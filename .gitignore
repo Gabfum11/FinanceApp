@@ -1,0 +1,39 @@
+# === Claude Code ===
+.claude/
+
+# === Backend (Python/FastAPI) ===
+backend/venv/
+backend/.env
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/**/*.pyc
+backend/finance.db
+
+# === Mobile (Expo/React Native) ===
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/expo-env.d.ts
+mobile/config.ts
+mobile/.kotlin/
+mobile/*.orig.*
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision
+mobile/.metro-health-check*
+mobile/npm-debug.*
+mobile/yarn-debug.*
+mobile/yarn-error.*
+mobile/.env*.local
+mobile/*.tsbuildinfo
+mobile/app-example
+mobile/ios
+mobile/android
+
+# === Comuni ===
+.DS_Store
+*.pem

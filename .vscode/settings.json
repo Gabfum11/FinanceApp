@@ -1,0 +1,4 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "typescript.tsdk": "mobile/node_modules/typescript/lib"
+}
