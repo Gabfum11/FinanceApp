@@ -97,7 +97,7 @@ export default function StatsScreen() {
           <ActivityIndicator size="large" />
         ) : (
           <>
-            <View>
+            <View style={styles.legendContainer}>
               {stats.map((item, index) => {
                 const percentage = total > 0 ? (item.total / total) * 100 : 0;
                 return (
@@ -124,7 +124,7 @@ export default function StatsScreen() {
               <PieChart
                 data={pieData}
                 donut
-                radius={90}
+                radius={75}
                 innerRadius={60}
                 centerLabelComponent={() => (
                   <View style={{ alignItems: "center" }}>

@@ -16,7 +16,6 @@ mobile/.expo/
 mobile/dist/
 mobile/web-build/
 mobile/expo-env.d.ts
-mobile/config.ts
 mobile/.kotlin/
 mobile/*.orig.*
 mobile/*.jks
@@ -28,6 +27,7 @@ mobile/.metro-health-check*
 mobile/npm-debug.*
 mobile/yarn-debug.*
 mobile/yarn-error.*
+mobile/.env
 mobile/.env*.local
 mobile/*.tsbuildinfo
 mobile/app-example

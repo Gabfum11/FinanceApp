@@ -37,6 +37,8 @@ export const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 8,
+        flex: 1,
+        minWidth: 0, // permette al contenitore di ridursi se necessario
     },
     legendDot: {
         width: 10,
@@ -45,6 +47,7 @@ export const styles = StyleSheet.create({
     },
     legendLabel: {
         fontSize: 14,
+        flexShrink: 1, // permette di ridurre la dimensione del testo se necessario
     },
     legendPercentage: {
         fontWeight: "bold",
