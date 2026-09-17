@@ -107,6 +107,15 @@ class StatsOut(BaseModel):
     cycle_end: date
     categories: list[CategoryStat]
 
+class DayStat(BaseModel):
+    date: date
+    total: float
+
+class WeeklyStatsOut(BaseModel):
+    week_start: date
+    week_end: date
+    days: list[DayStat]
+
 class BuddgetDate(BaseModel):
     monthly_budget: float
     budget_start_day: int = Field(..., ge=1, le=31)  # Valore compreso tra 1 e 31

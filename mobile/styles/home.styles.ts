@@ -137,4 +137,25 @@ export const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.85)",
     fontSize: 13,
   },
+  weeklyCard: {
+    backgroundColor: "#1B2B22",
+    borderRadius: 20,
+    padding: 20,
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  weeklyTitle: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 15,
+    marginBottom: 16,
+  },
+  weeklyChartWrapper: {
+    alignItems: "center",
+  },
+  weeklyBarLabel: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 10,
+    marginBottom: 4,
+  },
 });

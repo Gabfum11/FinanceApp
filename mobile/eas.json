@@ -11,13 +11,13 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://financeapp-backend.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://financeapp-vt0o.onrender.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://financeapp-backend.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://financeapp-vt0o.onrender.com"
       }
     }
   },

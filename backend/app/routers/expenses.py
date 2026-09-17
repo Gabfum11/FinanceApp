@@ -8,7 +8,8 @@ from app.business_logic import categorization
 from app.business_logic import security
 from datetime import date
 from app.business_logic.budget import get_budget_cycle
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta, MO
+from datetime import timedelta
 router = APIRouter(prefix="/expenses", tags=["expenses"]) #creazione del router
 #prefix = expenses significa che ogni endpoint definito qui avrà automaticamente expenses davanti al suo percorso
 
@@ -64,6 +65,31 @@ def get_stats(cycle_offset: int = 0, db: Session = Depends(get_db), current_user
         "cycle_end": cycle_end,
         "categories": [{"category_name": name, "total": total} for name, total in category_expense],
     }
+@router.get("/weekly-stats", response_model=schemas.WeeklyStatsOut)
+def get_weekly_stats(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    today = date.today()
+    week_start = today + relativedelta(weekday=MO(-1))  # lunedì di questa settimana relative delta trova il lunedì più vicino al giorno corrente, se oggi è lunedì, restituirà oggi stesso
+    week_end = week_start + timedelta(days=6)  # domenica
+    daily_expense = db.query(
+        models.Expense.date, func.sum(models.Expense.amount)
+    ).filter(
+        models.Expense.user_id == current_user.id,
+        models.Expense.date >= week_start,
+        models.Expense.date <= week_end,
+    ).group_by(models.Expense.date).all() #il group_by serve per raggruppare le spese per data e sommare gli importi di ciascun giorno
+
+    totals_by_day = {d: total for d, total in daily_expense} #permette di avere un dizionario con chiave=giorno e valore=totale spese di quel giorno
+    days = [
+        {"date": week_start + timedelta(days=i), "total": totals_by_day.get(week_start + timedelta(days=i), 0)}
+        for i in range(7)
+    ]
+
+    return {
+        "week_start": week_start,
+        "week_end": week_end,
+        "days": days,
+    }
+
 @router.get("/{expense_id}", response_model=schemas.ExpenseOut) #restituisce dati di una spesa specifica
 def get_expense(expense_id: int, db: Session = Depends(get_db), current_user: models.User=Depends(security.get_current_user)):
     expense = db.query(models.Expense).filter(models.Expense.id == expense_id, models.Expense.user_id==current_user.id).first()
