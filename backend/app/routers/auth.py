@@ -132,7 +132,10 @@ async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=De
         db.add(new_otp)
         db.commit()
         db.refresh(new_otp)
-        await email_service.send_otp_email(payload.email,otp_code, purpose=payload.purpose)
+        try:
+            await email_service.send_otp_email(payload.email,otp_code, purpose=payload.purpose)
+        except Exception as e:
+            print(f"Errore nell'invio dell'otp a {payload.email}: {e}")
     return{"detail":"Se l'account esiste, ricevereai un codice via mail"}
 
 @router.post("/resetPassword")

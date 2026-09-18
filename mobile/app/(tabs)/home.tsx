@@ -81,6 +81,7 @@ export default function HomeScreen() {
     const response = await apiFetch("/expenses/weekly-stats");
     if (response.ok) {
       const data = await response.json();
+      console.log("DEBUG weekly days:", JSON.stringify(data.days), data.days.map((d: DayStat) => typeof d.total));
       setWeeklyStats(data.days);
     }
   }
