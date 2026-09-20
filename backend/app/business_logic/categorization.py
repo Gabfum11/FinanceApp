@@ -3,8 +3,12 @@ from app import models
 import os
 from groq import Groq
 import json
+from datetime import date, timedelta
 
 groq_client=Groq( api_key=os.environ.get("GROQ_API_KEY"),)
+
+WEEKDAYS_IT = ["lunedi'", "martedi'", "mercoledi'", "giovedi'", "venerdi'", "sabato", "domenica"]
+
 
 def categorize_by_rules(description: str, db: Session) :
     description_lower = description.lower()
@@ -48,7 +52,50 @@ def categorize_by_ai(description: str, db: Session) -> int | None:
 
     return None
 
+# Il modello sbaglia l'aritmetica sui giorni della settimana ("mercoledi" -> lunedi),
+# quindi restituisce solo l'espressione e la data la calcola Python.
+RELATIVE_DAYS = {
+    "oggi": 0,
+    "ieri": 1,
+    "altro ieri": 2,
+    "l'altro ieri": 2,
+}
+
+WEEKDAY_INDEX = {
+    "lunedi": 0, "lunedì": 0,
+    "martedi": 1, "martedì": 1,
+    "mercoledi": 2, "mercoledì": 2,
+    "giovedi": 3, "giovedì": 3,
+    "venerdi": 4, "venerdì": 4,
+    "sabato": 5,
+    "domenica": 6,
+}
+
+
+def _resolve_date_expr(raw, today: date) -> date | None:
+    """Converte l'espressione del modello in una data. Sconosciuta -> None (= oggi)."""
+    if not raw or not isinstance(raw, str):
+        return None
+
+    expr = raw.strip().lower()
+    # "scorso"/"passato" non cambiano il calcolo: un giorno della settimana e' sempre passato
+    for filler in (" scorso", " scorsa", " passato", " passata", "di ", "lo ", "la ", "il "):
+        expr = expr.replace(filler, " ")
+    expr = " ".join(expr.split())
+
+    if expr in RELATIVE_DAYS:
+        return today - timedelta(days=RELATIVE_DAYS[expr])
+
+    if expr in WEEKDAY_INDEX:
+        # giorni indietro fino a quel giorno; se coincide con oggi si intende la settimana scorsa
+        delta = (today.weekday() - WEEKDAY_INDEX[expr]) % 7
+        return today - timedelta(days=delta or 7)
+
+    return None
+
+
 def extract_expense_from_text(text: str) -> dict | None:
+    today = date.today()
     try:
         chat_completion = groq_client.chat.completions.create(
             messages=[
@@ -56,12 +103,22 @@ def extract_expense_from_text(text: str) -> dict | None:
                     "role": "system",
                     "content": (
                         "Estrai da questo testo una spesa. Rispondi SOLO con un JSON valido, "
-                        'nel formato esatto {"description": "...", "amount": 0.0, "recurring": false,"frequency": null}. '
+                        'nel formato esatto {"description": "...", "amount": 0.0, "date_expr": null, "recurring": false,"frequency": null}. '
                         'se il testo indica che la spesa si ripete periodicamente (es. "al mese", "ogni settimana", "abbonamento"),'
                         'imposta "recurring":true e "frequency" con uno tra "monthly", "weekly", "yearly". '
+                        "se il testo dice quando e' avvenuta la spesa, copia quell'espressione in "
+                        '"date_expr" come appare, senza convertirla in data e senza calcoli. '
+                        'Valori ammessi per "date_expr": "oggi", "ieri", "altro ieri", '
+                        '"lunedi", "martedi", "mercoledi", "giovedi", "venerdi", "sabato", "domenica". '
+                        "Se il giorno e' seguito da \"scorso\" usa comunque solo il nome del giorno: "
+                        '"sabato scorso" -> "date_expr": "sabato". '
+                        "se il testo non dice quando, o usa un'espressione diversa da queste, "
+                        'lascia "date_expr": null. '
                         "Non aggiungere altro testo, solo il JSON. "
-                        'Esempio: input "Pizza 15 euro" -> output {"description": "Pizza", "amount": 15.0}. '
-                        'Esempio: input "palestra 60 euro al mese" -> output {"description": "Palestra", "amount": 60.0, "recurring": true, "frequency": "monthly"}. '
+                        'Esempio: input "Pizza 15 euro" -> output {"description": "Pizza", "amount": 15.0, "date_expr": null}. '
+                        'Esempio: input "spesa 40 euro ieri" -> output {"description": "Spesa", "amount": 40.0, "date_expr": "ieri"}. '
+                        'Esempio: input "visita dottore mercoledi 20 euro" -> output {"description": "Visita dottore", "amount": 20.0, "date_expr": "mercoledi"}. '
+                        'Esempio: input "palestra 60 euro al mese" -> output {"description": "Palestra", "amount": 60.0, "date_expr": null, "recurring": true, "frequency": "monthly"}. '
                         'se il testo non descrive una spesa, mancano dei dati, oppure contiene parole generiche, rispondi esattamente con '
                         '{"error": "not_an_expense"}'
                     ),
@@ -90,9 +147,11 @@ def extract_expense_from_text(text: str) -> dict | None:
         if recurring and frequency not in valid_frequencies:
             frequency=None
             recurring=False
+        expense_date = _resolve_date_expr(parsed.get("date_expr"), today)
         return {
             "description":description,
             "amount": amount,
+            "date": expense_date,
             "recurring":recurring,
             "frequency": frequency
         }

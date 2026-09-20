@@ -126,7 +126,8 @@ def extract_expense_preview(data_expense: dict, db: Session = Depends(get_db), c
     return {
         "description": extracted["description"],
         "amount": extracted["amount"],
-        "date": date.today(),
+        # il modello la valorizza solo se il testo dice quando: altrimenti vale oggi
+        "date": extracted["date"] or date.today(),
         "category_id": category_id,
         "category_name": category_name,
         "recurring": extracted["recurring"],
