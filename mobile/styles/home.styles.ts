@@ -6,8 +6,48 @@ export const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 60,
   },
-  title: {
+  // il margine sta sulla riga, così il saluto e l'icona restano allineati
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 24,
+  },
+  title: {
+    flex: 1,
+  },
+  // pillola con sfondo, bordo ed etichetta: da sola l'icona si leggeva
+  // come un logo decorativo invece che come un comando
+  assistantButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingLeft: 6,
+    paddingRight: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E5EA",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  assistantButtonPressed: {
+    backgroundColor: "#F0F0F2",
+    opacity: 0.85,
+  },
+  assistantButtonLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1B4332",
+  },
+  assistantIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
   sectionTitle:{
     marginTop:16,
@@ -143,19 +183,26 @@ export const styles = StyleSheet.create({
     padding: 20,
     marginTop: 16,
     marginBottom: 16,
+    overflow:"visible"
   },
   weeklyTitle: {
     color: "white",
     fontWeight: "bold",
     fontSize: 15,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   weeklyChartWrapper: {
     alignItems: "center",
+    overflow: "visible",
   },
   weeklyBarLabel: {
     color: "rgba(255,255,255,0.85)",
     fontSize: 10,
-    marginBottom: 4,
+    textAlign: "center",
+  },
+  weeklyBarLabelContainer: {
+    width: 56,
+    marginLeft: -10,
+    overflow: "visible",
   },
 });

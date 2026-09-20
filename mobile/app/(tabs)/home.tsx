@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, FlatList } from "react-native";
+import { View, FlatList, Image, Pressable } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { BarChart } from "react-native-gifted-charts";
 import { API_URL } from "@/config";
 import { styles } from "../../styles/home.styles";
 import { apiFetch } from "@/utils/apiFetch";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
 type Expense = {
   id: number;
@@ -56,6 +56,7 @@ function formatExpenseTime(dateString: string, createdAt: string): string {
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[]>([]); //questo stato contiene un array di expense, inizialmente vuoto
   const [nickname, setNickname] = useState("");
   const [budgetStatus, setBudgetStatus] = useState<{ budget: number | null; spent: number; remaining: number | null; cycle_start: string; cycle_end: string } | null>(null);
@@ -127,11 +128,34 @@ export default function HomeScreen() {
     };
   });
 
+  // Lascia spazio sopra la barra piu alta per l'etichetta del valore
+  const weeklyMaxValue =
+    Math.max(...weeklyStats.map((day) => day.total), 0) * 1.3 || 1;
+
   return (
     <View style={styles.container}>
-      <Text variant="headlineMedium" style={styles.title}>
-        Ciao {nickname}!
-      </Text>
+      <View style={styles.titleRow}>
+        <Text variant="headlineMedium" style={styles.title}>
+          Ciao {nickname}!
+        </Text>
+        <Pressable
+          onPress={() => router.push("/assistant")}
+          accessibilityRole="button"
+          accessibilityLabel="Apri l'assistente"
+          accessibilityHint="Registra una spesa scrivendola a parole"
+          hitSlop={8}
+          style={({ pressed }) => [
+            styles.assistantButton,
+            pressed && styles.assistantButtonPressed,
+          ]}
+        >
+          <Image
+            source={require("../../assets/images/logo/saldo-bot-1024.png")}
+            style={styles.assistantIcon}
+          />
+          <Text style={styles.assistantButtonLabel}>Chiedi</Text>
+        </Pressable>
+      </View>
       <View>
         <View style={styles.headerRow}>
           <Text variant="titleMedium">Budget</Text>
@@ -173,8 +197,8 @@ export default function HomeScreen() {
           <View style={styles.weeklyChartWrapper}>
             <BarChart
               data={weeklyChartData}
-              barWidth={22}
-              spacing={20}
+              barWidth={35}
+              spacing={8}
               roundedTop
               hideRules
               hideYAxisText
@@ -183,6 +207,9 @@ export default function HomeScreen() {
               xAxisLabelTextStyle={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}
               noOfSections={3}
               height={100}
+              maxValue={weeklyMaxValue}
+              barStyle={{ overflow: "visible" }}
+              topLabelContainerStyle={styles.weeklyBarLabelContainer}
             />
           </View>
         </View>

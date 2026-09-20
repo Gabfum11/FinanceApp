@@ -25,6 +25,7 @@ export default function RootLayout() {
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="register" options={{headerShown:false}} />
           <Stack.Screen name="add_expense" options={{ presentation: "modal", headerShown: false }} />
+          <Stack.Screen name="assistant" options={{ presentation: "modal", headerShown: false }} />
           <Stack.Screen name="verify_email" options={{ headerShown: false }} />
           <Stack.Screen name="resetPassword" options={{ headerShown: false }} />
           <Stack.Screen name="all_expenses" options={{ headerShown: false }} />

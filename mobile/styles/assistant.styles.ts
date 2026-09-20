@@ -13,7 +13,18 @@ export const styles = StyleSheet.create({
         
     },
     sectionParagraph:{
-        textAlign:"center"
+        textAlign:"center",
+        paddingHorizontal: 24,
+    },
+    // gli esempi staccati dal paragrafo: si leggono come cose da copiare
+    examples: {
+        marginTop: 12,
+        gap: 6,
+        alignItems: "center",
+    },
+    example: {
+        color: "#555555",
+        fontStyle: "italic",
     },
     chatContainer:{
         padding:12, // i messaggi non toccano i bordi dello schermo
@@ -66,8 +77,10 @@ export const styles = StyleSheet.create({
     },
     cardActions: {
         flexDirection: "row",
+        flexWrap: "wrap", // tre azioni non sempre entrano su una riga sola
         justifyContent: "flex-end",
-        gap: 8,
+        alignItems: "center",
+        gap: 6,
         marginTop: 12,
     },
     userText:{
@@ -92,5 +105,13 @@ export const styles = StyleSheet.create({
         alignItems: "center",
         marginTop: 8,
         marginBottom: 4,
-    }
+    },
+    dateRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 4,
+    },
+    dateChevron: {
+        marginLeft: "auto",
+    },
 })

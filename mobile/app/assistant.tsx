@@ -1,13 +1,15 @@
-import { KeyboardAvoidingView, View, FlatList, Platform } from "react-native";
+import { KeyboardAvoidingView, View, FlatList, Platform, Pressable } from "react-native";
 import { Text, IconButton, TextInput, Button, Switch } from "react-native-paper";
 import { useState } from "react";
 import { API_URL } from "@/config";
-import { styles } from "../styles/add-expense.styles";
+import { styles } from "../styles/assistant.styles";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
+import { toDateString, fromDateString } from "@/utils/date"
+import DateTimePicker from "@react-native-community/datetimepicker";
 
-export default function AddExpenseScreen() {
+export default function AssistantScreen() {
   type ExpenseConfirmation = {
     id: number;
     description: string;
@@ -26,11 +28,14 @@ export default function AddExpenseScreen() {
     expenseData?: ExpenseConfirmation;
   };
 
-  const [expenseText, setesxpenseText] = useState(""); //stato collegato al campo di testo dove l'utente scrive
+  const router = useRouter();
+
+  const [expenseText, setExpenseText] = useState(""); //stato collegato al campo di testo dove l'utente scrive
   const [pendingExpense, setPendingExpense] = useState<ExpenseConfirmation | null>(null); //rappresenta la card in attesa di decisione dell'utente
   const [isLoading, setIsLoading] = useState(false); //gestisce il messaggio "sto analizzando"
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [autoRenew, setAutoRenew] = useState(true);
+  const [showPicker, setShowPicker] = useState(false);
   
   async function handleSend() {
     const userMessage: ChatMessage = {
@@ -39,7 +44,7 @@ export default function AddExpenseScreen() {
       text: expenseText,
     };
     setMessages((prev) => [...prev, userMessage]); //crea un array contenente tutti i messaggi precedenti, più il nuovo aggiunto in fondo
-    setesxpenseText("");
+    setExpenseText("");
     setIsLoading(true);
 
     try {
@@ -54,7 +59,11 @@ export default function AddExpenseScreen() {
       if (!response.ok) {
         setMessages((prev) => [
           ...prev,
-          { id: Date.now().toString(), sender: "system", text: "Non sono riuscito a capire, riprova." },
+          {
+            id: Date.now().toString(),
+            sender: "system",
+            text: 'Non sono riuscito a capire. Prova a indicare cosa hai speso e quanto, tipo "Pizza 15 euro".',
+          },
         ]);
         return;
       }
@@ -70,6 +79,15 @@ export default function AddExpenseScreen() {
       setIsLoading(false);
     }
   }
+  function handleDateSelected(event: any, selectedDate: Date) {
+  setShowPicker(false);
+  if (!pendingExpense) return;
+  setPendingExpense({ ...pendingExpense, date: toDateString(selectedDate) });
+}
+
+function handleDatePickerDismiss() {
+  setShowPicker(false);
+}
 
   async function handleConfirm() {
     if (!pendingExpense) return;
@@ -102,7 +120,25 @@ export default function AddExpenseScreen() {
         { id: Date.now().toString(), sender: "system", expenseData: savedExpense },
       ]);
     }
+    setPendingExpense(null); //rimuove la card di conferma
+  }
+
+  function handleEdit() {
+    if (!pendingExpense) return;
+    // la card sparisce: la proposta prosegue nel form, che salva per conto suo
+    const proposal = pendingExpense;
     setPendingExpense(null);
+    router.push({
+      pathname: "/add_expense",
+      params: {
+        amount: String(proposal.amount),
+        description: proposal.description,
+        date: proposal.date,
+        recurring: String(proposal.recurring),
+        ...(proposal.category_id !== null && { categoryId: String(proposal.category_id) }),
+        ...(proposal.frequency !== null && { frequency: proposal.frequency }),
+      },
+    });
   }
 
   function handleCancel() {
@@ -121,8 +157,13 @@ export default function AddExpenseScreen() {
       <View style={styles.introContainer}>
         <Text variant="titleMedium" style={styles.title}>Registra la tua spesa</Text>
         <Text variant="bodyMedium" style={styles.sectionParagraph}>
-          Scrivi importo e descrizione, tipo "Pizza 15 euro" o "Palestra 50 euro al mese" per un abbonamento
+          Scrivi importo e descrizione. Puoi aggiungere quando l'hai fatta, e se si ripete diventa un abbonamento.
         </Text>
+        <View style={styles.examples}>
+          <Text variant="bodySmall" style={styles.example}>"Pizza 15 euro"</Text>
+          <Text variant="bodySmall" style={styles.example}>"Spesa 40 euro ieri"</Text>
+          <Text variant="bodySmall" style={styles.example}>"Palestra 50 euro al mese"</Text>
+        </View>
       </View>
 
       <FlatList
@@ -177,6 +218,22 @@ export default function AddExpenseScreen() {
           <Text style={styles.confirmationDetail}>
             Categoria: {pendingExpense.category_name ?? "Non assegnata"}
           </Text>
+          <Pressable onPress={() => setShowPicker(true)} style={styles.dateRow}>
+            <MaterialCommunityIcons name="calendar-outline" size={18} color="#666" />
+            <Text style={styles.confirmationDetail}>
+              {" "}Data: {fromDateString(pendingExpense.date).toLocaleDateString("it-IT")}
+            </Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" style={styles.dateChevron} />
+          </Pressable>
+          {showPicker && (
+            <DateTimePicker
+              value={fromDateString(pendingExpense.date)}
+              mode="date"
+              display="default"
+              onValueChange={handleDateSelected}
+              onDismiss={handleDatePickerDismiss}
+            />
+        )}
           {pendingExpense.recurring && (
             <>
             <Text style={styles.confirmationDetail}>
@@ -192,8 +249,9 @@ export default function AddExpenseScreen() {
             </>
           )}
           <View style={styles.cardActions}>
-            <Button mode="outlined" onPress={handleCancel}>Annulla</Button>
-            <Button mode="contained" onPress={handleConfirm}>Conferma e salva</Button>
+            <Button mode="text" onPress={handleCancel}>Annulla</Button>
+            <Button mode="outlined" icon="pencil-outline" onPress={handleEdit}>Modifica</Button>
+            <Button mode="contained" onPress={handleConfirm}>Conferma</Button>
           </View>
         </View>
       )}
@@ -201,8 +259,8 @@ export default function AddExpenseScreen() {
       <View style={styles.inputRow}>
         <TextInput
           value={expenseText}
-          onChangeText={setesxpenseText}
-          placeholder='Es. "Pizza 15 euro"'
+          onChangeText={setExpenseText}
+          placeholder='Es. "Spesa 40 euro ieri"'
           mode="outlined"
           style={styles.textInput}
           disabled={isLoading || pendingExpense !== null}
