@@ -34,6 +34,10 @@ mobile/app-example
 mobile/ios
 mobile/android
 
+# Pacchetto completo dei pulsanti Google (66 file, tutte le varianti e densita'):
+# nel repo bastano i 3 PNG in uso, copiati in assets/images/google/
+mobile/assets/images/Android + Web/
+
 # === Comuni ===
 .DS_Store
 *.pem
