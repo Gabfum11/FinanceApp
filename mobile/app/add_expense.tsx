@@ -151,7 +151,9 @@ export default function AddExpenseScreen() {
     //in modifica start_date non si tocca: ha gia' generato le spese arretrate
     const body = isSubscription
       ? isEditing
-        ? { ...common, frequency }
+        //in modifica si sposta il prossimo addebito: la data di partenza
+        //ha gia' generato le spese arretrate e non si tocca
+        ? { ...common, frequency, next_date: toDateString(date) }
         : { ...common, frequency, start_date: toDateString(date) }
       : { ...common, date: toDateString(date) };
 
@@ -299,10 +301,9 @@ export default function AddExpenseScreen() {
           )}
 
           {/* la data di partenza di un abbonamento ha gia' generato le spese arretrate */}
-          {!(isEditing && isSubscription) && (
           <View>
             <Text variant="bodySmall" style={styles.fieldLabel}>
-              {isSubscription ? "Primo addebito" : "Data"}
+              {!isSubscription ? "Data" : isEditing ? "Prossimo addebito" : "Primo addebito"}
             </Text>
               <Pressable
                 style={styles.field}
@@ -316,7 +317,6 @@ export default function AddExpenseScreen() {
                 <MaterialCommunityIcons name="chevron-down" size={20} color={colors.label} />
               </Pressable>
           </View>
-          )}
 
           <View>
             <Text variant="bodySmall" style={styles.fieldLabel}>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { View, FlatList, Image, Pressable } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button, Text } from "react-native-paper";
 import { BarChart } from "react-native-gifted-charts";
 import { API_URL } from "@/config";
@@ -58,6 +59,9 @@ function formatExpenseTime(dateString: string, createdAt: string): string {
 export default function HomeScreen() {
   const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[]>([]); //questo stato contiene un array di expense, inizialmente vuoto
+  //serve a distinguere "non ho ancora caricato" da "non ci sono spese":
+  //senza, il messaggio di lista vuota lampeggerebbe a ogni apertura
+  const [expensesLoaded, setExpensesLoaded] = useState(false);
   const [nickname, setNickname] = useState("");
   const [budgetStatus, setBudgetStatus] = useState<{ budget: number | null; spent: number; remaining: number | null; cycle_start: string; cycle_end: string } | null>(null);
   const [weeklyStats, setWeeklyStats] = useState<DayStat[]>([]);
@@ -67,6 +71,7 @@ export default function HomeScreen() {
       const data = await response.json();
       // console.log("Spese ricevute:",data) // dati sensibili, non loggare in produzione
       setExpenses(data);
+      setExpensesLoaded(true);
     }
     // else
     //   console.log("Spese non ricevute, status",response.status, await response.text());
@@ -218,9 +223,11 @@ export default function HomeScreen() {
         <Text variant="titleMedium" style={styles.sectionTitle}>
           Ultime transazioni
         </Text>
-        <Link href="/all_expenses" asChild>
-          <Text style={styles.linkExpenses}>Vedi tutte</Text>
-        </Link>
+        {expenses.length > 0 && (
+          <Link href="/all_expenses" asChild>
+            <Text style={styles.linkExpenses}>Vedi tutte</Text>
+          </Link>
+        )}
       <FlatList
         data={expenses.slice(0,2)}
         keyExtractor={(item) => item.id.toString()} //dice a react come identificare univocamente ogni riga
@@ -233,6 +240,17 @@ export default function HomeScreen() {
             <Text style={styles.expenseAmount}>- €{item.amount.toFixed(2)}</Text>
           </View>
         )}
+        ListEmptyComponent={
+          expensesLoaded ? (
+            <Pressable style={styles.emptyState} onPress={() => router.push("/add_expense")}>
+              <MaterialCommunityIcons name="receipt-text-outline" size={40} color="#C7C7CC" />
+              <Text style={styles.emptyTitle}>Nessuna spesa registrata</Text>
+              <Text style={styles.emptyHint}>
+                Tocca il pulsante + in basso per aggiungere la tua prima spesa
+              </Text>
+            </Pressable>
+          ) : null
+        }
       />
     </View>
   );

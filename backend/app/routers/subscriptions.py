@@ -160,13 +160,20 @@ def update_subscription(subscription_id: int, changes: schemas.SubscriptionUpdat
         if category is None:
             raise HTTPException(status_code=404, detail="Category not found")
 
+    #una data gia' passata verrebbe subito trasformata in spese arretrate
+    #al primo run_due_renewals: non e' quello che chiede chi sposta il rinnovo
+    new_next_date = updates.get("next_date")
+    if new_next_date is not None and new_next_date <= date.today():
+        raise HTTPException(status_code=422, detail="Il prossimo addebito deve essere una data futura")
+
     new_frequency = updates.get("frequency")
     for field, value in updates.items():
         setattr(sub, field, value)
 
     #cambiando periodo la vecchia next_date non e' piu' coerente: la ricalcoliamo
-    #da oggi, senza toccare le spese gia' generate
-    if new_frequency is not None:
+    #da oggi, senza toccare le spese gia' generate. Se pero' l'utente ha indicato
+    #anche una data esplicita, e' quella a valere
+    if new_frequency is not None and new_next_date is None:
         anchor_day = sub.next_date.day if new_frequency != "weekly" else None
         sub.next_date = advance(date.today(), new_frequency, anchor_day)
 

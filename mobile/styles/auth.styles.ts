@@ -69,17 +69,4 @@ export const styles = StyleSheet.create({
   dividerText: {
     color: "#999",
   },
-  //l'asset Google e' un pulsante completo: sfondo, bordo e testo sono nell'immagine,
-  //quindi il contenitore non deve aggiungere grafica propria
-  googleButton: {
-    alignSelf: "center",
-    marginTop: 4,
-  },
-  googleButtonPressed: {
-    opacity: 0.7,
-  },
-  googleButtonImage: {
-    height: 44,
-    width: 198, //rapporto 4.5:1 dell'asset ufficiale: alterarlo lo deforma
-  }
 });

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { View, Image, Pressable } from "react-native";
+import { View, Image } from "react-native";
 import { TextInput, Button, Text, Snackbar } from "react-native-paper";
 import {styles} from "../styles/auth.styles";
 import { Link } from "expo-router";
 import { API_URL } from "@/config";
 import { router } from "expo-router";
 import { useGoogleLogin } from "@/utils/useGoogleLogin";
+import { GoogleButton } from "@/components/GoogleButton";
 
 export default function RegisterScreen() {
     const[nickname,setnickName]=useState("");
@@ -109,23 +110,10 @@ export default function RegisterScreen() {
                         <Text style={styles.dividerText}>oppure</Text>
                         <View style={styles.dividerLine} />
                     </View>
-                    <Pressable
+                    <GoogleButton
                         onPress={google.signIn}
                         disabled={google.isLoading || loading}
-                        accessibilityRole="button"
-                        accessibilityLabel="Continua con Google"
-                        style={({ pressed }) => [
-                            styles.googleButton,
-                            (pressed || google.isLoading || loading) && styles.googleButtonPressed,
-                        ]}
-                    >
-                        {/* asset ufficiale Google: non va ridisegnato o ricolorato */}
-                        <Image
-                            source={require("../assets/images/google/btn-google-light.png")}
-                            style={styles.googleButtonImage}
-                            resizeMode="contain"
-                        />
-                    </Pressable>
+                    />
                 </>
             )}
 

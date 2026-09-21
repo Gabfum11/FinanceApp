@@ -66,10 +66,12 @@ export const styles = StyleSheet.create({
   segmentLabel: {
     fontSize: 14,
     color: colors.label,
+    //peso costante: in grassetto il testo e' piu' largo e i due segmenti
+    //cambierebbero larghezza a vicenda a ogni cambio di selezione
+    fontWeight: "600",
   },
   segmentLabelSelected: {
     color: colors.darkGreen,
-    fontWeight: "700",
   },
 
   frequencyRow: {

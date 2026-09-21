@@ -67,6 +67,7 @@ export default function BudgetScreen() {
           amount: String(sub.amount),
           description: sub.description,
           frequency: sub.frequency,
+          date: sub.next_date, //in modifica il campo data mostra il prossimo addebito
           ...(sub.category_id !== null && { categoryId: String(sub.category_id) }),
         },
       });

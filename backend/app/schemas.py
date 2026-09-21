@@ -40,12 +40,15 @@ class SubscriptionCreate(BaseModel):
     start_date: date | None = None #se assente l'abbonamento parte da oggi
     
 
-class SubscriptionUpdate(BaseModel): #start_date non e' modificabile: ha gia' generato le spese arretrate
+class SubscriptionUpdate(BaseModel):
     description: str | None = Field(None, min_length=1, max_length=200)
     amount: float | None = Field(None, gt=0, le=1000000)
     frequency: Literal["monthly", "weekly", "yearly"] | None = None
     category_id: int | None = None
     auto_renew: bool | None = None
+    #si sposta il prossimo addebito, non la data di partenza: quella ha gia'
+    #generato le spese arretrate e cambiarla renderebbe lo storico incoerente
+    next_date: date_type | None = None
 
 
 class SubscriptionOut(BaseModel):

@@ -65,6 +65,24 @@ export const styles = StyleSheet.create({
   buttonLabel: {
     fontSize: 13,
   },
+  //primo avvio: la lista vuota da sola non spiega nulla, questo indica cosa fare
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 28,
+    paddingHorizontal: 32,
+    gap: 6,
+  },
+  emptyTitle: {
+    fontWeight: "600",
+    color: "#3A3A3C",
+    marginTop: 4,
+  },
+  emptyHint: {
+    textAlign: "center",
+    color: "#8A8A8E",
+    fontSize: 13,
+    lineHeight: 18,
+  },
   expenseRow: {
     flexDirection: "row",
     justifyContent: "space-between",
