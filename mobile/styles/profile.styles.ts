@@ -50,4 +50,17 @@ export const styles = StyleSheet.create({
         borderColor: "#2ECC71",
         borderRadius: 20,
     },
+    //azione distruttiva: separata dal resto e senza sfondo, per non invitare al tocco
+    deleteButton: {
+        marginTop: "auto",
+        alignSelf: "center",
+    },
+    deleteWarning: {
+        marginBottom: 16,
+        lineHeight: 20,
+    },
+    deleteError: {
+        color: "#C0392B",
+        marginTop: 8,
+    },
 })

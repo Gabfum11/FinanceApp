@@ -5,6 +5,7 @@ import {styles} from "../styles/auth.styles";
 import { Link } from "expo-router";
 import { API_URL } from "@/config";
 import { router } from "expo-router";
+import { useGoogleLogin } from "@/utils/useGoogleLogin";
 
 export default function RegisterScreen() {
     const[nickname,setnickName]=useState("");
@@ -14,6 +15,13 @@ export default function RegisterScreen() {
     const [errorMessage, setErrorMessage] = useState("");
     const [snackbarVisible, setSnackbarVisible] = useState(false);
     const [showPassword,setShowPassword] =useState(false);
+    const google = useGoogleLogin({
+        onSuccess: () => router.replace("/(tabs)/home"),
+        onError: (message: string) => {
+            setErrorMessage(message);
+            setSnackbarVisible(true);
+        },
+    });
     async function handleRegister() {
         try {
             setLoading(true)
@@ -91,8 +99,30 @@ export default function RegisterScreen() {
                 loading={loading}
                 disabled={loading}
                 >
-                Registrati   
+                Registrati
             </Button>
+
+            {google.isReady && (
+                <>
+                    <View style={styles.dividerRow}>
+                        <View style={styles.dividerLine} />
+                        <Text style={styles.dividerText}>oppure</Text>
+                        <View style={styles.dividerLine} />
+                    </View>
+                    <Button
+                        mode="outlined"
+                        icon="google"
+                        onPress={google.signIn}
+                        style={styles.googleButton}
+                        labelStyle={styles.buttonLabel}
+                        loading={google.isLoading}
+                        disabled={google.isLoading || loading}
+                    >
+                        Continua con Google
+                    </Button>
+                </>
+            )}
+
             <Text style={styles.link}>
                 Hai già un account?{" "}
             <Link href="/login">

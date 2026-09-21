@@ -51,6 +51,18 @@ export default function ExpenseList() {
             loadExpenses();
         },[])
     );
+    function openEdit(expense: Expense) {
+        router.push({
+            pathname: "/add_expense",
+            params: {
+                editId: String(expense.id),
+                amount: String(expense.amount),
+                description: expense.description,
+                date: expense.date,
+                ...(expense.category_id !== null && { categoryId: String(expense.category_id) }),
+            },
+        });
+    }
     function confirmDelete(expenseId: number) {
         Alert.alert("Elimina spesa", "Sei sicuro di voler eliminare questa spesa?", [
         { text: "Annulla" }, 
@@ -82,6 +94,7 @@ export default function ExpenseList() {
                     </Text>
                 </View>
                 <Text style={styles.expenseAmount}>- €{item.amount.toFixed(2)}</Text>
+                <IconButton icon="pencil-outline" size={18} onPress={() => openEdit(item)} />
                 <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} />
             </View>
         )}

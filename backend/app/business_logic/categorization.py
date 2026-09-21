@@ -24,34 +24,6 @@ def categorize_by_rules(description: str, db: Session) :
 
     return None
 
-def categorize_by_ai(description: str, db: Session) -> int | None:
-    categories = db.query(models.Category).all()
-    category_names = [c.name for c in categories]
-
-    try:
-        chat_completion = groq_client.chat.completions.create(
-            messages=[
-              {"role": "user", "content": f"Classifica questa spesa {description} in una di queste categorie:{','.join(category_names)} . Rispondi solo col nome categoria."
-               'se non sei sicuro sulla categoria di appartenenza (es. è un nome proprio, un termine ambiguo o senza relazione chiara con le categorie)'
-               'rispondi esattamente con : nessuna'}
-            #il join prende una lista e la unisce in una singola stringa, inserendo un separatore scelto tra ogni elemento
-            ],
-            model="openai/gpt-oss-20b",
-            reasoning_effort="low",
-            max_tokens=512, #include i token di reasoning, non solo il nome della categoria
-        )
-        predicted_name = chat_completion.choices[0].message.content.strip() #strip rimuove eventuali spazi superfluie altri caratteri simili come tab e capo all'inizio e alla finefine
-        if predicted_name=='nessuna':
-            return None
-    except Exception:
-        return None
-
-    for category in categories:
-        if category.name.lower() == predicted_name.lower():
-            return category.id
-
-    return None
-
 # Il modello sbaglia l'aritmetica sui giorni della settimana ("mercoledi" -> lunedi),
 # quindi restituisce solo l'espressione e la data la calcola Python.
 RELATIVE_DAYS = {
@@ -94,8 +66,17 @@ def _resolve_date_expr(raw, today: date) -> date | None:
     return None
 
 
-def extract_expense_from_text(text: str) -> dict | None:
+def extract_expense_from_text(text: str, category_names: list[str] | None = None) -> dict | None:
     today = date.today()
+    #la categoria esce dalla stessa chiamata: chiederla a parte costerebbe una seconda richiesta
+    if category_names:
+        category_rule = (
+            'imposta "category" con una tra: ' + ", ".join(f'"{n}"' for n in category_names) + ". "
+            "Scegli in base a cosa e' stato comprato. "
+            "Se nessuna e' chiaramente adatta, o il testo e' ambiguo, usa null. "
+        )
+    else:
+        category_rule = '"category" deve essere sempre null. '
     try:
         chat_completion = groq_client.chat.completions.create(
             messages=[
@@ -103,7 +84,8 @@ def extract_expense_from_text(text: str) -> dict | None:
                     "role": "system",
                     "content": (
                         "Estrai da questo testo una spesa. Rispondi SOLO con un JSON valido, "
-                        'nel formato esatto {"description": "...", "amount": 0.0, "date_expr": null, "recurring": false,"frequency": null}. '
+                        'nel formato esatto {"description": "...", "amount": 0.0, "date_expr": null, "category": null, "recurring": false,"frequency": null}. '
+                        + category_rule +
                         'se il testo indica che la spesa si ripete periodicamente (es. "al mese", "ogni settimana", "abbonamento"),'
                         'imposta "recurring":true e "frequency" con uno tra "monthly", "weekly", "yearly". '
                         "se il testo dice quando e' avvenuta la spesa, copia quell'espressione in "
@@ -114,11 +96,15 @@ def extract_expense_from_text(text: str) -> dict | None:
                         '"sabato scorso" -> "date_expr": "sabato". '
                         "se il testo non dice quando, o usa un'espressione diversa da queste, "
                         'lascia "date_expr": null. '
+                        "la regola vale anche quando \"recurring\" e' true: in quel caso "
+                        "\"date_expr\" indica da quando parte l'abbonamento. "
+                        "Usa i nomi di categoria esattamente come elencati sopra; "
+                        "gli esempi che seguono mostrano solo la forma, non i nomi ammessi. "
                         "Non aggiungere altro testo, solo il JSON. "
-                        'Esempio: input "Pizza 15 euro" -> output {"description": "Pizza", "amount": 15.0, "date_expr": null}. '
-                        'Esempio: input "spesa 40 euro ieri" -> output {"description": "Spesa", "amount": 40.0, "date_expr": "ieri"}. '
-                        'Esempio: input "visita dottore mercoledi 20 euro" -> output {"description": "Visita dottore", "amount": 20.0, "date_expr": "mercoledi"}. '
-                        'Esempio: input "palestra 60 euro al mese" -> output {"description": "Palestra", "amount": 60.0, "date_expr": null, "recurring": true, "frequency": "monthly"}. '
+                        'Esempio di forma: {"description": "Pizza", "amount": 15.0, "date_expr": null, "category": "Cibo"}. '
+                        'Esempio di forma: {"description": "Spesa", "amount": 40.0, "date_expr": "ieri", "category": "Spesa"}. '
+                        'Esempio di forma: {"description": "Visita dottore", "amount": 20.0, "date_expr": "mercoledi", "category": "Salute"}. '
+                        'Esempio di forma: {"description": "Palestra", "amount": 60.0, "date_expr": null, "category": null, "recurring": true, "frequency": "monthly"}. '
                         'se il testo non descrive una spesa, mancano dei dati, oppure contiene parole generiche, rispondi esattamente con '
                         '{"error": "not_an_expense"}'
                     ),
@@ -148,10 +134,18 @@ def extract_expense_from_text(text: str) -> dict | None:
             frequency=None
             recurring=False
         expense_date = _resolve_date_expr(parsed.get("date_expr"), today)
+        #accettiamo solo un nome che esiste davvero: il modello puo' inventarne
+        category = parsed.get("category")
+        if not isinstance(category, str) or not category_names:
+            category = None
+        else:
+            match = next((n for n in category_names if n.lower() == category.strip().lower()), None)
+            category = match
         return {
             "description":description,
             "amount": amount,
             "date": expense_date,
+            "category": category,
             "recurring":recurring,
             "frequency": frequency
         }

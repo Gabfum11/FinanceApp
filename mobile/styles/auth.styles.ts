@@ -53,5 +53,23 @@ export const styles = StyleSheet.create({
   linkAction:{
     color: "#2ECC71",
     fontWeight:"bold"
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 12,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E5E5EA",
+  },
+  dividerText: {
+    color: "#999",
+  },
+  googleButton: {
+    borderColor: "#DADCE0",
   }
 });

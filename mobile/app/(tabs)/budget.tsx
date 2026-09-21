@@ -3,7 +3,7 @@ import { IconButton, Text, Button } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { useCallback, useEffect, useState } from "react";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { styles } from "@/styles/budget.styles";
 import { Alert } from "react-native";
 function getRenewal(next_date:string){
@@ -23,6 +23,7 @@ type Subscription = {
   amount: number;
   date: string;
   next_date:string;
+  frequency: string;
   category_id: number | null; //può tornare utile
   category_name: string | null;
   is_active:boolean;
@@ -57,6 +58,19 @@ export default function BudgetScreen() {
     if (diffDays === 1) return "scaduto ieri";
     return `scaduto ${diffDays} giorni fa`;
 }
+    function openEdit(sub: Subscription) {
+      router.push({
+        pathname: "/add_expense",
+        params: {
+          editId: String(sub.id),
+          recurring: "true",
+          amount: String(sub.amount),
+          description: sub.description,
+          frequency: sub.frequency,
+          ...(sub.category_id !== null && { categoryId: String(sub.category_id) }),
+        },
+      });
+    }
     function confirmToggle(subId: number, isCurrentActive:boolean) {
       if(isCurrentActive)
       {
@@ -121,6 +135,7 @@ export default function BudgetScreen() {
               </Text>
             </View>
             <Text style={styles.subAmount}>€{item.amount.toFixed(2)}</Text>
+            <IconButton icon="pencil-outline" size={18} onPress={()=>openEdit(item)} />
             <IconButton icon="pause" size={18} onPress={()=>confirmToggle(item.id, true)} />
           </View>
         )}

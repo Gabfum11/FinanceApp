@@ -46,7 +46,10 @@ export default function AddExpenseScreen() {
     date?: string;
     recurring?: string;
     frequency?: string;
+    editId?: string; //presente solo quando si modifica un elemento esistente
   }>();
+  const editId = params.editId;
+  const isEditing = !!editId;
 
   // L'importo è tenuto come stringa perché il tastierino lavora carattere per
   // carattere: un numero perderebbe lo zero finale di "24,90" e la virgola appena digitata.
@@ -144,20 +147,32 @@ export default function AddExpenseScreen() {
       amount,
       category_id: category!.id,
     };
+    const collection = isSubscription ? "/subscriptions/" : "/expenses/";
+    //in modifica start_date non si tocca: ha gia' generato le spese arretrate
+    const body = isSubscription
+      ? isEditing
+        ? { ...common, frequency }
+        : { ...common, frequency, start_date: toDateString(date) }
+      : { ...common, date: toDateString(date) };
+
     try {
-      const response = await apiFetch(isSubscription ? "/subscriptions/" : "/expenses/", {
-        method: "POST",
+      const response = await apiFetch(isEditing ? `${collection}${editId}` : collection, {
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          isSubscription ? { ...common, frequency } : { ...common, date: toDateString(date) }
-        ),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
+        // il server spiega i casi noti (es. troppi rinnovi arretrati)
+        const detail = await response
+          .json()
+          .then((body) => (typeof body?.detail === "string" ? body.detail : null))
+          .catch(() => null);
         setError(
-          isSubscription
-            ? "Non è stato possibile salvare l'abbonamento. Riprova."
-            : "Non è stato possibile salvare la spesa. Riprova."
+          detail ??
+            (isSubscription
+              ? "Non è stato possibile salvare l'abbonamento. Riprova."
+              : "Non è stato possibile salvare la spesa. Riprova.")
         );
         return;
       }
@@ -169,12 +184,17 @@ export default function AddExpenseScreen() {
     }
   }
 
+  function screenTitle() {
+    if (isEditing) return isSubscription ? "Modifica abbonamento" : "Modifica spesa";
+    return isSubscription ? "Nuovo abbonamento" : "Nuova spesa";
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <IconButton icon="chevron-left" size={28} onPress={() => router.back()} />
         <Text variant="titleMedium" style={styles.headerTitle}>
-          {isSubscription ? "Nuovo abbonamento" : "Nuova spesa"}
+          {screenTitle()}
         </Text>
         <View style={styles.headerSpacer} />
       </View>
@@ -183,6 +203,8 @@ export default function AddExpenseScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
       >
+        {/* in modifica il tipo non cambia: una spesa non diventa un abbonamento */}
+        {!isEditing && (
         <View style={styles.segmented}>
           {[
             { value: false, label: "Spesa" },
@@ -195,7 +217,6 @@ export default function AddExpenseScreen() {
                 style={[styles.segment, selected && styles.segmentSelected]}
                 onPress={() => {
                   setIsAmountFocused(false);
-                  setShowDatePicker(false);
                   setError(null);
                   setIsSubscription(option.value);
                 }}
@@ -209,6 +230,7 @@ export default function AddExpenseScreen() {
             );
           })}
         </View>
+        )}
 
         <Pressable style={styles.amountSection} onPress={focusAmount}>
           <Text variant="labelSmall" style={styles.amountLabel}>
@@ -242,7 +264,7 @@ export default function AddExpenseScreen() {
             </Pressable>
           </View>
 
-          {isSubscription ? (
+          {isSubscription && (
             <View>
               <Text variant="bodySmall" style={styles.fieldLabel}>
                 Frequenza
@@ -274,11 +296,14 @@ export default function AddExpenseScreen() {
                 })}
               </View>
             </View>
-          ) : (
-            <View>
-              <Text variant="bodySmall" style={styles.fieldLabel}>
-                Data
-              </Text>
+          )}
+
+          {/* la data di partenza di un abbonamento ha gia' generato le spese arretrate */}
+          {!(isEditing && isSubscription) && (
+          <View>
+            <Text variant="bodySmall" style={styles.fieldLabel}>
+              {isSubscription ? "Primo addebito" : "Data"}
+            </Text>
               <Pressable
                 style={styles.field}
                 onPress={() => {
@@ -290,7 +315,7 @@ export default function AddExpenseScreen() {
                 <Text style={styles.fieldText}>{formatDate(date)}</Text>
                 <MaterialCommunityIcons name="chevron-down" size={20} color={colors.label} />
               </Pressable>
-            </View>
+          </View>
           )}
 
           <View>
@@ -322,7 +347,11 @@ export default function AddExpenseScreen() {
             <ActivityIndicator color={colors.surface} />
           ) : (
             <Text style={[styles.saveButtonText, !canSave && styles.saveButtonTextDisabled]}>
-              {isSubscription ? "Salva abbonamento" : "Salva spesa"}
+              {isEditing
+                ? "Salva modifiche"
+                : isSubscription
+                  ? "Salva abbonamento"
+                  : "Salva spesa"}
             </Text>
           )}
         </Pressable>

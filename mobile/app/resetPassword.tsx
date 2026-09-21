@@ -42,7 +42,7 @@ export default function reset_password(){
          const response= await fetch(`${API_URL}/auth/verify-otp`,{
                 method:"POST",
                 headers:{"Content-Type": "application/json"},
-                body:JSON.stringify({email,code})
+                body:JSON.stringify({email,code, purpose:"password_reset"})
             })
             if(!response.ok)
             {

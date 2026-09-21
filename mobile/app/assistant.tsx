@@ -98,6 +98,7 @@ function handleDatePickerDismiss() {
       amount: pendingExpense.amount,
       frequency: pendingExpense.frequency,
       category_id: pendingExpense.category_id,
+      start_date: pendingExpense.date, //da quando parte: genera gli eventuali arretrati
     }:
     {
       description: pendingExpense.description,
@@ -113,13 +114,28 @@ function handleDatePickerDismiss() {
       body: JSON.stringify(body)
     });
 
-    if (response.ok) {
-      const savedExpense = await response.json();
+    if (!response.ok) {
+      //la card resta aperta: l'utente puo' correggere la data e riprovare
+      const detail = await response
+        .json()
+        .then((data) => (typeof data?.detail === "string" ? data.detail : null))
+        .catch(() => null);
       setMessages((prev) => [
         ...prev,
-        { id: Date.now().toString(), sender: "system", expenseData: savedExpense },
+        {
+          id: Date.now().toString(),
+          sender: "system",
+          text: detail ?? "Non sono riuscito a salvare, riprova.",
+        },
       ]);
+      return;
     }
+
+    const savedExpense = await response.json();
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now().toString(), sender: "system", expenseData: savedExpense },
+    ]);
     setPendingExpense(null); //rimuove la card di conferma
   }
 
@@ -221,7 +237,8 @@ function handleDatePickerDismiss() {
           <Pressable onPress={() => setShowPicker(true)} style={styles.dateRow}>
             <MaterialCommunityIcons name="calendar-outline" size={18} color="#666" />
             <Text style={styles.confirmationDetail}>
-              {" "}Data: {fromDateString(pendingExpense.date).toLocaleDateString("it-IT")}
+              {" "}{pendingExpense.recurring ? "Primo addebito" : "Data"}:{" "}
+              {fromDateString(pendingExpense.date).toLocaleDateString("it-IT")}
             </Text>
             <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" style={styles.dateChevron} />
           </Pressable>

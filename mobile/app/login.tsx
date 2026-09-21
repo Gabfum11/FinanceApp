@@ -6,6 +6,7 @@ import { Link } from "expo-router";
 import { API_URL } from "@/config";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
+import { useGoogleLogin } from "@/utils/useGoogleLogin";
 
 
 export default function LoginScreen() {
@@ -17,6 +18,13 @@ export default function LoginScreen() {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [showPassword, setShowPassword]=useState(false)
   const router=useRouter();
+  const google = useGoogleLogin({
+    onSuccess: () => router.replace("/(tabs)/home"),
+    onError: (message) => {
+      setErrorMessage(message);
+      setSnackbarVisible(true);
+    },
+  });
  async function handleLogin() {
   try {
     setLoading(true);
@@ -95,6 +103,28 @@ export default function LoginScreen() {
         >
         Accedi
       </Button>
+
+      {google.isReady && (
+        <>
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>oppure</Text>
+            <View style={styles.dividerLine} />
+          </View>
+          <Button
+            mode="outlined"
+            icon="google"
+            onPress={google.signIn}
+            style={styles.googleButton}
+            labelStyle={styles.buttonLabel}
+            loading={google.isLoading}
+            disabled={google.isLoading || loading}
+          >
+            Continua con Google
+          </Button>
+        </>
+      )}
+
       <Text style={styles.link}>
         Non hai un account?{" "}
         <Link href="/register"> 

@@ -10,7 +10,10 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, index=True, unique=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    #nullable: chi entra solo con Google non ha una password da conservare
+    hashed_password = Column(String, nullable=True)
+    #id stabile dell'account Google: l'email puo' cambiare, questo no
+    google_id = Column(String, index=True, unique=True, nullable=True)
     nickname = Column(String, nullable=True)
     monthly_budget = Column(Float, nullable=True)
     budget_start_day = Column(Integer, nullable=True, default=1)

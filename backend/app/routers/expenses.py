@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
 from typing import List
@@ -8,6 +8,8 @@ from app.business_logic import categorization
 from app.business_logic import security
 from datetime import date
 from app.business_logic.budget import get_budget_cycle
+from app.routers.subscriptions import run_due_renewals
+from app.state import limiter, user_or_ip
 from dateutil.relativedelta import relativedelta, MO
 from datetime import timedelta
 router = APIRouter(prefix="/expenses", tags=["expenses"]) #creazione del router
@@ -39,6 +41,7 @@ def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)
 @router.get("/", response_model=List[schemas.ExpenseOut])
 #dice a FASTAPI : la risposta è una lista di oggetti nella forma expenseOut
 def list_expenses(db: Session = Depends(get_db), current_user: models.User=Depends(security.get_current_user)):
+    run_due_renewals(db, current_user.id) #i rinnovi scaduti devono comparire tra le spese
     expenses= db.query(models.Expense).filter(models.Expense.user_id==current_user.id).order_by(models.Expense.created_at.desc()).all() #estrae tutte le righe della tabella expense
     for expense in expenses:
         expense.category_name=expense.category.name if expense.category else None
@@ -46,6 +49,7 @@ def list_expenses(db: Session = Depends(get_db), current_user: models.User=Depen
 
 @router.get("/stats", response_model=schemas.StatsOut)
 def get_stats(cycle_offset: int = 0, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    run_due_renewals(db, current_user.id)
     reference_date = date.today() - relativedelta(months=-cycle_offset)
     start_day = current_user.budget_start_day or 1
     cycle_start, cycle_end = get_budget_cycle(reference_date, start_day)
@@ -67,6 +71,7 @@ def get_stats(cycle_offset: int = 0, db: Session = Depends(get_db), current_user
     }
 @router.get("/weekly-stats", response_model=schemas.WeeklyStatsOut)
 def get_weekly_stats(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    run_due_renewals(db, current_user.id)
     today = date.today()
     week_start = today + relativedelta(weekday=MO(-1))  # lunedì di questa settimana relative delta trova il lunedì più vicino al giorno corrente, se oggi è lunedì, restituirà oggi stesso
     week_end = week_start + timedelta(days=6)  # domenica
@@ -97,7 +102,29 @@ def get_expense(expense_id: int, db: Session = Depends(get_db), current_user: mo
         raise HTTPException(status_code=404, detail="Expense not found")
     return expense
 
-@router.delete("/{expense_id}") 
+@router.patch("/{expense_id}", response_model=schemas.ExpenseOut)
+def update_expense(expense_id: int, changes: schemas.ExpenseUpdate, db: Session = Depends(get_db), current_user: models.User=Depends(security.get_current_user)):
+    expense = db.query(models.Expense).filter(models.Expense.id == expense_id, models.Expense.user_id==current_user.id).first()
+    if expense is None:
+        raise HTTPException(status_code=404, detail="Expense not found")
+
+    #exclude_unset distingue "campo non inviato" da "campo inviato a null"
+    updates = changes.model_dump(exclude_unset=True)
+
+    if updates.get("category_id") is not None:
+        category = db.query(models.Category).filter(models.Category.id == updates["category_id"]).first()
+        if category is None:
+            raise HTTPException(status_code=404, detail="Category not found")
+
+    for field, value in updates.items():
+        setattr(expense, field, value)
+
+    db.commit()
+    db.refresh(expense)
+    expense.category_name = expense.category.name if expense.category else None
+    return expense
+
+@router.delete("/{expense_id}")
 def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user: models.User=Depends(security.get_current_user)):
     expense = db.query(models.Expense).filter(models.Expense.id == expense_id, models.Expense.user_id==current_user.id).first()
     if expense is None:
@@ -107,14 +134,26 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user:
     return {"detail": "Expense deleted"}
 
 @router.post("/extract-preview")
-def extract_expense_preview(data_expense: dict, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+#unico endpoint che chiama un servizio a pagamento (Groq): senza tetto, un client
+#in loop puo' esaurire la quota. Il limite e' per account, non per IP, cosi' utenti
+#dietro la stessa rete non si bloccano a vicenda
+@limiter.limit("20/minute", key_func=user_or_ip)
+@limiter.limit("200/day", key_func=user_or_ip)
+def extract_expense_preview(request: Request, data_expense: dict, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
     text = data_expense.get("expenseText", "")
-    extracted = categorization.extract_expense_from_text(text)
+    categories = db.query(models.Category).all()
+    #passiamo i nomi al modello: categoria ed estrazione escono dalla stessa chiamata
+    extracted = categorization.extract_expense_from_text(text, [c.name for c in categories])
 
     if extracted is None:
         raise HTTPException(status_code=422, detail="Non sono riuscito a capire la spesa")
 
-    category_id = categorization.categorize_by_rules(extracted["description"], db)
+    category_id = None
+    if extracted["category"]:
+        match = next((c for c in categories if c.name == extracted["category"]), None)
+        category_id = match.id if match else None
+    if category_id is None: #il modello non ha scelto: ci provano le keyword
+        category_id = categorization.categorize_by_rules(extracted["description"], db)
     if category_id is None:
        altro=db.query(models.Category).filter(models.Category.name=="Altro").first()
        category_id=altro.id if altro else None

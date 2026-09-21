@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from datetime import date as date_type #serve dove un campo si chiama "date" e oscura il tipo
 from pydantic import BaseModel,Field,EmailStr
 from typing import Literal
 #schema in entrata(create) -> verifica che i dati che l'utente manda sono nel formato che ci si aspetta
@@ -24,12 +25,28 @@ class ExpenseOut(BaseModel): # rappresenta i dati che tu mandi al frontend dopo 
     class Config:
         from_attributes=True
 
+class ExpenseUpdate(BaseModel): #modifica parziale: i campi assenti restano invariati
+    description: str | None = Field(None, min_length=1, max_length=200)
+    amount: float | None = Field(None, gt=0, le=1000000)
+    date: date_type | None = None #date_type: il campo "date" oscura il tipo omonimo
+    category_id: int | None = None
+
+
 class SubscriptionCreate(BaseModel):
     description:str
     amount: float
     frequency: Literal["monthly", "weekly", "yearly"]
     category_id: int | None = None
+    start_date: date | None = None #se assente l'abbonamento parte da oggi
     
+
+class SubscriptionUpdate(BaseModel): #start_date non e' modificabile: ha gia' generato le spese arretrate
+    description: str | None = Field(None, min_length=1, max_length=200)
+    amount: float | None = Field(None, gt=0, le=1000000)
+    frequency: Literal["monthly", "weekly", "yearly"] | None = None
+    category_id: int | None = None
+    auto_renew: bool | None = None
+
 
 class SubscriptionOut(BaseModel):
     id:int
@@ -90,6 +107,7 @@ class UserLogin(BaseModel):
 class VerifyEmail(BaseModel):
     email:str
     code:str
+    purpose: Literal["email_verification", "password_reset"] = "email_verification"
 
 class ResendOtp(BaseModel):
     email:str
@@ -123,3 +141,10 @@ class BuddgetDate(BaseModel):
 class ChangePassword(BaseModel):
     current_password:str
     new_password:str = Field(..., min_length=8, max_length=72)
+
+class DeleteAccount(BaseModel): #la password conferma un'operazione irreversibile
+    password: str
+
+class GoogleLogin(BaseModel):
+    id_token: str #token rilasciato da Google all'app, che il server verifica
+    remember_me: bool = False
