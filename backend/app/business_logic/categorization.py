@@ -178,3 +178,15 @@ def extract_expense_from_text(
         #Groq sarebbe indistinguibile da una frase scritta male
         logger.exception("estrazione della spesa non riuscita")
         return None
+
+def attach_category_names(obj):
+    """Valorizza category_name e category_group su una spesa o un abbonamento.
+
+    Sono campi calcolati, non colonne: gli schemi di uscita li dichiarano ma
+    vanno riempiti a mano prima di restituire l'oggetto. Il gruppo serve al
+    client per scegliere l'icona senza caricare tutta la gerarchia.
+    """
+    categoria = obj.category
+    obj.category_name = categoria.name if categoria else None
+    obj.category_group = categoria.parent.name if categoria and categoria.parent else None
+    return obj

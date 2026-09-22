@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { styles } from "@/styles/all_expenses.styles";
 import { Alert } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { iconaPerGruppo } from "@/utils/categoryIcons";
 
 type Expense = {
   id: number;
@@ -267,6 +269,18 @@ export default function ExpenseList() {
         keyExtractor={(item)=>item.id.toString()} //dice a React come identificare ogni elemento dell'array in modo univoco
         renderItem={({item})=>(
             <View style={styles.expenseRow}>
+                {/* l'icona è del gruppo: rende la lista scansionabile senza leggere */}
+                <View style={styles.expenseIcon}>
+                    <MaterialCommunityIcons
+                        name={iconaPerGruppo(
+                            item.category_id !== null
+                                ? gruppoDiCategoria.get(item.category_id)?.name
+                                : null
+                        ) as any}
+                        size={20}
+                        color="#2ECC71"
+                    />
+                </View>
                 <View style={styles.expenseInfo}>
                     <Text style={styles.expenseDescription}>{item.description}</Text>
                     <Text style={styles.expenseMeta}>

@@ -161,6 +161,59 @@ class TestStatisticheAggregate:
         assert "Senza gruppo" in nomi
 
 
+class TestGruppoNellaRisposta:
+    """Il client usa il gruppo per l'icona: deve arrivare senza chiedere la gerarchia."""
+
+    @pytest.fixture
+    def affitto_id(self, db_session, gerarchia):
+        db = db_session()
+        cid = db.query(models.Category).filter(models.Category.name == "Affitto o mutuo").first().id
+        db.close()
+        return cid
+
+    def test_creando_una_spesa(self, client, utente, affitto_id):
+        r = client.post("/expenses/", json={"description": "Affitto", "amount": 500.0,
+                                            "date": "2026-09-01", "category_id": affitto_id})
+        assert r.json()["category_name"] == "Affitto o mutuo"
+        assert r.json()["category_group"] == "Casa"
+
+    def test_nella_lista_delle_spese(self, client, utente, affitto_id):
+        client.post("/expenses/", json={"description": "Affitto", "amount": 500.0,
+                                        "date": "2026-09-01", "category_id": affitto_id})
+        assert client.get("/expenses/").json()[0]["category_group"] == "Casa"
+
+    def test_modificando_una_spesa(self, client, utente, affitto_id):
+        r = client.post("/expenses/", json={"description": "X", "amount": 10.0,
+                                            "date": "2026-09-01", "category_id": affitto_id})
+        eid = r.json()["id"]
+        assert client.patch(f"/expenses/{eid}", json={"amount": 20.0}).json()["category_group"] == "Casa"
+
+    def test_creando_un_abbonamento(self, client, utente, affitto_id):
+        r = client.post("/subscriptions/", json={"description": "Affitto", "amount": 500.0,
+                                                 "frequency": "monthly", "category_id": affitto_id})
+        assert r.json()["category_group"] == "Casa"
+
+    def test_spesa_senza_categoria(self, client, utente, gerarchia):
+        r = client.post("/expenses/", json={"description": "X", "amount": 10.0, "date": "2026-09-01"})
+        assert r.json()["category_name"] is None
+        assert r.json()["category_group"] is None
+
+    def test_categoria_senza_gruppo(self, client, utente, db_session):
+        """Una categoria fuori dalla gerarchia non deve far fallire la risposta."""
+        db = db_session()
+        orfana = models.Category(name="Orfana", keywords=None, parent_id=None)
+        db.add(orfana)
+        db.commit()
+        db.refresh(orfana)
+        oid = orfana.id
+        db.close()
+
+        r = client.post("/expenses/", json={"description": "X", "amount": 10.0,
+                                            "date": "2026-09-01", "category_id": oid})
+        assert r.json()["category_name"] == "Orfana"
+        assert r.json()["category_group"] is None
+
+
 class TestSpeseSulleSottocategorie:
     def test_una_spesa_puo_usare_una_sottocategoria(self, client, utente, db_session, gerarchia):
         db = db_session()

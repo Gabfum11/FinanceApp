@@ -111,6 +111,16 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  //cerchio con l'icona del gruppo, come nella schermata Abbonamenti
+  expenseIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#EAF9F0",
+    marginRight: 12,
+  },
   expenseInfo: {
     flex: 1,
   },

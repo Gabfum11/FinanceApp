@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.business_logic import security
 from app.business_logic.budget import safe_day
+from app.business_logic.categorization import attach_category_names
 from datetime import date
 from dateutil.relativedelta import relativedelta
 router=APIRouter(prefix="/subscriptions", tags=["subscriptions"]) # tags serve per la pagina /docs
@@ -68,7 +69,7 @@ def create_subscription(subscription: schemas.SubscriptionCreate, db: Session=De
     db.commit()
     db.refresh(new_subscription)
 
-    new_subscription.category_name = new_subscription.category.name if new_subscription.category else None
+    attach_category_names(new_subscription)
     return new_subscription
 
 def run_due_renewals(db: Session, user_id: int) -> list[models.Subscriptions]:
@@ -103,7 +104,7 @@ def run_due_renewals(db: Session, user_id: int) -> list[models.Subscriptions]:
 def list_subscriptions(db:Session=Depends(get_db),current_user: models.User=Depends(security.get_current_user)):
     subscriptions = run_due_renewals(db, current_user.id)
     for sub in subscriptions:
-        sub.category_name=sub.category.name if sub.category else None
+        attach_category_names(sub)
     return subscriptions
 
 @router.patch("/{subscription_id}/toggle") #patch indica una modifica parziale a una risorsa esistente, toggle serve per invertire lo stato attuale del campo is_active
@@ -140,7 +141,7 @@ def mark_subscription_paid(subscription_id: int, db: Session = Depends(get_db), 
 
     db.commit()
     db.refresh(sub)
-    sub.category_name = sub.category.name if sub.category else None
+    attach_category_names(sub)
     return sub  #ritorniamo sub per restituire la data aggiornata del prossimo pagamento
 
 @router.patch("/{subscription_id}", response_model=schemas.SubscriptionOut)
@@ -179,7 +180,7 @@ def update_subscription(subscription_id: int, changes: schemas.SubscriptionUpdat
 
     db.commit()
     db.refresh(sub)
-    sub.category_name = sub.category.name if sub.category else None
+    attach_category_names(sub)
     return sub
 
 @router.delete("/{subscription_id}")

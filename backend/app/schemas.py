@@ -20,6 +20,7 @@ class ExpenseOut(BaseModel): # rappresenta i dati che tu mandi al frontend dopo 
     date: date
     category_id: int | None #qui è obbligatorio che il campo sia presente
     category_name:str | None =None #se il valore non viene fornito il default è None
+    category_group: str | None = None #gruppo della categoria: il client lo usa per l'icona
     created_at: datetime
 
     class Config:
@@ -60,6 +61,7 @@ class SubscriptionOut(BaseModel):
     next_date: date
     category_id: int | None
     category_name: str | None = None
+    category_group: str | None = None #gruppo della categoria: il client lo usa per l'icona
     created_at: datetime
     auto_renew: bool=True
 

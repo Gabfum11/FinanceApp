@@ -35,7 +35,7 @@ def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)
     db.add(new_expense) #prepara il salvataggio
     db.commit() #salva davvero
     db.refresh(new_expense) #per avere id e created_at aggiornati
-    new_expense.category_name = new_expense.category.name if new_expense.category else None
+    categorization.attach_category_names(new_expense)
     return new_expense
 
 @router.get("/", response_model=List[schemas.ExpenseOut])
@@ -49,7 +49,7 @@ def list_expenses(limit: int | None = Query(None, gt=0, le=500), db: Session = D
         query = query.limit(limit)
     expenses = query.all() #estrae le righe della tabella expense
     for expense in expenses:
-        expense.category_name=expense.category.name if expense.category else None
+        categorization.attach_category_names(expense)
     return expenses
 
 @router.get("/stats", response_model=schemas.StatsOut)
@@ -136,7 +136,7 @@ def update_expense(expense_id: int, changes: schemas.ExpenseUpdate, db: Session 
 
     db.commit()
     db.refresh(expense)
-    expense.category_name = expense.category.name if expense.category else None
+    categorization.attach_category_names(expense)
     return expense
 
 @router.delete("/{expense_id}")
@@ -192,9 +192,14 @@ def extract_expense_preview(request: Request, data_expense: dict, db: Session = 
        category_id=altro.id if altro else None
 
     category_name = None
+    category_group = None
     if category_id is not None:
         category = db.query(models.Category).filter(models.Category.id == category_id).first() #serve per ottenere il nome della categoria
         category_name = category.name if category else None
+        #il gruppo serve al client per scegliere l'icona: mandarlo qui evita
+        #che debba caricare tutta la gerarchia solo per una riga
+        if category and category.parent:
+            category_group = category.parent.name
     return {
         "description": extracted["description"],
         "amount": extracted["amount"],
@@ -202,6 +207,7 @@ def extract_expense_preview(request: Request, data_expense: dict, db: Session = 
         "date": extracted["date"] or date.today(),
         "category_id": category_id,
         "category_name": category_name,
+        "category_group": category_group,
         "recurring": extracted["recurring"],
         "frequency" : extracted["frequency"]
     }

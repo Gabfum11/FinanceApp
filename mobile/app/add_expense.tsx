@@ -17,6 +17,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { apiFetch } from "@/utils/apiFetch";
 import { fromDateString, toDateString } from "@/utils/date";
 import { styles, colors } from "../styles/add-expense.styles";
+import { iconaPerGruppo } from "@/utils/categoryIcons";
 
 type Category = {
   id: number;
@@ -420,8 +421,17 @@ export default function AddExpenseScreen() {
               keyExtractor={(item) => item.id.toString()}
               stickySectionHeadersEnabled
               renderSectionHeader={({ section }) => (
-                //il gruppo è solo un'intestazione: non è selezionabile
-                <Text style={styles.categoryGroupHeader}>{section.title}</Text>
+                //il gruppo è solo un'intestazione: non è selezionabile.
+                //L'icona sta qui e non su ogni voce: ripeterla 46 volte
+                //aggiungerebbe rumore senza distinguere nulla
+                <View style={styles.categoryGroupHeader}>
+                  <MaterialCommunityIcons
+                    name={iconaPerGruppo(section.title) as any}
+                    size={16}
+                    color={colors.label}
+                  />
+                  <Text style={styles.categoryGroupTitle}>{section.title}</Text>
+                </View>
               )}
               renderItem={({ item }) => (
                 <Pressable

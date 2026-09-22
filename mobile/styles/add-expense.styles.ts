@@ -238,9 +238,14 @@ export const styles = StyleSheet.create({
   },
   //intestazione di gruppo: deve leggersi come etichetta, non come voce da toccare
   categoryGroupHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     backgroundColor: "#F0F0F2",
     paddingHorizontal: 20,
     paddingVertical: 8,
+  },
+  categoryGroupTitle: {
     fontSize: 12,
     fontWeight: "700",
     color: colors.label,

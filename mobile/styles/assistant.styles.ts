@@ -106,6 +106,11 @@ export const styles = StyleSheet.create({
         marginTop: 8,
         marginBottom: 4,
     },
+    categoryRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 4,
+    },
     dateRow: {
         flexDirection: "row",
         alignItems: "center",

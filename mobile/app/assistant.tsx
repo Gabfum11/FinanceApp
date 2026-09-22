@@ -7,6 +7,7 @@ import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { toDateString, fromDateString } from "@/utils/date"
+import { iconaPerGruppo } from "@/utils/categoryIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 export default function AssistantScreen() {
@@ -15,6 +16,7 @@ export default function AssistantScreen() {
     description: string;
     amount: number;
     category_name: string | null;
+    category_group: string | null;
     date: string;
     category_id:number | null;
     recurring: boolean;
@@ -196,9 +198,16 @@ function handleDatePickerDismiss() {
               <Text style={styles.confirmationDetail}>
                 Descrizione: {item.expenseData.description}
               </Text>
-              <Text style={styles.confirmationDetail}>
-                Categoria: {item.expenseData.category_name ?? "Non assegnata"}
-              </Text>
+              <View style={styles.categoryRow}>
+                <MaterialCommunityIcons
+                  name={iconaPerGruppo(item.expenseData.category_group) as any}
+                  size={18}
+                  color="#2ECC71"
+                />
+                <Text style={styles.confirmationDetail}>
+                  {" "}{item.expenseData.category_name ?? "Non assegnata"}
+                </Text>
+              </View>
             </View>
           ) : (
             <View
@@ -231,9 +240,16 @@ function handleDatePickerDismiss() {
           <Text style={styles.confirmationDetail}>
             Descrizione: {pendingExpense.description}
           </Text>
-          <Text style={styles.confirmationDetail}>
-            Categoria: {pendingExpense.category_name ?? "Non assegnata"}
-          </Text>
+          <View style={styles.categoryRow}>
+            <MaterialCommunityIcons
+              name={iconaPerGruppo(pendingExpense.category_group) as any}
+              size={18}
+              color="#2ECC71"
+            />
+            <Text style={styles.confirmationDetail}>
+              {" "}{pendingExpense.category_name ?? "Non assegnata"}
+            </Text>
+          </View>
           <Pressable onPress={() => setShowPicker(true)} style={styles.dateRow}>
             <MaterialCommunityIcons name="calendar-outline" size={18} color="#666" />
             <Text style={styles.confirmationDetail}>
