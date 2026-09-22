@@ -7,7 +7,48 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models
+#con questa chiave si firmano i token: chi la conosce puo' fabbricarne uno per
+#qualsiasi utente, senza password. Deve restare nelle variabili d'ambiente.
 SECRET_KEY = os.getenv("SECRET_KEY")
+
+#lunghezza minima ragionevole per una chiave HS256: sotto, diventa indovinabile
+MIN_SECRET_KEY_LENGTH = 32
+
+#valori da esempio o segnaposto: se finissero in produzione la firma sarebbe
+#riproducibile da chiunque conosca il progetto
+WEAK_SECRET_KEYS = {
+    "secret", "secretkey", "secret_key", "changeme", "change-me",
+    "password", "test", "development", "dev", "your-secret-key",
+}
+
+
+def _validate_secret_key(key: str | None) -> str:
+    """Interrompe l'avvio se la chiave manca o e' debole.
+
+    os.getenv restituisce None senza protestare: l'app partirebbe, /health
+    risponderebbe OK, e il fallimento arriverebbe al primo login con un errore
+    incomprensibile. Meglio non partire affatto, con un messaggio chiaro.
+    """
+    if not key:
+        raise RuntimeError(
+            "SECRET_KEY non impostata. Senza, i token non possono essere firmati: "
+            "aggiungila alle variabili d'ambiente (backend/.env in locale, "
+            "pannello Environment su Render)."
+        )
+    if key.strip().lower() in WEAK_SECRET_KEYS:
+        raise RuntimeError(
+            "SECRET_KEY ha un valore da esempio. Generane una casuale con: "
+            "python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
+    if len(key) < MIN_SECRET_KEY_LENGTH:
+        raise RuntimeError(
+            f"SECRET_KEY troppo corta ({len(key)} caratteri, minimo {MIN_SECRET_KEY_LENGTH}). "
+            "Generane una con: python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
+    return key
+
+
+SECRET_KEY = _validate_secret_key(SECRET_KEY)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
