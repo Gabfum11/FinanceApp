@@ -38,6 +38,11 @@ mobile/android
 # nel repo bastano i 3 PNG in uso, copiati in assets/images/google/
 mobile/assets/images/Android + Web/
 
+# === Test ===
+backend/.coverage
+backend/htmlcov/
+backend/.pytest_cache/
+
 # === Comuni ===
 .DS_Store
 *.pem
