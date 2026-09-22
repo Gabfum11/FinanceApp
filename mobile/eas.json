@@ -6,18 +6,27 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://financeapp-vt0o.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "927557604432-7amto0tovrub15bm31l2i8o4isobs0u6.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "927557604432-nj69tjq65v4of9f9l980knkgie0sdql5.apps.googleusercontent.com"
+      }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://financeapp-vt0o.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://financeapp-vt0o.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "927557604432-7amto0tovrub15bm31l2i8o4isobs0u6.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "927557604432-nj69tjq65v4of9f9l980knkgie0sdql5.apps.googleusercontent.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://financeapp-vt0o.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://financeapp-vt0o.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "927557604432-7amto0tovrub15bm31l2i8o4isobs0u6.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "927557604432-nj69tjq65v4of9f9l980knkgie0sdql5.apps.googleusercontent.com"
       }
     }
   },
