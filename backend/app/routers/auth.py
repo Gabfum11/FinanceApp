@@ -5,6 +5,9 @@ from app.database import get_db
 from app import models, schemas
 from app.state import limiter
 from app.business_logic import security, email_service, google_auth
+from app.logging_config import get_logger
+
+logger = get_logger(__name__)
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime, timedelta, timezone
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -206,8 +209,14 @@ async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=De
         db.refresh(new_otp)
         try:
             await email_service.send_otp_email(payload.email,otp_code, purpose=payload.purpose)
-        except Exception as e:
-            print(f"Errore nell'invio dell'otp a {payload.email}: {e}")
+        except Exception:
+            #si registra l'id, non l'email: e' un dato personale e i log di
+            #Render restano leggibili per giorni. logger.exception include
+            #da solo il dettaglio dell'errore
+            logger.exception(
+                "invio del codice OTP non riuscito",
+                extra={"user_id": auth_user.id, "purpose": payload.purpose},
+            )
     return{"detail":"Se l'account esiste, ricevereai un codice via mail"}
 
 @router.post("/resetPassword")

@@ -4,6 +4,9 @@ import os
 from groq import Groq
 import json
 from datetime import date, timedelta
+from app.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 groq_client=Groq( api_key=os.environ.get("GROQ_API_KEY"),)
 
@@ -149,6 +152,8 @@ def extract_expense_from_text(text: str, category_names: list[str] | None = None
             "recurring":recurring,
             "frequency": frequency
         }
-    except Exception as e:
-        print(f"Errore in extract_expense_from_text: {e}")
+    except Exception:
+        #l'utente riceve solo "non ho capito": senza questa riga un guasto di
+        #Groq sarebbe indistinguibile da una frase scritta male
+        logger.exception("estrazione della spesa non riuscita")
         return None
