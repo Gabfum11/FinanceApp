@@ -29,6 +29,12 @@ class Category(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
     keywords = Column(String, nullable=True)
+    #null solo per i gruppi: le spese puntano sempre a una sottocategoria,
+    #mai al gruppo, così i totali non sono mai ambigui
+    parent_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+
+    parent = relationship("Category", remote_side=[id], back_populates="children")
+    children = relationship("Category", back_populates="parent")
 
     expenses = relationship("Expense", back_populates="category") #comodità per scrivere category.expenses e ottenere tutte le spese di quella categoria senza quey manuale
 

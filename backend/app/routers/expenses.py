@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from sqlalchemy import func, extract
 from typing import List
 from app.database import get_db
@@ -59,15 +59,25 @@ def get_stats(cycle_offset: int = 0, db: Session = Depends(get_db), current_user
     start_day = current_user.budget_start_day or 1
     cycle_start, cycle_end = get_budget_cycle(reference_date, start_day)
 
+    #le spese puntano a una sottocategoria, ma il grafico va aggregato per gruppo:
+    #con 47 sottocategorie avrebbe altrettante fette, illeggibili. Il gruppo si
+    #ricava risalendo con parent_id, e coalesce copre le categorie senza padre
+    parent = aliased(models.Category)
+    gruppo = func.coalesce(parent.name, models.Category.name)
+
     category_expense = db.query(
-        models.Category.name, func.sum(models.Expense.amount)
+        gruppo.label("gruppo"), func.sum(models.Expense.amount)
+    ).select_from(
+        models.Category #senza, la query partirebbe dall'alias del padre
     ).join(
         models.Expense, models.Expense.category_id == models.Category.id
+    ).outerjoin(
+        parent, models.Category.parent_id == parent.id
     ).filter(
         models.Expense.user_id == current_user.id,
         models.Expense.date >= cycle_start,
         models.Expense.date <= cycle_end,
-    ).group_by(models.Category.name).all()
+    ).group_by(gruppo).order_by(func.sum(models.Expense.amount).desc()).all()
 
     return {
         "cycle_start": cycle_start,
@@ -146,9 +156,27 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user:
 @limiter.limit("200/day", key_func=user_or_ip)
 def extract_expense_preview(request: Request, data_expense: dict, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
     text = data_expense.get("expenseText", "")
-    categories = db.query(models.Category).all()
+    #solo le sottocategorie: una spesa non puo' essere assegnata a un gruppo.
+    #Il gruppo viene comunque passato al modello come contesto, perche' aiuta
+    #a scegliere ("Bolletta energia" sotto "Casa" e' piu' chiaro da solo)
+    categories = (
+        db.query(models.Category)
+        .filter(models.Category.parent_id.isnot(None))
+        .all()
+    )
+    #le keywords accompagnano il nome: "Mezzi pubblici" da solo non fa pensare
+    #a "treno", ma le sue parole chiave sì
+    per_gruppo: dict[str, list[str]] = {}
+    for c in categories:
+        etichetta = c.name
+        if c.keywords:
+            prime = ", ".join(k.strip() for k in c.keywords.split(",")[:4] if k.strip())
+            if prime:
+                etichetta = f"{c.name} ({prime})"
+        per_gruppo.setdefault(c.parent.name, []).append(etichetta)
+
     #passiamo i nomi al modello: categoria ed estrazione escono dalla stessa chiamata
-    extracted = categorization.extract_expense_from_text(text, [c.name for c in categories])
+    extracted = categorization.extract_expense_from_text(text, [c.name for c in categories], per_gruppo)
 
     if extracted is None:
         raise HTTPException(status_code=422, detail="Non sono riuscito a capire la spesa")

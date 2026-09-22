@@ -75,6 +75,17 @@ class CategoryOut(BaseModel):
     id: int
     name: str
     keywords: str | None
+    parent_id: int | None = None #null sui gruppi
+
+    class Config:
+        from_attributes = True
+
+
+class CategoryGroupOut(BaseModel):
+    """Un gruppo con le sue sottocategorie: il picker le mostra a due livelli."""
+    id: int
+    name: str
+    children: list[CategoryOut] = []
 
     class Config:
         from_attributes = True

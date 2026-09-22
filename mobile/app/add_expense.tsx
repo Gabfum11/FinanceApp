@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  FlatList,
   Keyboard,
   Modal,
   Pressable,
   ScrollView,
+  SectionList,
   TextInput as RNTextInput,
   View,
 } from "react-native";
@@ -22,6 +22,15 @@ type Category = {
   id: number;
   name: string;
   keywords: string | null;
+  parent_id: number | null;
+};
+
+//le categorie sono a due livelli: i gruppi fanno da intestazione e non sono
+//selezionabili, si sceglie sempre una sottocategoria
+type CategoryGroup = {
+  id: number;
+  name: string;
+  children: Category[];
 };
 
 type Frequency = "monthly" | "weekly" | "yearly";
@@ -75,7 +84,7 @@ export default function AddExpenseScreen() {
   // la visibilità del tastierino e del cursore lampeggiante.
   const [isAmountFocused, setIsAmountFocused] = useState(false);
 
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryGroup[]>([]);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -87,13 +96,17 @@ export default function AddExpenseScreen() {
   useEffect(() => {
     async function loadCategories() {
       try {
-        const response = await apiFetch("/categories/");
+        const response = await apiFetch("/categories/grouped");
         if (!response.ok) return;
-        const data: Category[] = await response.json();
+        const data: CategoryGroup[] = await response.json();
         setCategories(data);
-        // la categoria proposta arriva come id: l'oggetto completo esiste solo ora
+        // la categoria proposta arriva come id: l'oggetto completo esiste solo ora,
+        // e va cercato tra le sottocategorie di tutti i gruppi
         if (params.categoryId) {
-          const preselected = data.find((c) => c.id === Number(params.categoryId));
+          const cercato = Number(params.categoryId);
+          const preselected = data
+            .flatMap((gruppo) => gruppo.children)
+            .find((c) => c.id === cercato);
           if (preselected) setCategory(preselected);
         }
       } catch {
@@ -399,9 +412,17 @@ export default function AddExpenseScreen() {
             <Text variant="titleMedium" style={styles.modalTitle}>
               Seleziona categoria
             </Text>
-            <FlatList
-              data={categories}
+            <SectionList
+              sections={categories.map((gruppo) => ({
+                title: gruppo.name,
+                data: gruppo.children,
+              }))}
               keyExtractor={(item) => item.id.toString()}
+              stickySectionHeadersEnabled
+              renderSectionHeader={({ section }) => (
+                //il gruppo è solo un'intestazione: non è selezionabile
+                <Text style={styles.categoryGroupHeader}>{section.title}</Text>
+              )}
               renderItem={({ item }) => (
                 <Pressable
                   style={styles.categoryRow}

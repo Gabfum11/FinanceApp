@@ -69,14 +69,35 @@ def _resolve_date_expr(raw, today: date) -> date | None:
     return None
 
 
-def extract_expense_from_text(text: str, category_names: list[str] | None = None) -> dict | None:
+def extract_expense_from_text(
+    text: str,
+    category_names: list[str] | None = None,
+    categories_by_group: dict[str, list[str]] | None = None,
+) -> dict | None:
     today = date.today()
     #la categoria esce dalla stessa chiamata: chiederla a parte costerebbe una seconda richiesta
     if category_names:
+        if categories_by_group:
+            #un elenco di 47 voci di fila e' difficile da percorrere: raggruppandole
+            #il modello restringe prima l'ambito e poi sceglie dentro quello
+            elenco = "; ".join(
+                f"{gruppo}: " + ", ".join(f'"{n}"' for n in sorted(nomi))
+                for gruppo, nomi in sorted(categories_by_group.items())
+            )
+        else:
+            elenco = ", ".join(f'"{n}"' for n in category_names)
+
         category_rule = (
-            'imposta "category" con una tra: ' + ", ".join(f'"{n}"' for n in category_names) + ". "
-            "Scegli in base a cosa e' stato comprato. "
-            "Se nessuna e' chiaramente adatta, o il testo e' ambiguo, usa null. "
+            'imposta "category" con una tra le voci elencate, raggruppate per ambito: '
+            + elenco + ". " #elenco contiene tutte le categorie, prese dal database tramite l'API /categories/grouped
+            "Scegli la voce piu' specifica che corrisponde a cosa e' stato comprato. "
+            "Se l'ambito e' chiaro ma nessuna voce specifica calza, usa quella "
+            'che finisce con "(generico)" di quell\'ambito. '
+            "Se nemmeno l'ambito e' chiaro, usa null. "
+            "Le parole fra parentesi tonde dopo una voce sono solo esempi di cosa "
+            "vi rientra: rispondi con il nome della voce, senza quelle parentesi "
+            "e senza il nome del gruppo davanti. "
+            'L\'unica eccezione e\' "(generico)", che fa parte del nome. '
         )
     else:
         category_rule = '"category" deve essere sempre null. '
@@ -104,10 +125,10 @@ def extract_expense_from_text(text: str, category_names: list[str] | None = None
                         "Usa i nomi di categoria esattamente come elencati sopra; "
                         "gli esempi che seguono mostrano solo la forma, non i nomi ammessi. "
                         "Non aggiungere altro testo, solo il JSON. "
-                        'Esempio di forma: {"description": "Pizza", "amount": 15.0, "date_expr": null, "category": "Cibo"}. '
-                        'Esempio di forma: {"description": "Spesa", "amount": 40.0, "date_expr": "ieri", "category": "Spesa"}. '
-                        'Esempio di forma: {"description": "Visita dottore", "amount": 20.0, "date_expr": "mercoledi", "category": "Salute"}. '
-                        'Esempio di forma: {"description": "Palestra", "amount": 60.0, "date_expr": null, "category": null, "recurring": true, "frequency": "monthly"}. '
+                        'Esempio di forma: {"description": "Pizza", "amount": 15.0, "date_expr": null, "category": "Pranzi e cene"}. '
+                        'Esempio di forma: {"description": "Spesa", "amount": 40.0, "date_expr": "ieri", "category": "Spesa alimentare"}. '
+                        'Esempio di forma: {"description": "Visita dottore", "amount": 20.0, "date_expr": "mercoledi", "category": "Visite mediche"}. '
+                        'Esempio di forma: {"description": "Palestra", "amount": 60.0, "date_expr": null, "category": "Palestra", "recurring": true, "frequency": "monthly"}. '
                         'se il testo non descrive una spesa, mancano dei dati, oppure contiene parole generiche, rispondi esattamente con '
                         '{"error": "not_an_expense"}'
                     ),

@@ -229,16 +229,28 @@ export const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     paddingTop: 16,
     paddingBottom: 28,
-    maxHeight: "60%",
+    maxHeight: "75%", //con 59 voci un foglio basso obbligherebbe a scorrere troppo
   },
   modalTitle: {
     fontWeight: "700",
     paddingHorizontal: 20,
     paddingBottom: 8,
   },
-  categoryRow: {
+  //intestazione di gruppo: deve leggersi come etichetta, non come voce da toccare
+  categoryGroupHeader: {
+    backgroundColor: "#F0F0F2",
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingVertical: 8,
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.label,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  categoryRow: {
+    paddingLeft: 32, //rientro: distingue la voce dall'intestazione del gruppo
+    paddingRight: 20,
+    paddingVertical: 13,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
