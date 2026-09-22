@@ -61,6 +61,59 @@ class TestModificaSpesa:
         assert client.patch("/expenses/9999", json={"amount": 5}).status_code == 404
 
 
+class TestLimiteSullaLista:
+    """La Home mostra poche spese: scaricare tutto lo storico sarebbe uno spreco."""
+
+    @pytest.fixture
+    def dieci_spese(self, db_session, utente):
+        db = db_session()
+        for i in range(10):
+            db.add(models.Expense(
+                description=f"Spesa {i}", amount=float(i + 1),
+                date=date.today() - timedelta(days=i), user_id=utente,
+            ))
+        db.commit()
+        db.close()
+
+    def test_senza_limite_le_restituisce_tutte(self, client, dieci_spese):
+        """L'endpoint deve continuare a funzionare come prima per chi non passa limit."""
+        r = client.get("/expenses/")
+        assert r.status_code == 200
+        assert len(r.json()) == 10
+
+    def test_limite_rispettato(self, client, dieci_spese):
+        r = client.get("/expenses/?limit=3")
+        assert r.status_code == 200
+        assert len(r.json()) == 3
+
+    def test_restituisce_le_piu_recenti(self, client, dieci_spese):
+        """Limitare senza ordinare darebbe righe arbitrarie."""
+        tutte = client.get("/expenses/").json()
+        limitate = client.get("/expenses/?limit=3").json()
+        assert [e["id"] for e in limitate] == [e["id"] for e in tutte[:3]]
+
+    def test_limite_piu_grande_del_totale(self, client, dieci_spese):
+        assert len(client.get("/expenses/?limit=100").json()) == 10
+
+    @pytest.mark.parametrize("valore", [0, -1, 501])
+    def test_valori_non_ammessi(self, client, utente, valore):
+        assert client.get(f"/expenses/?limit={valore}").status_code == 422
+
+    def test_i_rinnovi_vengono_generati_anche_con_limite(self, client, db_session, utente):
+        """Limitare la lista non deve saltare la generazione dei rinnovi scaduti."""
+        db = db_session()
+        db.add(models.Subscriptions(
+            description="Netflix", amount=12.0, frequency="monthly",
+            next_date=date.today() - timedelta(days=90),
+            user_id=utente, is_active=True, auto_renew=True,
+        ))
+        db.commit()
+        db.close()
+
+        client.get("/expenses/?limit=1")
+        assert conta_spese(db_session, utente) >= 3
+
+
 class TestIsolamentoTraUtenti:
     """Il controllo più importante: nessuno deve toccare i dati di un altro."""
 

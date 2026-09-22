@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
 from typing import List
@@ -40,9 +40,14 @@ def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)
 
 @router.get("/", response_model=List[schemas.ExpenseOut])
 #dice a FASTAPI : la risposta è una lista di oggetti nella forma expenseOut
-def list_expenses(db: Session = Depends(get_db), current_user: models.User=Depends(security.get_current_user)):
+def list_expenses(limit: int | None = Query(None, gt=0, le=500), db: Session = Depends(get_db), current_user: models.User=Depends(security.get_current_user)):
+    #limit e' opzionale: senza, l'endpoint si comporta come prima. Serve alla Home,
+    #che mostra solo le ultime spese e non deve scaricare tutto lo storico
     run_due_renewals(db, current_user.id) #i rinnovi scaduti devono comparire tra le spese
-    expenses= db.query(models.Expense).filter(models.Expense.user_id==current_user.id).order_by(models.Expense.created_at.desc()).all() #estrae tutte le righe della tabella expense
+    query = db.query(models.Expense).filter(models.Expense.user_id==current_user.id).order_by(models.Expense.created_at.desc())
+    if limit is not None:
+        query = query.limit(limit)
+    expenses = query.all() #estrae le righe della tabella expense
     for expense in expenses:
         expense.category_name=expense.category.name if expense.category else None
     return expenses
