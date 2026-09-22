@@ -1,3 +1,5 @@
+import os
+
 from fastapi import Depends, FastAPI, Request, Response, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -12,9 +14,44 @@ from app.routers import expenses, categories, auth, subscriptions, budget
 setup_logging()
 logger = get_logger(__name__)
 
-app = FastAPI(title="Finance App API")
+#su Render va impostata a "production": in locale resta spenta e /docs funziona
+IS_PRODUCTION = os.getenv("ENVIRONMENT", "").strip().lower() == "production"
+
+#la documentazione interattiva elenca ogni endpoint, i parametri e la forma delle
+#risposte: gli endpoint restano protetti, ma e' una mappa regalata a chi cerca
+#un punto debole. In sviluppo resta disponibile, dove serve davvero.
+app = FastAPI(
+    title="Finance App API",
+    docs_url=None if IS_PRODUCTION else "/docs",
+    redoc_url=None if IS_PRODUCTION else "/redoc",
+    openapi_url=None if IS_PRODUCTION else "/openapi.json",
+)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """Intestazioni che irrigidiscono il comportamento del browser.
+
+    Un'app nativa le ignora, ma /docs, /health e qualsiasi accesso da browser
+    passano di qui, e in futuro una versione web le troverebbe già attive.
+    """
+    response = await call_next(request)
+    #impedisce al browser di indovinare il tipo di contenuto: un JSON
+    #interpretato come HTML puo' diventare un vettore di XSS
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    #nessuna pagina del sito va incorniciata in un sito altrui (clickjacking)
+    response.headers["X-Frame-Options"] = "DENY"
+    #limita cosa viene rivelato al sito di destinazione quando si segue un link
+    response.headers["Referrer-Policy"] = "no-referrer"
+    #l'API non usa fotocamera, microfono o posizione: le neghiamo esplicitamente
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if IS_PRODUCTION:
+        #obbliga il browser a usare HTTPS per un anno, anche se l'utente
+        #digita http://. In locale romperebbe lo sviluppo senza certificato
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
 
 @app.middleware("http")
