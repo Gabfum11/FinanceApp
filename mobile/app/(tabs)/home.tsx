@@ -66,7 +66,9 @@ export default function HomeScreen() {
   const [budgetStatus, setBudgetStatus] = useState<{ budget: number | null; spent: number; remaining: number | null; cycle_start: string; cycle_end: string } | null>(null);
   const [weeklyStats, setWeeklyStats] = useState<DayStat[]>([]);
   async function loadExpenses() {
-    const response = await apiFetch("/expenses/");
+    //la Home ne mostra due: scaricare tutto lo storico a ogni apertura
+    //sarebbe uno spreco che peggiora col passare del tempo
+    const response = await apiFetch("/expenses/?limit=5");
     if (response.ok) {
       const data = await response.json();
       // console.log("Spese ricevute:",data) // dati sensibili, non loggare in produzione
