@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { FlatList, View, Pressable, ScrollView } from "react-native";
 import { IconButton, Text, Searchbar } from "react-native-paper";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { styles } from "@/styles/all_expenses.styles";
 import { Alert } from "react-native";
@@ -42,6 +42,10 @@ function normalize(text: string): string {
     return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
 
+type Gruppo = { id: number; name: string };
+
+type CategoryGroup = Gruppo & { children: { id: number; name: string }[] };
+
 type Period = "all" | "month" | "quarter";
 
 const PERIODS: { value: Period; label: string }[] = [
@@ -63,30 +67,44 @@ export default function ExpenseList() {
     const [query, setQuery] = useState("");
     const [categoryId, setCategoryId] = useState<number | null>(null);
     const [period, setPeriod] = useState<Period>("all");
+    //le spese portano la sottocategoria: per raggrupparle serve sapere a quale
+    //gruppo appartiene ciascuna, informazione che sta solo nel backend
+    const [gruppoDiCategoria, setGruppoDiCategoria] = useState<Map<number, Gruppo>>(new Map());
 
-    //le categorie da mostrare escono dalle spese stesse: non serve chiamare /categories/,
-    //e compaiono solo quelle effettivamente usate
+    //i chip mostrano i gruppi, non le sottocategorie: con 46 voci sarebbero
+    //troppi da scorrere. Compaiono solo i gruppi che hanno spese registrate
     const categories = useMemo(() => {
-        const map = new Map<number, string>();
+        const usati = new Map<number, string>();
         for (const e of expenses) {
-            if (e.category_id !== null && e.category_name) map.set(e.category_id, e.category_name);
+            if (e.category_id === null) continue;
+            const gruppo = gruppoDiCategoria.get(e.category_id);
+            if (gruppo) usati.set(gruppo.id, gruppo.name);
         }
-        return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
-    }, [expenses]);
+        return [...usati.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+    }, [expenses, gruppoDiCategoria]);
 
     const filtered = useMemo(() => {
         const q = normalize(query.trim());
         const from = periodStart(period);
         return expenses.filter((e) => {
-            if (categoryId !== null && e.category_id !== categoryId) return false;
+            if (categoryId !== null) {
+                //il chip porta l'id del gruppo, la spesa quello della sottocategoria:
+                //il confronto passa dal gruppo di appartenenza
+                const gruppo = e.category_id !== null ? gruppoDiCategoria.get(e.category_id) : undefined;
+                if (gruppo?.id !== categoryId) return false;
+            }
             if (from && new Date(e.date) < from) return false;
             if (!q) return true;
+            //la ricerca testuale guarda anche il nome del gruppo: cercando "casa"
+            //si trovano le bollette, che non contengono quella parola
+            const gruppo = e.category_id !== null ? gruppoDiCategoria.get(e.category_id) : undefined;
             return (
                 normalize(e.description).includes(q) ||
-                normalize(e.category_name ?? "").includes(q)
+                normalize(e.category_name ?? "").includes(q) ||
+                normalize(gruppo?.name ?? "").includes(q)
             );
         });
-    }, [expenses, query, categoryId, period]);
+    }, [expenses, query, categoryId, period, gruppoDiCategoria]);
 
     const total = useMemo(
         () => filtered.reduce((sum, e) => sum + e.amount, 0),
@@ -108,6 +126,26 @@ export default function ExpenseList() {
             setExpensesLoaded(true)
         }
     }
+    //la gerarchia cambia raramente: basta caricarla una volta all'apertura
+    useEffect(() => {
+        async function loadGruppi() {
+            try {
+                const response = await apiFetch("/categories/grouped");
+                if (!response.ok) return;
+                const gruppi: CategoryGroup[] = await response.json();
+                const mappa = new Map<number, Gruppo>();
+                for (const g of gruppi) {
+                    for (const figlia of g.children) {
+                        mappa.set(figlia.id, { id: g.id, name: g.name });
+                    }
+                }
+                setGruppoDiCategoria(mappa);
+            } catch {
+                //senza gerarchia i chip categoria non compaiono, il resto funziona
+            }
+        }
+        loadGruppi();
+    }, []);
     useFocusEffect(
         useCallback(()=>{
             loadExpenses();
