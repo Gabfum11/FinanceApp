@@ -10,6 +10,7 @@ export const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "flex-end",  // spinge il contenuto verso la fine (destra, in una riga)
         alignItems: "center",
+        marginBottom: 24,
     },
     logoutButton:{
         margin:0
@@ -50,9 +51,13 @@ export const styles = StyleSheet.create({
         borderColor: "#2ECC71",
         borderRadius: 20,
     },
+    //azioni di sicurezza in fondo, separate dal resto
+    logoutAllButton: {
+        marginTop: "auto",
+        alignSelf: "center",
+    },
     //azione distruttiva: separata dal resto e senza sfondo, per non invitare al tocco
     deleteButton: {
-        marginTop: "auto",
         alignSelf: "center",
     },
     deleteWarning: {

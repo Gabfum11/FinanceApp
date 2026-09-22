@@ -67,6 +67,19 @@ def create_access_token(data: dict, expire_minutes:int=ACCESS_TOKEN_EXPIRE_MINUT
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM) #genera e restituisce il token
 
+def create_user_token(user: models.User, expire_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES, **extra):
+    """Token di accesso per un utente, con la sua versione corrente.
+
+    Da preferire a create_access_token: includere "ver" a mano in ogni punto
+    che emette token e' facile da dimenticare, e un token senza versione
+    resterebbe valido anche dopo una revoca.
+    """
+    return create_access_token(
+        {"sub": str(user.id), "ver": user.token_version, **extra},
+        expire_minutes,
+    )
+
+
 def decode_access_token(token: str) -> dict | None:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -92,6 +105,12 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
     user = db.query(models.User).filter(models.User.id == int(user_id)).first()
     if user is None:
+        raise credentials_exception
+
+    #il confronto avviene qui, dove l'utente e' gia' stato letto: non costa
+    #una query in piu'. I token emessi prima di questa funzione non hanno il
+    #campo e valgono 0, come il valore iniziale della colonna
+    if payload.get("ver", 0) != user.token_version:
         raise credentials_exception
 
     return user

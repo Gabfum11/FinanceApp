@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { View, Alert } from "react-native";
 import { Text, IconButton, Button, Dialog, Portal, TextInput } from "react-native-paper";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -14,6 +14,30 @@ export default function ProfileScreen() {
     const [password, setPassword] = useState("");
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
+
+    function confirmLogoutAll() {
+        Alert.alert(
+            "Disconnetti tutti i dispositivi",
+            "Dovrai accedere di nuovo su ogni dispositivo, questo compreso. Usalo se hai perso il telefono.",
+            [{ text: "Annulla" }, { text: "Disconnetti", onPress: handleLogoutAll }]
+        );
+    }
+
+    async function handleLogoutAll() {
+        setIsLoggingOutAll(true);
+        try {
+            const response = await apiFetch("/auth/logout-all", { method: "POST" });
+            if (!response.ok) return;
+            //il token in uso e' appena stato invalidato: va buttato anche qui
+            await SecureStore.deleteItemAsync("token");
+            router.replace("/login");
+        } catch {
+            //senza rete la revoca non parte: l'utente resta dov'e'
+        } finally {
+            setIsLoggingOutAll(false);
+        }
+    }
 
     function closeDeleteDialog() {
         setShowDeleteDialog(false);
@@ -97,6 +121,18 @@ export default function ProfileScreen() {
                 </Button>
                 <View></View>
             </View>
+
+            {/* cancellare il token dal telefono non basta: quello emesso resta
+                valido fino a 30 giorni, e un dispositivo perso resterebbe dentro */}
+            <Button
+                mode="text"
+                onPress={confirmLogoutAll}
+                loading={isLoggingOutAll}
+                disabled={isLoggingOutAll}
+                style={styles.logoutAllButton}
+            >
+                Disconnetti tutti i dispositivi
+            </Button>
 
             <Button
                 mode="text"

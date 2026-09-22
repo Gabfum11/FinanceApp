@@ -21,6 +21,10 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     is_verified=Column(Boolean,default=False)
     is_admin = Column(Boolean, default=False, nullable=False)
+    #finisce dentro ogni token: incrementandolo, tutti quelli gia' emessi
+    #diventano invalidi. E' l'unico modo per disconnettere un dispositivo
+    #perso prima della scadenza naturale del token
+    token_version = Column(Integer, default=0, nullable=False, server_default="0")
     expenses = relationship("Expense", back_populates="owner")
 
 class Category(Base):

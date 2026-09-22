@@ -71,11 +71,14 @@ async def verify_otp(request: Request, verify: schemas.VerifyEmail, db: Session=
         db.commit()
         raise HTTPException(status_code=401, detail="Invalid code")
     if otp.purpose=="email_verification":
-        data={"sub":str(otp.user_id)} #sub indica il soggetto a cui si riferisce il token
-        otp.user.is_verified=True 
+        otp.user.is_verified=True
+        access_token=security.create_user_token(otp.user)
     else:
-        data={"sub": str(otp.user_id), "purpose": "password_reset"}
-    access_token=security.create_access_token(data)
+        #il token di reset non porta la versione: il cambio password la
+        #incrementa, e il token si invaliderebbe prima di poter essere usato
+        access_token=security.create_access_token(
+            {"sub": str(otp.user_id), "purpose": "password_reset"}
+        )
     db.query(models.OtpCode).filter(models.OtpCode.user_id==otp.user_id).delete()
     db.commit()
     return {"access_token": access_token, "token_type": "bearer"}
@@ -92,8 +95,7 @@ def login(request: Request, credentials: schemas.UserLogin, db: Session=Depends(
     if not auth_user.is_verified:
         raise HTTPException(status_code=403,detail="User not verified")
     expires = 60 * 24 * 30 if credentials.remember_me else 60  # 30 giorni vs 1 ora
-    data={"sub": str(auth_user.id)}
-    access_token=security.create_access_token(data, expires)
+    access_token=security.create_user_token(auth_user, expires)
     return {"access_token": access_token, "token_type": "bearer"}
     #token_type dice al client come deve usare il token nelle richieste successive
     #in questo caso sarà sempre la stringa fissa bearer, significa che il client deve mandare questo token
@@ -138,7 +140,7 @@ def login_with_google(request: Request, payload: schemas.GoogleLogin, db: Sessio
         db.commit()
 
     expires = 60 * 24 * 30 if payload.remember_me else 60
-    access_token = security.create_access_token({"sub": str(auth_user.id)}, expires)
+    access_token = security.create_user_token(auth_user, expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -155,12 +157,29 @@ def login_for_swagger(request: Request, form_data: OAuth2PasswordRequestForm = D
     if not auth_user.is_verified:
         raise HTTPException(status_code=403, detail="User not verified")
 
-    access_token = security.create_access_token(data={"sub": str(auth_user.id)})
+    access_token = security.create_user_token(auth_user)
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/me", response_model=schemas.UserOut)
 def get_me(current_user: models.User = Depends(security.get_current_user)):
     return current_user
+
+
+@router.post("/logout-all")
+@limiter.limit("5/minute")
+def logout_all_devices(request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    """Invalida tutti i token dell'utente, compreso quello in uso.
+
+    Serve quando un dispositivo viene perso: cancellare il token dal telefono
+    non basta, perche' quello emesso resta valido fino alla scadenza (con
+    "Ricordami" sono 30 giorni). Chi rifa' login ottiene un token nuovo.
+    """
+    #current_user puo' arrivare da un'altra sessione: l'incremento va fatto
+    #su quella corrente, altrimenti il commit non lo vede
+    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
+    utente.token_version += 1
+    db.commit()
+    return {"detail": "Sessioni chiuse su tutti i dispositivi"}
 
 
 @router.delete("/me")
@@ -222,6 +241,8 @@ async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=De
 @router.post("/resetPassword")
 async def resetPassword(passw:schemas.ResetPassword,db:Session=Depends(get_db),user:str=Depends(security.get_reset_password_user)):
     user.hashed_password=security.hash_password(passw.new_password)
+    #chi ha chiesto il reset ha perso l'accesso: ogni sessione aperta va chiusa
+    user.token_version += 1
     db.commit()
     return {"detail": "Password aggiornata con successo"}
 
@@ -240,9 +261,22 @@ def change_password(data: schemas.ChangePassword, db:Session=Depends(get_db), cu
         raise HTTPException(status_code=400, detail="Questo account accede con Google e non ha una password")
     if not security.verify_password(data.current_password, current_user.hashed_password):
         raise HTTPException(status_code=401, detail="Current password is incorrect")
-    current_user.hashed_password = security.hash_password(data.new_password)
+    #current_user puo' arrivare da un'altra sessione: le modifiche vanno fatte
+    #su quella corrente, altrimenti il commit non le vede
+    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
+    utente.hashed_password = security.hash_password(data.new_password)
+    #chi avesse rubato un token resterebbe dentro con la password vecchia:
+    #l'incremento invalida tutti i token gia' emessi
+    utente.token_version += 1
     db.commit()
-    return {"detail": "Password aggiornata con successo"}
+    db.refresh(utente)
+    #chi ha cambiato la password verrebbe disconnesso dal proprio incremento:
+    #gli diamo subito un token aggiornato
+    return {
+        "detail": "Password aggiornata con successo",
+        "access_token": security.create_user_token(utente),
+        "token_type": "bearer",
+    }
 
 @router.patch("/updateProfile")
 def update_profile(nickname: str, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
