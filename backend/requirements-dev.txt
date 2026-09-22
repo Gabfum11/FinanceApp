@@ -1,0 +1,5 @@
+# Dipendenze per lo sviluppo e i test.
+# Tenute separate da requirements.txt: Render installa solo quelle di produzione.
+# Installazione:  pip install -r requirements-dev.txt
+-r requirements.txt
+pytest==9.1.1
