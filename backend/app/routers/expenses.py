@@ -152,8 +152,14 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user:
 #unico endpoint che chiama un servizio a pagamento (Groq): senza tetto, un client
 #in loop puo' esaurire la quota. Il limite e' per account, non per IP, cosi' utenti
 #dietro la stessa rete non si bloccano a vicenda
-@limiter.limit("20/minute", key_func=user_or_ip)
+#il piano gratuito di Groq concede ~8000 token al minuto: con un prompt da ~940
+#token sono circa 8 richieste. Un limite per utente piu' alto di quello globale
+#lascerebbe saturare Groq a un solo utente, facendo fallire le richieste altrui
+@limiter.limit("5/minute", key_func=user_or_ip)
 @limiter.limit("200/day", key_func=user_or_ip)
+#tetto complessivo: senza, bastano due utenti attivi insieme per superare
+#il limite di Groq e ricevere 429 invece di una risposta
+@limiter.limit("8/minute", key_func=lambda request: "extract-preview-globale")
 def extract_expense_preview(request: Request, data_expense: dict, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
     text = data_expense.get("expenseText", "")
     #solo le sottocategorie: una spesa non puo' essere assegnata a un gruppo.
@@ -176,7 +182,15 @@ def extract_expense_preview(request: Request, data_expense: dict, db: Session = 
         per_gruppo.setdefault(c.parent.name, []).append(etichetta)
 
     #passiamo i nomi al modello: categoria ed estrazione escono dalla stessa chiamata
-    extracted = categorization.extract_expense_from_text(text, [c.name for c in categories], per_gruppo)
+    try:
+        extracted = categorization.extract_expense_from_text(text, [c.name for c in categories], per_gruppo)
+    except categorization.ServizioOccupato:
+        #503 e non 422: la frase era valida, e' il servizio a non essere
+        #disponibile. Dire "non ho capito" porterebbe a riscriverla invano
+        raise HTTPException(
+            status_code=503,
+            detail="Troppe richieste in questo momento. Riprova tra qualche istante.",
+        )
 
     if extracted is None:
         raise HTTPException(status_code=422, detail="Non sono riuscito a capire la spesa")

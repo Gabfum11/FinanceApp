@@ -1,12 +1,21 @@
 from sqlalchemy.orm import Session
 from app import models
 import os
-from groq import Groq
+from groq import Groq, RateLimitError
 import json
 from datetime import date, timedelta
 from app.logging_config import get_logger
 
 logger = get_logger(__name__)
+
+
+class ServizioOccupato(Exception):
+    """Groq ha rifiutato per limite di frequenza.
+
+    Distinta dal None restituito quando il testo non e' comprensibile: le due
+    situazioni richiedono messaggi opposti. Dire "non ho capito" a chi ha
+    scritto una frase corretta lo porta a riscriverla e fallire di nuovo.
+    """
 
 groq_client=Groq( api_key=os.environ.get("GROQ_API_KEY"),)
 
@@ -173,6 +182,11 @@ def extract_expense_from_text(
             "recurring":recurring,
             "frequency": frequency
         }
+    except RateLimitError:
+        #il testo era valido: e' Groq a essere saturo. Propagare invece di
+        #restituire None permette all'endpoint di dare il messaggio giusto
+        logger.warning("limite di frequenza di Groq raggiunto")
+        raise ServizioOccupato()
     except Exception:
         #l'utente riceve solo "non ho capito": senza questa riga un guasto di
         #Groq sarebbe indistinguibile da una frase scritta male

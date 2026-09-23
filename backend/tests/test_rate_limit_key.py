@@ -106,41 +106,5 @@ class TestChiaveDiAccount:
         assert got == IP_UTENTE_A
 
 
-class TestLimiteSuExtractPreview:
-    """L'endpoint che chiama Groq è l'unico che costa denaro a ogni richiesta."""
-
-    def test_oltre_il_limite_le_richieste_sono_bloccate(self, client, make_user, login_as, make_category):
-        from unittest.mock import patch
-        from app.main import app
-
-        make_category(name="Altro")
-        login_as(make_user(email="quota@example.com"))
-        app.state.limiter.enabled = True
-        app.state.limiter.reset()
-
-        chiamate_a_groq = 0
-
-        def finta_estrazione(*args, **kwargs):
-            nonlocal chiamate_a_groq
-            chiamate_a_groq += 1
-            return {
-                "description": "Pizza", "amount": 15.0, "date": None,
-                "category": None, "recurring": False, "frequency": None,
-            }
-
-        try:
-            with patch("app.business_logic.categorization.extract_expense_from_text", finta_estrazione):
-                codici = [
-                    client.post(
-                        "/expenses/extract-preview",
-                        json={"expenseText": "Pizza 15 euro"},
-                        headers={"Authorization": "Bearer token-quota"},
-                    ).status_code
-                    for _ in range(25)
-                ]
-        finally:
-            app.state.limiter.enabled = False
-
-        assert codici.count(200) == 20
-        assert codici.count(429) == 5
-        assert chiamate_a_groq == 20, "le richieste bloccate non devono raggiungere Groq"
+# I limiti su extract-preview sono verificati in test_rate_limit_groq.py,
+# dove sono allineati ai limiti reali del piano Groq.

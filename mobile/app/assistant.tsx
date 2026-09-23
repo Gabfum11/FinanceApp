@@ -59,12 +59,22 @@ export default function AssistantScreen() {
       });
 
       if (!response.ok) {
+        //429 e 503 significano "servizio occupato", non "frase incomprensibile":
+        //col messaggio sbagliato l'utente riscrive la stessa cosa e fallisce di nuovo
+        const occupato = response.status === 429 || response.status === 503;
+        const detail = await response
+          .json()
+          .then((body) => (typeof body?.detail === "string" ? body.detail : null))
+          .catch(() => null);
+
         setMessages((prev) => [
           ...prev,
           {
             id: Date.now().toString(),
             sender: "system",
-            text: 'Non sono riuscito a capire. Prova a indicare cosa hai speso e quanto, tipo "Pizza 15 euro".',
+            text: occupato
+              ? detail ?? "Troppe richieste in questo momento. Riprova tra qualche istante."
+              : 'Non sono riuscito a capire. Prova a indicare cosa hai speso e quanto, tipo "Pizza 15 euro".',
           },
         ]);
         return;
