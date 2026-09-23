@@ -5,7 +5,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { styles } from "@/styles/all_expenses.styles";
-import { Alert } from "react-native";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { iconaPerGruppo } from "@/utils/categoryIcons";
 
@@ -72,6 +72,8 @@ export default function ExpenseList() {
     //le spese portano la sottocategoria: per raggrupparle serve sapere a quale
     //gruppo appartiene ciascuna, informazione che sta solo nel backend
     const [gruppoDiCategoria, setGruppoDiCategoria] = useState<Map<number, Gruppo>>(new Map());
+    //id della spesa in attesa di conferma: null quando il dialogo e' chiuso
+    const [daEliminare, setDaEliminare] = useState<number | null>(null);
 
     //i chip mostrano i gruppi, non le sottocategorie: con 46 voci sarebbero
     //troppi da scorrere. Compaiono solo i gruppi che hanno spese registrate
@@ -166,12 +168,10 @@ export default function ExpenseList() {
         });
     }
     function confirmDelete(expenseId: number) {
-        Alert.alert("Elimina spesa", "Sei sicuro di voler eliminare questa spesa?", [
-        { text: "Annulla" }, 
-        { text: "Elimina", onPress: () => handleDelete(expenseId) },
-        ]);
+        setDaEliminare(expenseId);
     }
     async function handleDelete(expenseId:number) {
+        setDaEliminare(null);
         const response=await apiFetch(`/expenses/${expenseId}`, {method:"DELETE"});
         if(response.ok){
             setExpenses((prev) => prev.filter((exp) => exp.id !== expenseId)); //serve ad aggiornare la lista a schermo filtrando le spese, il cui id non corrisponde a quello della spesa cancellata
@@ -304,6 +304,16 @@ export default function ExpenseList() {
                 </View>
             )
         }
+        />
+
+        <ConfirmDialog
+            visible={daEliminare !== null}
+            title="Elimina spesa"
+            message="Sei sicuro di voler eliminare questa spesa?"
+            confirmLabel="Elimina"
+            destructive
+            onConfirm={() => daEliminare !== null && handleDelete(daEliminare)}
+            onDismiss={() => setDaEliminare(null)}
         />
        </View> 
     )
