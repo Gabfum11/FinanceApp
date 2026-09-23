@@ -51,6 +51,63 @@ export const styles = StyleSheet.create({
         borderColor: "#2ECC71",
         borderRadius: 20,
     },
+    //etichetta di sezione: raggruppa le voci senza pesare come un titolo
+    sectionLabel: {
+        fontSize: 12,
+        fontWeight: "700",
+        color: "#8A8A8E",
+        letterSpacing: 0.6,
+        marginTop: 24,
+        marginBottom: 8,
+        marginLeft: 4,
+    },
+    sectionCard: {
+        backgroundColor: "white",
+        borderRadius: 16,
+        overflow: "hidden",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    row: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 15,
+    },
+    rowLabel: {
+        flex: 1,
+        fontSize: 15,
+        color: "#1a1a1a",
+    },
+    //raggruppa titolo e sottotitolo, così lo switch resta allineato a destra
+    rowTextGroup: {
+        flex: 1,
+    },
+    rowHint: {
+        fontSize: 12,
+        color: "#8A8A8E",
+        marginTop: 2,
+    },
+    supportText: {
+        lineHeight: 20,
+    },
+    //l'indirizzo staccato dal testo: si legge e si trascrive piu' facilmente
+    supportEmail: {
+        marginTop: 8,
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#2ECC71",
+    },
+    //separatore rientrato, allineato al testo e non all'icona
+    rowDivider: {
+        height: 1,
+        backgroundColor: "#EFEFF2",
+        marginLeft: 48,
+    },
     //azioni di sicurezza in fondo, separate dal resto
     logoutAllButton: {
         marginTop: "auto",
