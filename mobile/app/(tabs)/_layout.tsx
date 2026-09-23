@@ -1,9 +1,20 @@
 import { Tabs, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View, AppState } from "react-native";
+import { useEffect } from "react";
+import { refreshTokenIfNeeded } from "@/utils/session";
 
 export default function TabsLayout() {
   const router=useRouter()
+
+  //un'app lasciata aperta per settimane non passerebbe mai da index.tsx:
+  //il rinnovo va tentato anche al rientro in primo piano
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (stato) => {
+      if (stato === "active") refreshTokenIfNeeded();
+    });
+    return () => sub.remove();
+  }, []);
   return (
     <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: "#2ECC71" }}>
       <Tabs.Screen

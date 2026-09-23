@@ -12,6 +12,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime, timedelta, timezone
 router = APIRouter(prefix="/auth", tags=["auth"])
 MAX_OTP_ATTEMPTS = 5  # Numero massimo di tentativi consentiti per l'inserimento del codice OTP
+#durata unica per tutti i login: il client rinnova prima della scadenza, quindi
+#chi apre l'app almeno una volta al mese non rivede mai la schermata di accesso
+ACCESS_TOKEN_DAYS = 30
 
 #response model dice a FastAPI che qualunque cosa la funzione restituisca, formattala secondo questo schema pydantic prima di mandarla al client
 @router.post("/register", response_model=schemas.UserOut)
@@ -94,8 +97,9 @@ def login(request: Request, credentials: schemas.UserLogin, db: Session=Depends(
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not auth_user.is_verified:
         raise HTTPException(status_code=403,detail="User not verified")
-    expires = 60 * 24 * 30 if credentials.remember_me else 60  # 30 giorni vs 1 ora
-    access_token=security.create_user_token(auth_user, expires)
+    #durata unica: il client rinnova il token prima della scadenza, quindi
+    #la scelta "resta connesso" non aveva piu' effetto pratico
+    access_token=security.create_user_token(auth_user, 60 * 24 * ACCESS_TOKEN_DAYS)
     return {"access_token": access_token, "token_type": "bearer"}
     #token_type dice al client come deve usare il token nelle richieste successive
     #in questo caso sarà sempre la stringa fissa bearer, significa che il client deve mandare questo token
@@ -139,8 +143,7 @@ def login_with_google(request: Request, payload: schemas.GoogleLogin, db: Sessio
         auth_user.is_verified = True
         db.commit()
 
-    expires = 60 * 24 * 30 if payload.remember_me else 60
-    access_token = security.create_user_token(auth_user, expires)
+    access_token = security.create_user_token(auth_user, 60 * 24 * ACCESS_TOKEN_DAYS)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -163,6 +166,24 @@ def login_for_swagger(request: Request, form_data: OAuth2PasswordRequestForm = D
 @router.get("/me", response_model=schemas.UserOut)
 def get_me(current_user: models.User = Depends(security.get_current_user)):
     return current_user
+
+
+@router.post("/refresh", response_model=schemas.Token)
+@limiter.limit("20/hour")
+def refresh_token(request: Request, current_user: models.User = Depends(security.get_current_user)):
+    """Restituisce un token nuovo a chi ne ha uno ancora valido.
+
+    Senza, alla scadenza l'utente si ritrova al login senza spiegazione. Il
+    client chiede il rinnovo quando il token e' a meta' vita, così chi apre
+    l'app almeno una volta al mese resta sempre autenticato.
+
+    Non e' un refresh token: è lo stesso tipo di token, con scadenza rinnovata.
+    Un token scaduto non viene accettato, quindi la finestra resta limitata.
+    """
+    return {
+        "access_token": security.create_user_token(current_user, 60 * 24 * ACCESS_TOKEN_DAYS),
+        "token_type": "bearer",
+    }
 
 
 @router.post("/logout-all")

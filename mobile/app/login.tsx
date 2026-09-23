@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Image } from "react-native";
-import { TextInput, Button, Text, Checkbox,Snackbar } from "react-native-paper";
+import { TextInput, Button, Text, Snackbar } from "react-native-paper";
 import {styles} from "../styles/auth.styles";
 import { Link } from "expo-router";
 import { API_URL } from "@/config";
@@ -13,7 +13,6 @@ import { GoogleButton } from "@/components/GoogleButton";
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const[remember_me, setRememberMe]=useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -32,7 +31,7 @@ export default function LoginScreen() {
     const response = await fetch(`${API_URL}/auth/login`, { //apiurl serve per non scrivere ogni volta l'url completo, ma solo la parte finale
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, remember_me }), //è una scorciatoia JavaScript per scrivere { email: email, password: password } (quando il nome della chiave coincide col nome della variabile, puoi ometterlo)
+      body: JSON.stringify({ email, password }), //è una scorciatoia JavaScript per scrivere { email: email, password: password } (quando il nome della chiave coincide col nome della variabile, puoi ometterlo)
     });
 
     if (!response.ok) {
@@ -90,10 +89,6 @@ export default function LoginScreen() {
         />
         }
       />
-      <View style={styles.checkboxRow}>
-        <Checkbox status={remember_me ? "checked" : "unchecked"} onPress={() => setRememberMe(!remember_me)} /> 
-        <Text> Ricordami su questo dispositivo</Text>
-      </View>
       <Button 
         mode="contained" 
         onPress={handleLogin} 
