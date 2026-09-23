@@ -1,17 +1,23 @@
 import { useEffect, useState } from "react";
-import * as Google from "expo-auth-session/providers/google";
-import * as WebBrowser from "expo-web-browser";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import * as SecureStore from "expo-secure-store";
 import { API_URL } from "@/config";
 
-// chiude la scheda del browser quando l'autenticazione termina
-WebBrowser.maybeCompleteAuthSession();
-
-// Gli id client arrivano dalla Google Cloud Console e cambiano per piattaforma.
-// Stanno nelle variabili EXPO_PUBLIC_* perché il client deve conoscerli:
-// non sono segreti, servono solo a dire a Google quale app sta chiedendo l'accesso.
-const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
+// Si usa il Google Play Services nativo invece del flusso OAuth via browser:
+// con expo-auth-session un client ID di tipo Android faceva rispondere a Google
+// "Errore 400: invalid_request", perché quei client non supportano il flusso
+// implicito che restituisce direttamente un id_token.
+//
+// Serve il client ID WEB, non quello Android: quest'ultimo non va passato qui,
+// associa soltanto la firma dell'app al progetto Google.
 const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+
+if (WEB_CLIENT_ID) {
+  GoogleSignin.configure({ webClientId: WEB_CLIENT_ID });
+}
 
 type Options = {
   onSuccess: () => void;
@@ -20,28 +26,47 @@ type Options = {
 
 export function useGoogleLogin({ onSuccess, onError }: Options) {
   const [isLoading, setIsLoading] = useState(false);
-
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    androidClientId: ANDROID_CLIENT_ID,
-    clientId: WEB_CLIENT_ID, // usato da Expo Go, che non è l'app Android firmata
-  });
+  //Google Play Services manca su alcuni dispositivi (emulatori, telefoni
+  //senza servizi Google): senza, il pulsante non deve comparire
+  const [isAvailable, setIsAvailable] = useState(false);
 
   useEffect(() => {
-    if (response?.type === "success") {
-      const idToken = response.params?.id_token;
-      if (idToken) {
-        exchangeToken(idToken);
-      } else {
+    if (!WEB_CLIENT_ID) return;
+    GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: false })
+      .then(() => setIsAvailable(true))
+      .catch(() => setIsAvailable(false));
+  }, []);
+
+  async function signIn() {
+    setIsLoading(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      //signOut prima: senza, riapre l'ultimo account usato senza chiedere,
+      //e non si potrebbe cambiare utente
+      await GoogleSignin.signOut().catch(() => {});
+      const risposta = await GoogleSignin.signIn();
+
+      const idToken =
+        (risposta as any)?.data?.idToken ?? (risposta as any)?.idToken;
+      if (!idToken) {
         onError("Risposta di Google incompleta. Riprova.");
+        return;
       }
-    } else if (response?.type === "error") {
+      await exchangeToken(idToken);
+    } catch (errore: any) {
+      //l'utente che chiude la finestra non è un errore da mostrare
+      if (errore?.code === statusCodes.SIGN_IN_CANCELLED) return;
+      if (errore?.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        onError("Google Play Services non disponibile su questo dispositivo.");
+        return;
+      }
       onError("Accesso con Google non riuscito. Riprova.");
+    } finally {
+      setIsLoading(false);
     }
-    // il caso "dismiss" è l'utente che ha chiuso la scheda: nessun errore da mostrare
-  }, [response]);
+  }
 
   async function exchangeToken(idToken: string) {
-    setIsLoading(true);
     try {
       // il token di Google non è il nostro: lo scambiamo con un token dell'app
       const res = await fetch(`${API_URL}/auth/google`, {
@@ -65,16 +90,12 @@ export function useGoogleLogin({ onSuccess, onError }: Options) {
       onSuccess();
     } catch {
       onError("Errore di rete. Riprova.");
-    } finally {
-      setIsLoading(false);
     }
   }
 
   return {
-    signIn: () => promptAsync(),
-    //request è null finché la configurazione non è pronta: senza questo controllo
-    //il pulsante sembrerebbe funzionante ma non aprirebbe nulla
-    isReady: !!request && !!(ANDROID_CLIENT_ID || WEB_CLIENT_ID),
+    signIn,
+    isReady: !!WEB_CLIENT_ID && isAvailable,
     isLoading,
   };
 }
