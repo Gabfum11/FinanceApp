@@ -45,6 +45,9 @@ export const colors = {
   textOnDarkMuted: "rgba(255,255,255,0.6)",
   /** riquadri e separatori appena percettibili sopra le superfici scure */
   overlayLight: "rgba(255,255,255,0.2)",
+  /** elementi in secondo piano sopra le superfici scure: le barre dei giorni
+   *  diversi da oggi, che non devono competere con quella evidenziata */
+  overlayMuted: "rgba(255,255,255,0.15)",
   overlayFaint: "rgba(255,255,255,0.04)",
 
   // --- avvisi (abbonamenti in scadenza) ---

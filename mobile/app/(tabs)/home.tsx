@@ -5,6 +5,7 @@ import { Button, Text } from "react-native-paper";
 import { BarChart } from "react-native-gifted-charts";
 import { API_URL } from "@/config";
 import { styles } from "../../styles/home.styles";
+import { colors } from "../../styles/tokens";
 import { apiFetch } from "@/utils/apiFetch";
 import { Link, useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
@@ -89,7 +90,6 @@ export default function HomeScreen() {
     const response = await apiFetch("/expenses/weekly-stats");
     if (response.ok) {
       const data = await response.json();
-      console.log("DEBUG weekly days:", JSON.stringify(data.days), data.days.map((d: DayStat) => typeof d.total));
       setWeeklyStats(data.days);
     }
   }
@@ -128,16 +128,22 @@ export default function HomeScreen() {
     return {
       value: day.total,
       label: GIORNI_SETTIMANA[new Date(day.date).getDay() === 0 ? 6 : new Date(day.date).getDay() - 1],
-      frontColor: isToday ? "#2ECC71" : "rgba(255,255,255,0.15)",
+      frontColor: isToday ? colors.primary : colors.overlayMuted,
       topLabelComponent: () => (
         <Text style={styles.weeklyBarLabel}>€{day.total.toFixed(0)}</Text>
       ),
     };
   });
 
-  // Lascia spazio sopra la barra piu alta per l'etichetta del valore
-  const weeklyMaxValue =
-    Math.max(...weeklyStats.map((day) => day.total), 0) * 1.3 || 1;
+  // La scala parte da una soglia fissa invece di adattarsi sempre al massimo:
+  // con la sola scala relativa una giornata da 5 euro riempiva il grafico
+  // quanto una da 200, e l'altezza delle barre non diceva piu' nulla.
+  // Sopra i 40 euro la scala torna ad adattarsi, se no le spese grandi
+  // uscirebbero dal riquadro.
+  const SOGLIA_SCALA = 40;
+  const speseMassime = Math.max(...weeklyStats.map((day) => day.total), 0);
+  // il fattore lascia spazio sopra la barra piu alta per l'etichetta del valore
+  const weeklyMaxValue = Math.max(speseMassime * 1.3, SOGLIA_SCALA);
 
   return (
     <View style={styles.container}>
@@ -190,7 +196,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.budgetLegendRow}>
               <View style={styles.budgetLegendItem}>
-                <View style={[styles.budgetLegendDot, { backgroundColor: "#2ECC71" }]} />
+                <View style={[styles.budgetLegendDot, { backgroundColor: colors.primary }]} />
                 <Text style={styles.budgetLegendText}>Speso {budgetStatus.spent.toFixed(2)}</Text>
               </View>
             </View>
@@ -211,7 +217,7 @@ export default function HomeScreen() {
               hideYAxisText
               yAxisThickness={0}
               xAxisThickness={0}
-              xAxisLabelTextStyle={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}
+              xAxisLabelTextStyle={{ color: colors.textOnDarkMuted, fontSize: 12 }}
               noOfSections={3}
               height={100}
               maxValue={weeklyMaxValue}
