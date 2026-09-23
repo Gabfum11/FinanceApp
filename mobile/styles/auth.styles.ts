@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { colors } from "./tokens";
 
 export const styles = StyleSheet.create({
   container: {
@@ -51,7 +52,7 @@ export const styles = StyleSheet.create({
     
   },
   linkAction:{
-    color: "#2ECC71",
+    color: colors.primary,
     fontWeight:"bold"
   },
   dividerRow: {
@@ -64,9 +65,9 @@ export const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E5E5EA",
+    backgroundColor: colors.border,
   },
   dividerText: {
-    color: "#999",
+    color: colors.textMuted,
   },
 });

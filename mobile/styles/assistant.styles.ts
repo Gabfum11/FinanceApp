@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { colors, cardShadow, floatingShadow } from "./tokens";
 
 export const styles = StyleSheet.create({
     container: {
@@ -23,7 +24,7 @@ export const styles = StyleSheet.create({
         alignItems: "center",
     },
     example: {
-        color: "#555555",
+        color: colors.textMuted,
         fontStyle: "italic",
     },
     chatContainer:{
@@ -36,36 +37,28 @@ export const styles = StyleSheet.create({
         borderRadius:16, //bordi arrotondati, tipico delle chat
     },
     userBubble: {
-        backgroundColor:"#1B4332",
+        backgroundColor:colors.primaryDark,
         alignSelf:"flex-end" //allineato a destra
     },
     systemBubble: {
-        backgroundColor:"white",
+        backgroundColor:colors.surface,
         alignSelf: "flex-start",       // allineato a sinistra
         // eventualmente una leggera ombra, per farla "staccare" dallo sfondo chiaro
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        ...cardShadow,
     },
     expenseCard:{
-        backgroundColor: "white",
+        backgroundColor: colors.surface,
         borderRadius: 20,
         padding: 20,
         marginVertical: 8,
         gap: 6,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 6,
+        ...floatingShadow,
     },
     cardLabel: {
     opacity: 0.5,
     },
     cardAmount: {
-    color: "#2ECC71",
+    color: colors.primary,
     fontWeight: "700",
     },
     confirmationDetail: {
@@ -84,10 +77,10 @@ export const styles = StyleSheet.create({
         marginTop: 12,
     },
     userText:{
-        color:"white"
+        color:colors.textOnPrimary
     },
     systemText:{
-        color:"#333333"
+        color:colors.textSecondary
     },
     inputRow:{
         flexDirection: "row",

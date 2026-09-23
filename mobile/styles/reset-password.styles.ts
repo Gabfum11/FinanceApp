@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { colors } from "./tokens";
 
 export const styles = StyleSheet.create({
     container: {
@@ -11,7 +12,7 @@ export const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 16,
-        backgroundColor: "#FDF3E7",
+        backgroundColor: colors.infoSoft,
         justifyContent: "center",
         alignItems: "center",
         marginBottom: 16,
@@ -20,7 +21,7 @@ export const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 20,
-        backgroundColor: "#2ECC71",
+        backgroundColor: colors.primary,
         justifyContent: "center",
         alignItems: "center",
         marginBottom: 16,
@@ -29,7 +30,7 @@ export const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 16,
-        backgroundColor: "#FDEAEA",
+        backgroundColor: colors.dangerSoft,
         justifyContent: "center",
         alignItems: "center",
         marginBottom: 16,
@@ -59,14 +60,14 @@ export const styles = StyleSheet.create({
         width: 45,
         height: 55,
         borderWidth: 1,
-        borderColor: "#ccc",
+        borderColor: colors.chevron,
         borderRadius: 10,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "white",
+        backgroundColor: colors.surface,
     },
     codeBoxActive: {
-        borderColor: "#2ECC71",
+        borderColor: colors.primary,
         borderWidth: 2,
     },
     codeDigit: {
@@ -90,7 +91,7 @@ export const styles = StyleSheet.create({
         fontWeight: "bold",
     },
     resendCodeText: {
-        color: "#2ECC71",
+        color: colors.primary,
         fontWeight: "bold",
     },
     remainingTime: {

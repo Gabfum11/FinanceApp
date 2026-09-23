@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
 import { ripianificaPromemoria } from "@/utils/notifications";
 import { styles } from "@/styles/budget.styles";
-import { Alert } from "react-native";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 function getRenewal(next_date:string){
   const today= new Date();
   today.setHours(0, 0, 0, 0);
@@ -31,8 +31,13 @@ type Subscription = {
   auto_renew:boolean;
 };
 const mesi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+//conferma in attesa: il tipo dice quale azione parte alla conferma
+type ConfermaInAttesa =
+  | { tipo: "pausa" | "riattiva" | "elimina"; subId: number };
+
 export default function BudgetScreen() {
   const [subscriptions, setSubscriptions]=useState<Subscription[]>([]);
+  const [conferma, setConferma] = useState<ConfermaInAttesa | null>(null);
   const activeSubscriptions = subscriptions.filter(sub => sub.is_active);
   const pausedSubscriptions = subscriptions.filter(sub => !sub.is_active);
   const today = new Date();
@@ -77,26 +82,38 @@ export default function BudgetScreen() {
       });
     }
     function confirmToggle(subId: number, isCurrentActive:boolean) {
-      if(isCurrentActive)
-      {
-        Alert.alert( "Abbonamento in pausa","Sei sicuro di voler mettere in pausa questo abbonamento?", [
-        { text: "Annulla" }, 
-        { text: "Conferma", onPress: () => HandlePause(subId)},
-        ]);
-      }
-      else
-      {
-         Alert.alert( "Riattiva abbonamento","Sei sicuro di voler riattivare questo abbonamento?", [
-        { text: "Annulla" }, 
-        { text: "Conferma", onPress: () => HandlePause(subId)},
-        ]);
-      }
+      setConferma({ tipo: isCurrentActive ? "pausa" : "riattiva", subId });
     }
     function confirmDelete(expenseId: number) {
-        Alert.alert("Elimina abbonamento", "Sei sicuro di voler eliminare questo abbonamento?", [
-        { text: "Annulla" }, 
-        { text: "Elimina", onPress: () => handleDelete(expenseId) },
-        ]);
+        setConferma({ tipo: "elimina", subId: expenseId });
+    }
+    //testi e azione del dialogo, ricavati dalla conferma in attesa
+    const testiConferma = {
+      pausa: {
+        title: "Abbonamento in pausa",
+        message: "Sei sicuro di voler mettere in pausa questo abbonamento?",
+        confirmLabel: "Conferma",
+        destructive: false,
+      },
+      riattiva: {
+        title: "Riattiva abbonamento",
+        message: "Sei sicuro di voler riattivare questo abbonamento?",
+        confirmLabel: "Conferma",
+        destructive: false,
+      },
+      elimina: {
+        title: "Elimina abbonamento",
+        message: "Sei sicuro di voler eliminare questo abbonamento?",
+        confirmLabel: "Elimina",
+        destructive: true,
+      },
+    } as const;
+    function eseguiConferma() {
+      if (!conferma) return;
+      const { tipo, subId } = conferma;
+      setConferma(null);
+      if (tipo === "elimina") handleDelete(subId);
+      else HandlePause(subId);
     }
     async function handleDelete(subscription_id:number) {
         const response=await apiFetch(`/subscriptions/${subscription_id}`, {method:"DELETE"});
@@ -198,6 +215,16 @@ export default function BudgetScreen() {
           />
         </>
       )}
+
+      <ConfirmDialog
+        visible={conferma !== null}
+        title={conferma ? testiConferma[conferma.tipo].title : ""}
+        message={conferma ? testiConferma[conferma.tipo].message : ""}
+        confirmLabel={conferma ? testiConferma[conferma.tipo].confirmLabel : "Conferma"}
+        destructive={conferma ? testiConferma[conferma.tipo].destructive : false}
+        onConfirm={eseguiConferma}
+        onDismiss={() => setConferma(null)}
+      />
     </View>
   );
 }

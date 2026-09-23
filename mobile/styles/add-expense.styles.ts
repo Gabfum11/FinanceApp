@@ -1,18 +1,26 @@
 import { StyleSheet } from "react-native";
+import { colors as tokens, cardShadow, scrim } from "./tokens";
 
-// Palette della schermata: il verde resta riservato all'importo e al CTA,
-// i tasti del tastierino usano il blu scuro per non competere con essi.
+// Alias locali sui token condivisi: i nomi restano quelli usati nella
+// schermata, ma i valori vengono da un posto solo.
+// Il blu del tastierino è specifico di qui: serve a non competere col verde,
+// riservato all'importo e al pulsante di salvataggio.
 export const colors = {
-  background: "#F9F9F9",
-  surface: "#FFFFFF",
-  green: "#2ECC71",
-  darkGreen: "#1B4332",
+  background: tokens.background,
+  surface: tokens.surface,
+  green: tokens.primary,
+  darkGreen: tokens.primaryDark,
   keypadText: "#1B3A6B",
-  label: "#8A8A8E",
-  placeholder: "#A9A9AE",
-  border: "#E5E5EA",
-  disabled: "#DCDCE0",
-  disabledText: "#9A9AA0",
+  label: tokens.textMuted,
+  placeholder: tokens.textDisabled,
+  border: tokens.border,
+  disabled: tokens.disabled,
+  disabledText: tokens.disabledText,
+  text: tokens.text,
+  textSecondary: tokens.textSecondary,
+  surfaceAlt: tokens.surfaceAlt,
+  primarySoft: tokens.primarySoft,
+  error: tokens.dangerDark,
 };
 
 export const styles = StyleSheet.create({
@@ -48,7 +56,7 @@ export const styles = StyleSheet.create({
     marginTop: 8,
     padding: 4,
     borderRadius: 12,
-    backgroundColor: "#EFEFF2",
+    backgroundColor: colors.surfaceAlt,
   },
   segment: {
     paddingHorizontal: 22,
@@ -57,11 +65,7 @@ export const styles = StyleSheet.create({
   },
   segmentSelected: {
     backgroundColor: colors.surface,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 2,
-    elevation: 2,
+    ...cardShadow,
   },
   segmentLabel: {
     fontSize: 14,
@@ -90,11 +94,11 @@ export const styles = StyleSheet.create({
   },
   frequencyChipSelected: {
     borderColor: colors.green,
-    backgroundColor: "#EAF9F0",
+    backgroundColor: colors.primarySoft,
   },
   frequencyLabel: {
     fontSize: 14,
-    color: "#3A3A3C",
+    color: colors.textSecondary,
   },
   frequencyLabelSelected: {
     color: colors.darkGreen,
@@ -120,7 +124,7 @@ export const styles = StyleSheet.create({
     marginRight: 4,
   },
   amountValue: {
-    color: "#111111",
+    color: colors.text,
     fontSize: 44,
     fontWeight: "700",
   },
@@ -147,7 +151,7 @@ export const styles = StyleSheet.create({
     gap: 14,
   },
   fieldLabel: {
-    color: "#3A3A3C",
+    color: colors.textSecondary,
     marginBottom: 6,
   },
   field: {
@@ -163,7 +167,7 @@ export const styles = StyleSheet.create({
   },
   fieldText: {
     flex: 1,
-    color: "#111111",
+    color: colors.text,
   },
   fieldPlaceholder: {
     flex: 1,
@@ -173,7 +177,7 @@ export const styles = StyleSheet.create({
   descriptionInput: {
     flex: 1,
     paddingVertical: 0,
-    color: "#111111",
+    color: colors.text,
   },
 
   saveButton: {
@@ -220,7 +224,7 @@ export const styles = StyleSheet.create({
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: scrim,
     justifyContent: "flex-end",
   },
   modalSheet: {
@@ -241,7 +245,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#F0F0F2",
+    backgroundColor: colors.surfaceAlt,
     paddingHorizontal: 20,
     paddingVertical: 8,
   },
@@ -261,14 +265,14 @@ export const styles = StyleSheet.create({
   },
   categoryRowText: {
     fontSize: 16,
-    color: "#111111",
+    color: colors.text,
   },
   categoryRowSelected: {
     color: colors.green,
     fontWeight: "700",
   },
   errorText: {
-    color: "#C0392B",
+    color: colors.error,
     textAlign: "center",
     marginTop: 12,
     paddingHorizontal: 20,

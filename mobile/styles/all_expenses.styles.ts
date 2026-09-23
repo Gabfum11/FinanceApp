@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { colors, cardShadow } from "./tokens";
 
 export const styles = StyleSheet.create({
     container: {
@@ -24,7 +25,7 @@ export const styles = StyleSheet.create({
   searchbar: {
     marginHorizontal: 16,
     marginBottom: 10,
-    backgroundColor: "#F0F0F2",
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
   },
   searchbarInput: {
@@ -48,22 +49,22 @@ export const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#E5E5EA",
-    backgroundColor: "white",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   chipSelected: {
-    backgroundColor: "#EAF9F0",
-    borderColor: "#2ECC71",
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primary,
   },
   chipLabel: {
     fontSize: 13,
-    color: "#3A3A3C",
+    color: colors.textSecondary,
     //il peso resta invariato tra selezionato e non: il grassetto e' piu' largo
     //e farebbe cambiare larghezza al chip, spostando quelli accanto
     fontWeight: "600",
   },
   chipLabelSelected: {
-    color: "#1B4332",
+    color: colors.primaryDark,
   },
   //risponde alla domanda che segue sempre un filtro: "quanto ho speso in questo?"
   summaryRow: {
@@ -75,12 +76,12 @@ export const styles = StyleSheet.create({
   },
   summaryCount: {
     fontSize: 13,
-    color: "#8a8a8a",
+    color: colors.textMuted,
   },
   summaryTotal: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#1a1a1a",
+    color: colors.text,
   },
   emptyState: {
     alignItems: "center",
@@ -90,26 +91,22 @@ export const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontWeight: "600",
-    color: "#3A3A3C",
+    color: colors.textSecondary,
   },
   emptyHint: {
     textAlign: "center",
-    color: "#8A8A8E",
+    color: colors.textMuted,
     fontSize: 13,
   },
   expenseRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "white",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    ...cardShadow,
   },
   //cerchio con l'icona del gruppo, come nella schermata Abbonamenti
   expenseIcon: {
@@ -118,7 +115,7 @@ export const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#EAF9F0",
+    backgroundColor: colors.primarySoft,
     marginRight: 12,
   },
   expenseInfo: {
@@ -127,16 +124,16 @@ export const styles = StyleSheet.create({
   expenseDescription: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
+    color: colors.text,
   },
   expenseMeta: {
     fontSize: 13,
-    color: "#8a8a8a",
+    color: colors.textMuted,
     marginTop: 3,
   },
   expenseAmount: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#E74C3C",
+    color: colors.danger,
   },
 })

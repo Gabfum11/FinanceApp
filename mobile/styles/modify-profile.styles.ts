@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { colors } from "./tokens";
 
 export const styles = StyleSheet.create({
     container: {
@@ -13,10 +14,10 @@ export const styles = StyleSheet.create({
         marginBottom: 24,
     },
     headerAction: {
-        color: "#999",
+        color: colors.textMuted,
     },
     headerActionPrimary: {
-        color: "#2ECC71",
+        color: colors.primary,
         fontWeight: "bold",
     },
     formSection: {
@@ -32,17 +33,17 @@ export const styles = StyleSheet.create({
     },
     inputDisabled: {
         width: "100%",
-        backgroundColor: "#F0F0F0",
+        backgroundColor: colors.surfaceAlt,
     },
     helperText: {
-        color: "#999",
+        color: colors.textMuted,
         fontSize: 12,
         marginTop: 4,
     },
     settingsItem: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "white",
+        backgroundColor: colors.surface,
         borderRadius: 16,
         padding: 14,
         gap: 12,

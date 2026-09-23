@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { colors, cardShadow } from "./tokens";
 export const styles=StyleSheet.create({
     container:{
         flex: 1, //deve occupare tutto lo spazio disponibile
@@ -11,18 +12,14 @@ export const styles=StyleSheet.create({
         padding:14,
         borderRadius:16,
         margin:5,
-        backgroundColor: "white",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 3,
-        elevation:2
+        backgroundColor: colors.surface,
+        ...cardShadow,
     },
     subIconContainer: {
         width: 40,
         height: 40,
         borderRadius: 12,
-        backgroundColor: "#E8F8F0",
+        backgroundColor: colors.primarySoft,
         justifyContent: "center",
         alignItems: "center",
         marginRight: 12,
@@ -44,41 +41,37 @@ export const styles=StyleSheet.create({
         padding: 14,
         borderRadius: 16,
         margin: 5,
-        backgroundColor: "#F5F5F5",   // grigio molto tenue
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        backgroundColor: colors.surfaceAlt,   // grigio molto tenue
+        ...cardShadow,
     },
     pausedIconContainer: {
         width: 40,
         height: 40,
         borderRadius: 12,
-        backgroundColor: "#E5E5E5",
+        backgroundColor: colors.border,
         justifyContent: "center",
         alignItems: "center",
         marginRight: 12,
     },
     pausedMeta: {
-    color: "#999",
+    color: colors.textMuted,
     fontSize: 13,
     },
     reactivateLink: {
-    color: "#2ECC71",
+    color: colors.primary,
     fontWeight: "bold",
     },
     subMeta: {
-        color: "#666",
+        color: colors.textMuted,
         fontSize: 13,
     },
     dueCard: {
         borderWidth: 1,
-        borderColor: "#F5C518",
+        borderColor: colors.accent,
         borderRadius: 16,
         padding: 14,
         margin: 5,
-        backgroundColor: "#FFFDF3",
+        backgroundColor: colors.warningSurface,
     },
     dueHeader: {
         flexDirection: "row",
@@ -91,8 +84,8 @@ export const styles=StyleSheet.create({
         marginTop: 4,
     },
     dueBadge: {
-        backgroundColor: "#FCECC0",
-        color: "#B8860B",
+        backgroundColor: colors.warningBadge,
+        color: colors.warningText,
         fontSize: 11,
         fontWeight: "bold",
         paddingHorizontal: 8,
@@ -101,13 +94,13 @@ export const styles=StyleSheet.create({
         overflow: "hidden",
     },
     dueOverdue: {
-        color: "#999",
+        color: colors.textMuted,
         fontSize: 12,
     },
     dueQuestion: {
         marginTop: 10,
         marginBottom: 12,
-        color: "#333",
+        color: colors.textSecondary,
     },
     dueActions: {
         flexDirection: "row",

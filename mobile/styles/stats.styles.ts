@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { colors } from "./tokens";
 
 export const styles = StyleSheet.create({
     container: {
@@ -19,7 +20,7 @@ export const styles = StyleSheet.create({
     card: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "white",
+        backgroundColor: colors.surface,
         borderRadius: 20,
         padding: 20,
         gap: 16,

@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { colors, cardShadow } from "./tokens";
 
 export const styles = StyleSheet.create({
   container: {
@@ -26,23 +27,19 @@ export const styles = StyleSheet.create({
     paddingRight: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#E5E5EA",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    borderColor: colors.border,
+    ...cardShadow,
   },
   assistantButtonPressed: {
-    backgroundColor: "#F0F0F2",
+    backgroundColor: colors.surfaceAlt,
     opacity: 0.85,
   },
   assistantButtonLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#1B4332",
+    color: colors.primaryDark,
   },
   assistantIcon: {
     width: 28,
@@ -74,12 +71,12 @@ export const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontWeight: "600",
-    color: "#3A3A3C",
+    color: colors.textSecondary,
     marginTop: 4,
   },
   emptyHint: {
     textAlign: "center",
-    color: "#8A8A8E",
+    color: colors.textMuted,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -91,12 +88,8 @@ export const styles = StyleSheet.create({
     borderRadius:16,
     margin:5,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation:2
+    borderBottomColor: colors.border,
+    ...cardShadow,
   },
   expenseInfo:{
     flex:1
@@ -107,18 +100,18 @@ export const styles = StyleSheet.create({
   },
   expenseAmount: {
     fontSize: 16,
-    color: "#E74C3C",
+    color: colors.danger,
   },
   expenseMeta:{
 
   },
   linkExpenses:{
-    color: "#2ECC71",
+    color: colors.primary,
     fontWeight:"bold",
     textAlign:"right"
   },
   budgetCard: {
-    backgroundColor: "#1B4332",
+    backgroundColor: colors.primaryDark,
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
@@ -131,7 +124,7 @@ export const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: colors.overlayFaint,
   },
   budgetLabelRow: {
     flexDirection: "row",
@@ -140,13 +133,13 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
   },
   budgetLabel: {
-    color: "#F5C518",
+    color: colors.accent,
     fontWeight: "bold",
     fontSize: 12,
     letterSpacing: 0.5,
   },
   budgetCycleRange: {
-    color: "rgba(255,255,255,0.6)",
+    color: colors.textOnDarkMuted,
     fontSize: 12,
   },
   budgetAmountRow: {
@@ -156,25 +149,25 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
   },
   budgetRemaining: {
-    color: "white",
+    color: colors.textOnPrimary,
     fontSize: 34,
     fontWeight: "bold",
   },
   budgetOf: {
-    color: "rgba(255,255,255,0.6)",
+    color: colors.textOnDarkMuted,
     fontSize: 14,
     marginBottom: 4,
   },
   progressBarBackground: {
     height: 8,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: colors.overlayLight,
     borderRadius: 4,
     overflow: "hidden",
     marginBottom: 14,
   },
   progressBarFill: {
     height: "100%",
-    backgroundColor: "#2ECC71",
+    backgroundColor: colors.primary,
     borderRadius: 4,
   },
   budgetLegendRow: {
@@ -192,11 +185,11 @@ export const styles = StyleSheet.create({
     borderRadius: 4,
   },
   budgetLegendText: {
-    color: "rgba(255,255,255,0.85)",
+    color: colors.textOnDark,
     fontSize: 13,
   },
   weeklyCard: {
-    backgroundColor: "#1B2B22",
+    backgroundColor: colors.surfaceDarker,
     borderRadius: 20,
     padding: 20,
     marginTop: 16,
@@ -204,7 +197,7 @@ export const styles = StyleSheet.create({
     overflow:"visible"
   },
   weeklyTitle: {
-    color: "white",
+    color: colors.textOnPrimary,
     fontWeight: "bold",
     fontSize: 15,
     marginBottom: 12,
@@ -214,7 +207,7 @@ export const styles = StyleSheet.create({
     overflow: "visible",
   },
   weeklyBarLabel: {
-    color: "rgba(255,255,255,0.85)",
+    color: colors.textOnDark,
     fontSize: 10,
     textAlign: "center",
   },
