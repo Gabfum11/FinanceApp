@@ -1,12 +1,14 @@
-import { View, Alert, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
 import { Text, IconButton, Button, Dialog, Portal, TextInput, ActivityIndicator, Snackbar, Switch } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { esportaCsv } from "@/utils/exportData";
-import { impostaPromemoria, promemoriaAttivi } from "@/utils/notifications";
+import { impostaPromemoria, promemoriaAttivi, NOTIFICHE_DISPONIBILI } from "@/utils/notifications";
 import { contattaSupporto, SUPPORT_EMAIL } from "@/utils/support";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { styles } from "@/styles/profile.styles";
+import { colors } from "@/styles/tokens";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 
@@ -26,6 +28,7 @@ export default function ProfileScreen() {
     const [promemoria, setPromemoria] = useState(false);
     const [promemoriaInCorso, setPromemoriaInCorso] = useState(false);
     const [showSupportDialog, setShowSupportDialog] = useState(false);
+    const [showLogoutAllDialog, setShowLogoutAllDialog] = useState(false);
 
     async function handleContatta() {
         setShowSupportDialog(false);
@@ -63,14 +66,11 @@ export default function ProfileScreen() {
     }
 
     function confirmLogoutAll() {
-        Alert.alert(
-            "Disconnetti tutti i dispositivi",
-            "Dovrai accedere di nuovo su ogni dispositivo, questo compreso. Usalo se hai perso il telefono.",
-            [{ text: "Annulla" }, { text: "Disconnetti", onPress: handleLogoutAll }]
-        );
+        setShowLogoutAllDialog(true);
     }
 
     async function handleLogoutAll() {
+        setShowLogoutAllDialog(false);
         setIsLoggingOutAll(true);
         try {
             const response = await apiFetch("/auth/logout-all", { method: "POST" });
@@ -146,10 +146,11 @@ export default function ProfileScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
+                <Text style={styles.headerTitle}>Profilo</Text>
                 <IconButton
                     icon="logout"
                     mode="outlined"
-                    iconColor="#E74C3C"
+                    iconColor={colors.danger}
                     onPress={handleLogout}
                     style={styles.logoutButton}
                 />
@@ -169,10 +170,14 @@ export default function ProfileScreen() {
                 <View></View>
             </View>
 
+            {/* in Expo Go il modulo delle notifiche non esiste: uno switch
+                che non puo' funzionare e' peggio di una voce assente */}
+            {NOTIFICHE_DISPONIBILI && (
+            <>
             <Text style={styles.sectionLabel}>APP</Text>
             <View style={styles.sectionCard}>
                 <View style={styles.row}>
-                    <MaterialCommunityIcons name="bell-outline" size={20} color="#F5C518" />
+                    <MaterialCommunityIcons name="bell-outline" size={20} color={colors.accent} />
                     <View style={styles.rowTextGroup}>
                         <Text style={styles.rowLabel}>Promemoria abbonamenti</Text>
                         <Text style={styles.rowHint}>
@@ -186,6 +191,8 @@ export default function ProfileScreen() {
                     />
                 </View>
             </View>
+            </>
+            )}
 
             <Text style={styles.sectionLabel}>DATI</Text>
             <View style={styles.sectionCard}>
@@ -194,11 +201,11 @@ export default function ProfileScreen() {
                     onPress={() => handleExport("expenses")}
                     disabled={esportazione !== null}
                 >
-                    <MaterialCommunityIcons name="file-download-outline" size={20} color="#2ECC71" />
+                    <MaterialCommunityIcons name="file-download-outline" size={20} color={colors.primary} />
                     <Text style={styles.rowLabel}>Esporta spese</Text>
                     {esportazione === "expenses"
                         ? <ActivityIndicator size={18} />
-                        : <MaterialCommunityIcons name="chevron-right" size={20} color="#C7C7CC" />}
+                        : <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />}
                 </Pressable>
                 <View style={styles.rowDivider} />
                 <Pressable
@@ -206,20 +213,20 @@ export default function ProfileScreen() {
                     onPress={() => handleExport("subscriptions")}
                     disabled={esportazione !== null}
                 >
-                    <MaterialCommunityIcons name="file-download-outline" size={20} color="#2ECC71" />
+                    <MaterialCommunityIcons name="file-download-outline" size={20} color={colors.primary} />
                     <Text style={styles.rowLabel}>Esporta abbonamenti</Text>
                     {esportazione === "subscriptions"
                         ? <ActivityIndicator size={18} />
-                        : <MaterialCommunityIcons name="chevron-right" size={20} color="#C7C7CC" />}
+                        : <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />}
                 </Pressable>
             </View>
 
             <Text style={styles.sectionLabel}>SUPPORTO</Text>
             <View style={styles.sectionCard}>
                 <Pressable style={styles.row} onPress={() => setShowSupportDialog(true)}>
-                    <MaterialCommunityIcons name="help-circle-outline" size={20} color="#3498DB" />
+                    <MaterialCommunityIcons name="help-circle-outline" size={20} color={colors.primary} />
                     <Text style={styles.rowLabel}>Contattaci</Text>
-                    <MaterialCommunityIcons name="chevron-right" size={20} color="#C7C7CC" />
+                    <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
                 </Pressable>
             </View>
 
@@ -237,16 +244,26 @@ export default function ProfileScreen() {
 
             <Button
                 mode="text"
-                textColor="#C0392B"
+                textColor={colors.dangerDark}
                 onPress={() => setShowDeleteDialog(true)}
                 style={styles.deleteButton}
             >
                 Elimina account
             </Button>
 
+            <ConfirmDialog
+                visible={showLogoutAllDialog}
+                title="Disconnetti tutti i dispositivi"
+                message="Dovrai accedere di nuovo su ogni dispositivo, questo compreso. Usalo se hai perso il telefono."
+                confirmLabel="Disconnetti"
+                destructive
+                onConfirm={handleLogoutAll}
+                onDismiss={() => setShowLogoutAllDialog(false)}
+            />
+
             <Portal>
-                <Dialog visible={showDeleteDialog} onDismiss={closeDeleteDialog}>
-                    <Dialog.Title>Elimina account</Dialog.Title>
+                <Dialog visible={showDeleteDialog} onDismiss={closeDeleteDialog} style={styles.dialog}>
+                    <Dialog.Title style={styles.dialogTitle}>Elimina account</Dialog.Title>
                     <Dialog.Content>
                         <Text style={styles.deleteWarning}>
                             Verranno eliminati definitivamente il tuo profilo, le tue spese e i tuoi
@@ -268,7 +285,7 @@ export default function ProfileScreen() {
                         </Button>
                         <Button
                             onPress={handleDeleteAccount}
-                            textColor="#C0392B"
+                            textColor={colors.dangerDark}
                             disabled={isDeleting || password.length === 0}
                             loading={isDeleting}
                         >
@@ -277,17 +294,25 @@ export default function ProfileScreen() {
                     </Dialog.Actions>
                 </Dialog>
 
-                <Dialog visible={showSupportDialog} onDismiss={() => setShowSupportDialog(false)}>
-                    <Dialog.Title>Feedback e supporto</Dialog.Title>
+                <Dialog
+                    visible={showSupportDialog}
+                    onDismiss={() => setShowSupportDialog(false)}
+                    style={styles.dialog}
+                >
+                    <Dialog.Title style={styles.dialogTitle}>Feedback e supporto</Dialog.Title>
                     <Dialog.Content>
-                        <Text style={styles.supportText}>
+                        <Text style={styles.dialogText}>
                             Contattaci per qualsiasi domanda all'indirizzo
                         </Text>
                         <Text style={styles.supportEmail}>{SUPPORT_EMAIL}</Text>
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <Button onPress={() => setShowSupportDialog(false)}>Annulla</Button>
-                        <Button onPress={handleContatta}>Manda email</Button>
+                        <Button onPress={() => setShowSupportDialog(false)} textColor={colors.textMuted}>
+                            Annulla
+                        </Button>
+                        <Button onPress={handleContatta} textColor={colors.primary}>
+                            Manda email
+                        </Button>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>

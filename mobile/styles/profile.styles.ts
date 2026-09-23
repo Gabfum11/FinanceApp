@@ -10,9 +10,14 @@ export const styles = StyleSheet.create({
     },
     header:{
         flexDirection: "row",
-        justifyContent: "flex-end",  // spinge il contenuto verso la fine (destra, in una riga)
+        justifyContent: "space-between",  // titolo a sinistra, logout a destra
         alignItems: "center",
         marginBottom: spacing.xl,
+    },
+    headerTitle: {
+        fontSize: 28,
+        fontWeight: "700",
+        color: colors.text,
     },
     logoutButton:{
         margin:0
