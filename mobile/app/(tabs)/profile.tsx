@@ -179,7 +179,7 @@ export default function ProfileScreen() {
                 <View style={styles.row}>
                     <MaterialCommunityIcons name="bell-outline" size={20} color={colors.accent} />
                     <View style={styles.rowTextGroup}>
-                        <Text style={styles.rowLabel}>Promemoria abbonamenti</Text>
+                        <Text style={styles.rowLabelInGroup}>Promemoria abbonamenti</Text>
                         <Text style={styles.rowHint}>
                             {promemoria ? "Il giorno prima del rinnovo, alle 9:00" : "Disattivati"}
                         </Text>

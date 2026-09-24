@@ -92,6 +92,13 @@ export const styles = StyleSheet.create({
     rowTextGroup: {
         flex: 1,
     },
+    //dentro rowTextGroup il testo e' in colonna: qui flex:1 lo farebbe
+    //espandere in altezza e ne taglierebbe il contenuto, al contrario di
+    //quanto fa nelle righe dove l'etichetta e' figlia diretta della riga
+    rowLabelInGroup: {
+        fontSize: 15,
+        color: colors.text,
+    },
     rowHint: {
         fontSize: 12,
         color: colors.textMuted,
