@@ -1,4 +1,6 @@
-import { KeyboardAvoidingView, View, FlatList, Platform, Pressable } from "react-native";
+import { KeyboardAvoidingView, View, FlatList, Platform, Pressable, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { colors } from "../styles/tokens";
 import { Text, IconButton, TextInput, Button, Switch } from "react-native-paper";
 import { useState } from "react";
 import { API_URL } from "@/config";
@@ -27,6 +29,7 @@ export default function AssistantScreen() {
     id: string;
     sender: "user" | "system";
     text?: string;
+    examples?: string[]; //elenco sotto il testo, solo per il benvenuto
     expenseData?: ExpenseConfirmation;
   };
 
@@ -40,7 +43,14 @@ export default function AssistantScreen() {
     {
       id: "benvenuto",
       sender: "system",
-      text: "Ciao! Sono l'assistente di Trackit. Dimmi cosa hai speso e quanto, e se vuoi anche quando. Se è una spesa che si ripete, la salvo come abbonamento. Ecco qualche esempio:",
+      text: "Ciao! Sono l'assistente di Trackit. Dimmi cosa hai speso e quanto, e se vuoi anche quando. Se è una spesa che si ripete, la salvo come abbonamento.",
+      //coprono i casi che l'assistente sa riconoscere: base, con data, ricorrente
+      examples: [
+        "Pizza 15 euro",
+        "Spesa 40 euro ieri",
+        "Benzina 60 euro il 3 settembre",
+        "Palestra 50 euro al mese",
+      ],
     },
   ]);
   const [autoRenew, setAutoRenew] = useState(true);
@@ -89,6 +99,7 @@ export default function AssistantScreen() {
 
       const data = await response.json();
       setPendingExpense(data);
+      setAutoRenew(true); //ogni proposta riparte dal default, non dalla scelta fatta sulla precedente
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -118,6 +129,7 @@ function handleDatePickerDismiss() {
       frequency: pendingExpense.frequency,
       category_id: pendingExpense.category_id,
       start_date: pendingExpense.date, //da quando parte: genera gli eventuali arretrati
+      auto_renew: autoRenew,
     }:
     {
       description: pendingExpense.description,
@@ -150,10 +162,12 @@ function handleDatePickerDismiss() {
       return;
     }
 
-    const savedExpense = await response.json();
+    const saved = await response.json();
+    //la risposta di /subscriptions/ non ha "recurring" né "date": si parte dalla proposta
+    //confermata, così la card sa dire se è stata aggiunta una spesa o un abbonamento
     setMessages((prev) => [
       ...prev,
-      { id: Date.now().toString(), sender: "system", expenseData: savedExpense },
+      { id: Date.now().toString(), sender: "system", expenseData: { ...pendingExpense, id: saved.id } },
     ]);
     setPendingExpense(null); //rimuove la card di conferma
   }
@@ -184,43 +198,60 @@ function handleDatePickerDismiss() {
     setPendingExpense(null);
   }
 
-  //coprono i casi che l'assistente sa riconoscere: base, con data, ricorrente
-  const esempi = [
-    "Pizza 15 euro",
-    "Spesa 40 euro ieri",
-    "Benzina 60 euro il 3 settembre",
-    "Palestra 50 euro al mese",
-    "Netflix 13 euro ogni mese",
-  ];
-
   return (
+    //senza safe area il benvenuto finiva sotto la barra di stato e l'input sotto i tasti di navigazione
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"} //height fa si che su android, quando appare la tastiera, il contenitore si ridimensiona spingendo il campo input verso l'alto
     >
+      <View style={styles.header}>
+        <Image
+          source={require("../assets/images/logo/saldo-bot-1024.png")}
+          style={styles.headerAvatar}
+        />
+        <View style={styles.headerText}>
+          <Text variant="titleMedium" style={styles.headerTitle}>Assistente</Text>
+          <Text variant="bodySmall" style={styles.headerSubtitle}>Registra spese scrivendo a parole</Text>
+        </View>
+        <IconButton icon="close" onPress={() => router.back()} accessibilityLabel="Chiudi l'assistente" />
+      </View>
+
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.chatContainer}
         renderItem={({ item }) => (
           item.expenseData ? (
-            <View style={styles.expenseCard}>
-              <Text variant="labelSmall" style={styles.cardLabel}>IMPORTO</Text>
-              <Text variant="headlineMedium" style={styles.cardAmount}>
-                €{item.expenseData.amount.toFixed(2)}
-              </Text>
-              <Text style={styles.confirmationDetail}>
-                Descrizione: {item.expenseData.description}
-              </Text>
-              <View style={styles.categoryRow}>
-                <MaterialCommunityIcons
-                  name={iconaPerGruppo(item.expenseData.category_group) as any}
-                  size={18}
-                  color="#2ECC71"
-                />
-                <Text style={styles.confirmationDetail}>
-                  {" "}{item.expenseData.category_name ?? "Non assegnata"}
+            //card di esito: dice chiaramente che il salvataggio è andato a buon fine
+            <View style={styles.savedCard}>
+              <View style={styles.savedHeader}>
+                <MaterialCommunityIcons name="check-circle" size={20} color={colors.primary} />
+                <Text style={styles.savedTitle}>
+                  {item.expenseData.recurring ? "Abbonamento aggiunto" : "Spesa aggiunta"}
                 </Text>
+              </View>
+              <View style={styles.savedBody}>
+                <View style={styles.savedIcon}>
+                  <MaterialCommunityIcons
+                    name={iconaPerGruppo(item.expenseData.category_group) as any}
+                    size={20}
+                    color={colors.primaryDark}
+                  />
+                </View>
+                <View style={styles.savedInfo}>
+                  <Text style={styles.savedDescription} numberOfLines={1}>
+                    {item.expenseData.description}
+                  </Text>
+                  <Text style={styles.savedMeta}>
+                    {item.expenseData.category_name ?? "Non assegnata"}
+                    {" · "}
+                    {item.expenseData.recurring
+                      ? item.expenseData.frequency === "monthly" ? "Mensile" : item.expenseData.frequency === "weekly" ? "Settimanale" : "Annuale"
+                      : fromDateString(item.expenseData.date).toLocaleDateString("it-IT")}
+                  </Text>
+                </View>
+                <Text style={styles.savedAmount}>€{item.expenseData.amount.toFixed(2)}</Text>
               </View>
             </View>
           ) : (
@@ -233,6 +264,14 @@ function handleDatePickerDismiss() {
               <Text style={item.sender === "user" ? styles.userText : styles.systemText}>
                 {item.text}
               </Text>
+              {item.examples && (
+                <View style={styles.examples}>
+                  <Text style={styles.examplesLabel}>Per esempio:</Text>
+                  {item.examples.map((esempio) => (
+                    <Text key={esempio} style={styles.example}>“{esempio}”</Text>
+                  ))}
+                </View>
+              )}
             </View>
           )
         )}
@@ -240,19 +279,6 @@ function handleDatePickerDismiss() {
           isLoading ? (
             <View style={[styles.messageBubble, styles.systemBubble]}>
               <Text style={styles.systemText}>Sto analizzando...</Text>
-            </View>
-          ) : messages.length === 1 && !pendingExpense ? (
-            //solo finché c'è il benvenuto: dopo il primo messaggio ingombrerebbero la chat
-            <View style={styles.suggestions}>
-              {esempi.map((esempio) => (
-                <Pressable
-                  key={esempio}
-                  onPress={() => setExpenseText(esempio)}
-                  style={({ pressed }) => [styles.suggestion, pressed && styles.suggestionPressed]}
-                >
-                  <Text style={styles.suggestionText}>{esempio}</Text>
-                </Pressable>
-              ))}
             </View>
           ) : null
         }
@@ -334,5 +360,6 @@ function handleDatePickerDismiss() {
         />
       </View>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
