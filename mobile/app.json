@@ -12,7 +12,11 @@
     },
     "android": {
       "predictiveBackGestureEnabled": false,
-      "package": "com.gabrifu03.trackIt"
+      "package": "com.gabrifu03.trackIt",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo/saldo-mark-transparent-1024.png",
+        "backgroundColor": "#2ECC71"
+      }
     },
     "web": {
       "output": "static",

@@ -46,3 +46,5 @@ backend/.pytest_cache/
 # === Comuni ===
 .DS_Store
 *.pem
+
+PRIVACY-DATI.md

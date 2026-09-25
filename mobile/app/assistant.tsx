@@ -35,7 +35,14 @@ export default function AssistantScreen() {
   const [expenseText, setExpenseText] = useState(""); //stato collegato al campo di testo dove l'utente scrive
   const [pendingExpense, setPendingExpense] = useState<ExpenseConfirmation | null>(null); //rappresenta la card in attesa di decisione dell'utente
   const [isLoading, setIsLoading] = useState(false); //gestisce il messaggio "sto analizzando"
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  //il benvenuto è il primo messaggio del bot: sembra che l'assistente parli davvero
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: "benvenuto",
+      sender: "system",
+      text: "Ciao! Sono l'assistente di Trackit. Dimmi cosa hai speso e quanto, e se vuoi anche quando. Se è una spesa che si ripete, la salvo come abbonamento. Ecco qualche esempio:",
+    },
+  ]);
   const [autoRenew, setAutoRenew] = useState(true);
   const [showPicker, setShowPicker] = useState(false);
   
@@ -177,23 +184,20 @@ function handleDatePickerDismiss() {
     setPendingExpense(null);
   }
 
+  //coprono i casi che l'assistente sa riconoscere: base, con data, ricorrente
+  const esempi = [
+    "Pizza 15 euro",
+    "Spesa 40 euro ieri",
+    "Benzina 60 euro il 3 settembre",
+    "Palestra 50 euro al mese",
+    "Netflix 13 euro ogni mese",
+  ];
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"} //height fa si che su android, quando appare la tastiera, il contenitore si ridimensiona spingendo il campo input verso l'alto
     >
-      <View style={styles.introContainer}>
-        <Text variant="titleMedium" style={styles.title}>Registra la tua spesa</Text>
-        <Text variant="bodyMedium" style={styles.sectionParagraph}>
-          Scrivi importo e descrizione. Puoi aggiungere quando l'hai fatta, e se si ripete diventa un abbonamento.
-        </Text>
-        <View style={styles.examples}>
-          <Text variant="bodySmall" style={styles.example}>"Pizza 15 euro"</Text>
-          <Text variant="bodySmall" style={styles.example}>"Spesa 40 euro ieri"</Text>
-          <Text variant="bodySmall" style={styles.example}>"Palestra 50 euro al mese"</Text>
-        </View>
-      </View>
-
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
@@ -236,6 +240,19 @@ function handleDatePickerDismiss() {
           isLoading ? (
             <View style={[styles.messageBubble, styles.systemBubble]}>
               <Text style={styles.systemText}>Sto analizzando...</Text>
+            </View>
+          ) : messages.length === 1 && !pendingExpense ? (
+            //solo finché c'è il benvenuto: dopo il primo messaggio ingombrerebbero la chat
+            <View style={styles.suggestions}>
+              {esempi.map((esempio) => (
+                <Pressable
+                  key={esempio}
+                  onPress={() => setExpenseText(esempio)}
+                  style={({ pressed }) => [styles.suggestion, pressed && styles.suggestionPressed]}
+                >
+                  <Text style={styles.suggestionText}>{esempio}</Text>
+                </Pressable>
+              ))}
             </View>
           ) : null
         }

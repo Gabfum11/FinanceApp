@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, FlatList, Image, Pressable } from "react-native";
+import { View, FlatList, Pressable } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button, Text } from "react-native-paper";
 import { BarChart } from "react-native-gifted-charts";
@@ -9,6 +9,15 @@ import { colors } from "../../styles/tokens";
 import { apiFetch } from "@/utils/apiFetch";
 import { Link, useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withDelay,
+  useReducedMotion,
+} from "react-native-reanimated";
 type Expense = {
   id: number;
   description: string;
@@ -66,6 +75,26 @@ export default function HomeScreen() {
   const [nickname, setNickname] = useState("");
   const [budgetStatus, setBudgetStatus] = useState<{ budget: number | null; spent: number; remaining: number | null; cycle_start: string; cycle_end: string } | null>(null);
   const [weeklyStats, setWeeklyStats] = useState<DayStat[]>([]);
+  const rotazioneBot = useSharedValue(0);
+  const riduciMovimento = useReducedMotion();
+
+  useEffect(() => {
+    if (riduciMovimento) return;
+    //un saluto breve ogni 4s, poi si ferma: invita a chiedere senza disturbare
+    rotazioneBot.value = withRepeat(
+      withDelay(4000, withSequence(
+        withTiming(-12, { duration: 120 }),
+        withTiming(12, { duration: 160 }),
+        withTiming(-8, { duration: 140 }),
+        withTiming(0, { duration: 120 }),
+      )),
+      3,
+    );
+  }, [riduciMovimento]);
+
+  const salutoStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotazioneBot.value}deg` }],
+  }));
   async function loadExpenses() {
     //la Home ne mostra due: scaricare tutto lo storico a ogni apertura
     //sarebbe uno spreco che peggiora col passare del tempo
@@ -162,9 +191,9 @@ export default function HomeScreen() {
             pressed && styles.assistantButtonPressed,
           ]}
         >
-          <Image
+          <Animated.Image
             source={require("../../assets/images/logo/saldo-bot-1024.png")}
-            style={styles.assistantIcon}
+            style={[styles.assistantIcon, salutoStyle]}
           />
           <Text style={styles.assistantButtonLabel}>Chiedi</Text>
         </Pressable>

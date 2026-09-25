@@ -50,7 +50,7 @@ export default function TabsLayout() {
                 width: 56,
                 height: 56,
                 borderRadius: 28, //la metà della larghezza/altezza, utile per ottenere un cerchio perfetto
-                backgroundColor: "#F1C40F",
+                backgroundColor: "#F5C518",
                 //ombra sotto il pulsante su ios
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 2 },

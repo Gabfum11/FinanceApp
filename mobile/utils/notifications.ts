@@ -1,7 +1,24 @@
-import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiFetch } from "@/utils/apiFetch";
+
+// expo-notifications è stato rimosso da Expo Go con SDK 53: importarlo in cima
+// farebbe fallire il caricamento della schermata Abbonamenti. Con require()
+// dentro un try, in Expo Go l'app parte e i promemoria restano disattivati.
+const IN_EXPO_GO = Constants.appOwnership === "expo";
+
+let Notifications: any = null;
+if (!IN_EXPO_GO) {
+  try {
+    Notifications = require("expo-notifications");
+  } catch {
+    //modulo assente: lo switch dei promemoria non comparirà
+  }
+}
+
+/** Se false, le notifiche non sono disponibili: lo switch va nascosto. */
+export const NOTIFICHE_DISPONIBILI = Notifications !== null;
 
 // Promemoria per gli abbonamenti in scadenza: il giorno prima alle 9:00.
 //
@@ -21,14 +38,16 @@ type Abbonamento = {
   is_active: boolean;
 };
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+if (Notifications) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 export async function promemoriaAttivi(): Promise<boolean> {
   return (await AsyncStorage.getItem(CHIAVE_ATTIVE)) === "true";
@@ -36,6 +55,7 @@ export async function promemoriaAttivi(): Promise<boolean> {
 
 /** Chiede il permesso se non è già stato dato. Restituisce se è concesso. */
 async function assicuraPermesso(): Promise<boolean> {
+  if (!Notifications) return false;
   const { status } = await Notifications.getPermissionsAsync();
   if (status === "granted") return true;
   //su Android il permesso è negabile definitivamente: se l'utente ha già
@@ -45,7 +65,7 @@ async function assicuraPermesso(): Promise<boolean> {
 }
 
 async function preparaCanaleAndroid() {
-  if (Platform.OS !== "android") return;
+  if (!Notifications || Platform.OS !== "android") return;
   //senza un canale esplicito Android usa quello predefinito, che l'utente
   //non può regolare separatamente dalle altre notifiche dell'app
   await Notifications.setNotificationChannelAsync("abbonamenti", {
@@ -63,6 +83,7 @@ async function preparaCanaleAndroid() {
  * e tenere traccia di ogni caso sarebbe più fragile che rifare da capo.
  */
 export async function ripianificaPromemoria(): Promise<void> {
+  if (!Notifications) return;
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
     if (!(await promemoriaAttivi())) return;
@@ -113,6 +134,7 @@ export async function ripianificaPromemoria(): Promise<void> {
 
 /** Accende o spegne i promemoria. Restituisce lo stato effettivo. */
 export async function impostaPromemoria(attivi: boolean): Promise<boolean> {
+  if (!Notifications) return false;
   if (!attivi) {
     await AsyncStorage.setItem(CHIAVE_ATTIVE, "false");
     await Notifications.cancelAllScheduledNotificationsAsync();

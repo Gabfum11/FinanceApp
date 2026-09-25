@@ -5,27 +5,26 @@ export const styles = StyleSheet.create({
     container: {
         flex: 1
     },
-    introContainer: {
-        alignItems:"center",
-        marginTop:50
+    // esempi toccabili: riempiono il campo di testo, l'utente li corregge e invia
+    suggestions: {
+        flexDirection: "row",
+        flexWrap: "wrap", // vanno a capo invece di uscire dallo schermo
+        gap: 8,
     },
-    title:{
-        fontWeight:"bold"
-        
+    suggestion: {
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.surface,
     },
-    sectionParagraph:{
-        textAlign:"center",
-        paddingHorizontal: 24,
+    suggestionPressed: {
+        opacity: 0.6,
     },
-    // gli esempi staccati dal paragrafo: si leggono come cose da copiare
-    examples: {
-        marginTop: 12,
-        gap: 6,
-        alignItems: "center",
-    },
-    example: {
-        color: colors.textMuted,
-        fontStyle: "italic",
+    suggestionText: {
+        fontSize: 13,
+        color: colors.textSecondary,
     },
     chatContainer:{
         padding:12, // i messaggi non toccano i bordi dello schermo
