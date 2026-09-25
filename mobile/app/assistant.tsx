@@ -91,7 +91,7 @@ export default function AssistantScreen() {
             sender: "system",
             text: occupato
               ? detail ?? "Troppe richieste in questo momento. Riprova tra qualche istante."
-              : 'Non sono riuscito a capire. Prova a indicare cosa hai speso e quanto, tipo "Pizza 15 euro".',
+              : 'Non sono riuscito a capire. Prova a dirmi cosa hai comprato e quanto hai speso, per esempio "Pizza 15 euro".',
           },
         ]);
         return;
