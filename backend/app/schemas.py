@@ -102,7 +102,7 @@ class UserOut(BaseModel):
     id: int
     email: str
     nickname: str
-    
+    has_password: bool #False per gli account creati con Google
 
     class Config:
         from_attributes = True

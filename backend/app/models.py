@@ -8,24 +8,30 @@ from app.database import Base
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True) 
     email = Column(String, index=True, unique=True, nullable=False)
     #nullable: chi entra solo con Google non ha una password da conservare
     hashed_password = Column(String, nullable=True)
-    #id stabile dell'account Google: l'email puo' cambiare, questo no
-    google_id = Column(String, index=True, unique=True, nullable=True)
+    #id stabile dell'account Google: l'email puo' cambiare, questo no perche' e' un identificativo univoco generato da Google, serverà per login con Google. Se l'utente entra solo con email/password, resta null
+    google_id = Column(String, index=True, unique=True, nullable=True) 
     nickname = Column(String, nullable=True)
     monthly_budget = Column(Float, nullable=True)
     budget_start_day = Column(Integer, nullable=True, default=1)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     is_verified=Column(Boolean,default=False)
-    is_admin = Column(Boolean, default=False, nullable=False)
+    is_admin = Column(Boolean, default=False, nullable=False) #l'admin non puo' essere disattivato, serve per avere un account di emergenza per accedere al db se qualcosa va storto
     #finisce dentro ogni token: incrementandolo, tutti quelli gia' emessi
     #diventano invalidi. E' l'unico modo per disconnettere un dispositivo
     #perso prima della scadenza naturale del token
     token_version = Column(Integer, default=0, nullable=False, server_default="0")
     expenses = relationship("Expense", back_populates="owner")
+
+    @property
+    def has_password(self) -> bool:
+        #gli account creati con Google non hanno una password da confermare:
+        #l'app lo usa per non chiederla dove verrebbe comunque ignorata
+        return self.hashed_password is not None
 
 class Category(Base):
     __tablename__ = "categories"
@@ -55,7 +61,7 @@ class Expense(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
 
     owner = relationship("User", back_populates="expenses") #permette facilmente di ottenere il proprietario partendo da una spesa
-    category = relationship("Category", back_populates="expenses")
+    category = relationship("Category", back_populates="expenses") #se aggiungi una spesa, sqlalchemy aggiorna automaticamente la lista di spese della categoria, e viceversa
 
 class Subscriptions(Base):
     __tablename__ = "subscriptions"

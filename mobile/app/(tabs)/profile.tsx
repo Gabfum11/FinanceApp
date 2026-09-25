@@ -18,6 +18,9 @@ export default function ProfileScreen() {
     const [email, setEmail] = useState("");
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [password, setPassword] = useState("");
+    //gli account creati con Google non hanno password: chiedergliela farebbe
+    //sembrare valida qualsiasi cosa scritta, perche' il server la ignora
+    const [hasPassword, setHasPassword] = useState(true);
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
@@ -125,6 +128,7 @@ export default function ProfileScreen() {
                 const data = await response.json();
                 setNickname(data.nickname);
                 setEmail(data.email);
+                setHasPassword(data.has_password);
             }
         }
         loadUser();
@@ -269,14 +273,20 @@ export default function ProfileScreen() {
                             Verranno eliminati definitivamente il tuo profilo, le tue spese e i tuoi
                             abbonamenti. L'operazione non è reversibile.
                         </Text>
-                        <TextInput
-                            label="Conferma la password"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                            mode="outlined"
-                            autoCapitalize="none"
-                        />
+                        {hasPassword ? (
+                            <TextInput
+                                label="Conferma la password"
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry
+                                mode="outlined"
+                                autoCapitalize="none"
+                            />
+                        ) : (
+                            <Text style={styles.deleteWarning}>
+                                Il tuo account è collegato a Google.
+                            </Text>
+                        )}
                         {deleteError && <Text style={styles.deleteError}>{deleteError}</Text>}
                     </Dialog.Content>
                     <Dialog.Actions>
@@ -286,7 +296,7 @@ export default function ProfileScreen() {
                         <Button
                             onPress={handleDeleteAccount}
                             textColor={colors.dangerDark}
-                            disabled={isDeleting || password.length === 0}
+                            disabled={isDeleting || (hasPassword && password.length === 0)}
                             loading={isDeleting}
                         >
                             Elimina
