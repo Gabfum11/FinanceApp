@@ -1,16 +1,10 @@
 import os
 import random
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
+import httpx
 
-conf = ConnectionConfig( #dice alla libreria come collegarsi al server SMTP di gmail
-    MAIL_USERNAME=os.getenv("GMAIL_ADDRESS"),
-    MAIL_PASSWORD=os.getenv("GMAIL_APP_PASSWORD"),
-    MAIL_FROM=os.getenv("GMAIL_ADDRESS"),
-    MAIL_PORT=587,
-    MAIL_SERVER="smtp.gmail.com",
-    MAIL_STARTTLS=True,
-    MAIL_SSL_TLS=False,
-)
+BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+SENDER_EMAIL = os.getenv("GMAIL_ADDRESS")
+BREVO_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 def generate_otp_code() -> str: #genera un numero casuale a 6 cifre
@@ -21,12 +15,18 @@ async def send_otp_email(to_email: str, code: str, purpose: str):
     subject = "Verifica il tuo account" if purpose == "email_verification" else "Reimposta la tua password"
     body = f"Il tuo codice è: {code}\n\nScade tra 10 minuti."
 
-    message = MessageSchema(
-        subject=subject,
-        recipients=[to_email],
-        body=body,
-        subtype=MessageType.plain,
-    )
-
-    fm = FastMail(conf)
-    await fm.send_message(message)
+    #Render (piano gratuito) blocca le porte SMTP in uscita, quindi l'invio
+    #via smtp.gmail.com andava sempre in timeout: Brevo manda l'email tramite
+    #una chiamata HTTP, che non è bloccata
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.post(
+            BREVO_URL,
+            headers={"api-key": BREVO_API_KEY},
+            json={
+                "sender": {"email": SENDER_EMAIL, "name": "TrackIt"},
+                "to": [{"email": to_email}],
+                "subject": subject,
+                "textContent": body,
+            },
+        )
+    response.raise_for_status() #senza, un rifiuto di Brevo (chiave sbagliata, mittente non verificato) passerebbe inosservato
