@@ -17,8 +17,9 @@ export const styles = StyleSheet.create({
   title: {
     flex: 1,
   },
-  // pillola con sfondo, bordo ed etichetta: da sola l'icona si leggeva
-  // come un logo decorativo invece che come un comando
+  // pillola con sfondo ed etichetta: da sola l'icona si leggeva
+  // come un logo decorativo invece che come un comando.
+  // Giallo e nero come il "+" della tab bar: i due modi di aggiungere una spesa si somigliano
   assistantButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -27,19 +28,16 @@ export const styles = StyleSheet.create({
     paddingRight: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...cardShadow,
+    //niente ombra: su Android l'elevation disegnava un alone grigio attorno alla pillola gialla
+    backgroundColor: colors.accent,
   },
   assistantButtonPressed: {
-    backgroundColor: colors.surfaceAlt,
-    opacity: 0.85,
+    opacity: 0.8,
   },
   assistantButtonLabel: {
     fontSize: 14,
-    fontWeight: "600",
-    color: colors.primaryDark,
+    fontWeight: "700",
+    color: "black",
   },
   assistantIcon: {
     width: 28,
