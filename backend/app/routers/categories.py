@@ -24,6 +24,7 @@ def list_categories(db: Session = Depends(get_db), current_user: models.User=Dep
 
 @router.get("/grouped", response_model=List[schemas.CategoryGroupOut])
 def list_categories_grouped(db: Session = Depends(get_db), current_user: models.User=Depends(security.get_current_user)):
+    #current_user serve perchè l'endpoint richiede un token valido, ma non serve per la query, quindi non lo usiamo
     """Le categorie raggruppate per gruppo, ordinate per nome.
 
     Il picker deve distinguere i gruppi (intestazioni, non selezionabili) dalle

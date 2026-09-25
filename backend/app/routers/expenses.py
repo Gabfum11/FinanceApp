@@ -30,7 +30,7 @@ def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)
         amount=expense.amount,
         date=expense.date,
         category_id=expense.category_id,
-        user_id=current_user.id,  # temporaneo: useremo l'utente autenticato quando avremo il login
+        user_id=current_user.id,  
     )
     db.add(new_expense) #prepara il salvataggio
     db.commit() #salva davvero

@@ -90,6 +90,14 @@ def decode_access_token(token: str) -> dict | None:
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token") #schema che sa estrarre il token dall'header
 
 
+"""
+get_current_user fa cinque controlli:
+1. Il token e' valido (firma corretta, non scaduto)
+2. Il token e' di tipo access (non password_reset)
+3. Il token contiene un id utente , questo perchè alcuni token potrebbero non avere un id utente (es. token di reset password)
+4. L'utente esiste nel db
+5. La versione del token corrisponde a quella dell'utente (revoca)
+"""
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> models.User:
     credentials_exception = HTTPException(status_code=401, detail="Could not validate credentials")
     #il primo depends fa in modo che FastAPI estragga automaticamente il token dall'header Authorization e lo passi come stringa
