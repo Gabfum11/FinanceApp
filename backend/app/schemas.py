@@ -39,7 +39,8 @@ class SubscriptionCreate(BaseModel):
     frequency: Literal["monthly", "weekly", "yearly"]
     category_id: int | None = None
     start_date: date | None = None #se assente l'abbonamento parte da oggi
-    
+    auto_renew: bool = True #i client che non lo mandano mantengono il comportamento di prima
+
 
 class SubscriptionUpdate(BaseModel):
     description: str | None = Field(None, min_length=1, max_length=200)

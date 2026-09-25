@@ -53,7 +53,8 @@ def create_subscription(subscription: schemas.SubscriptionCreate, db: Session=De
         frequency=subscription.frequency,
         category_id=subscription.category_id,
         user_id=current_user.id,
-        next_date=next_date
+        next_date=next_date,
+        auto_renew=subscription.auto_renew,
     )
     db.add(new_subscription)
 
