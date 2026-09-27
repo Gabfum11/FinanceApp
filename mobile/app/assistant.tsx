@@ -46,7 +46,7 @@ export default function AssistantScreen() {
     {
       id: "benvenuto",
       sender: "system",
-      text: "Ciao! Sono l'assistente di Trackit. Dimmi cosa hai comprato, quanto hai speso e, se vuoi, anche quando. Se è una spesa che si ripete, la salvo come abbonamento.",
+      text: "Ciao! Sono l'assistente di TrackIt. Dimmi cosa hai comprato, quanto hai speso e, se vuoi, anche quando. Se è una spesa che si ripete, la salvo come abbonamento.",
       //coprono i casi che l'assistente sa riconoscere: base, con data, ricorrente
       examples: [
         "Pizza 15 euro",
@@ -242,7 +242,7 @@ function handleDatePickerDismiss() {
     >
       <View style={styles.header}>
         <Image
-          source={require("../assets/images/logo/saldo-bot-1024.png")}
+          source={require("../assets/images/logo/trackit-bot-1024.png")}
           style={styles.headerAvatar}
         />
         <View style={styles.headerText}>

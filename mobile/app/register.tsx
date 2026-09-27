@@ -52,7 +52,7 @@ export default function RegisterScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.logoContainer}>
-                <Image source={require("../assets/images/logo/saldo-icon-180.png")} style={styles.logo} />
+                <Image source={require("../assets/images/logo/trackit-icon-rounded-180.png")} style={styles.logo} />
                 <Text style={styles.logoLabel}>TrackIt</Text>
             </View>
             <Text variant="headlineMedium" style={styles.title}>

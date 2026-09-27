@@ -214,7 +214,7 @@ export default function HomeScreen() {
           ]}
         >
           <Animated.Image
-            source={require("../../assets/images/logo/saldo-bot-1024.png")}
+            source={require("../../assets/images/logo/trackit-bot-1024.png")}
             style={[styles.assistantIcon, salutoStyle]}
           />
           <Text style={styles.assistantButtonLabel}>Chiedi</Text>

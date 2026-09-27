@@ -4,7 +4,7 @@ import { TextInput, Button, Text, Snackbar } from "react-native-paper";
 import {styles} from "../styles/auth.styles";
 import { Link } from "expo-router";
 import { API_URL } from "@/config";
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from "expo-secure-store"; //permette di salvare in maniera persistente il token al riavvio dell'app
 import { useRouter } from "expo-router";
 import { useGoogleLogin } from "@/utils/useGoogleLogin";
 import { GoogleButton } from "@/components/GoogleButton";
@@ -56,7 +56,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>{/*container di tutta la schermata*/}
       <View style={styles.logoContainer}>
-        <Image source={require("../assets/images/logo/saldo-icon-180.png")} style={styles.logo} />
+        <Image source={require("../assets/images/logo/trackit-icon-rounded-180.png")} style={styles.logo} />
         <Text style={styles.logoLabel}>TrackIt</Text>
       </View>
       <Text variant="headlineMedium" style={styles.title}>

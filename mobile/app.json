@@ -4,7 +4,7 @@
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo/saldo-icon-1024.png",
+    "icon": "./assets/images/logo/trackit-icon-1024.png",
     "scheme": "mobile",
     "userInterfaceStyle": "light",
     "ios": {
@@ -14,20 +14,21 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.gabrifu03.trackIt",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo/saldo-mark-transparent-1024.png",
+        "foregroundImage": "./assets/images/logo/trackit-adaptive-foreground-1024.png",
+        "monochromeImage": "./assets/images/logo/trackit-adaptive-monochrome-1024.png",
         "backgroundColor": "#2ECC71"
       }
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/logo/trackit-favicon-48.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo/saldo-icon-1024.png",
+          "image": "./assets/images/logo/trackit-icon-rounded-1024.png",
           "imageWidth": 200,
           "backgroundColor": "#ffffff"
         }
@@ -40,7 +41,13 @@
       "@react-native-community/datetimepicker",
       "@react-native-google-signin/google-signin",
       "expo-sharing",
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/logo/trackit-notification-96.png",
+          "color": "#2ECC71"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
