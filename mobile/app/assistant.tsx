@@ -2,16 +2,17 @@ import { KeyboardAvoidingView, View, FlatList, Platform, Pressable, Image } from
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../styles/tokens";
 import { Text, IconButton, TextInput, Button, Switch, Portal } from "react-native-paper";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { API_URL } from "@/config";
 import { styles } from "../styles/assistant.styles";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { toDateString, fromDateString } from "@/utils/date"
 import { iconaPerGruppo } from "@/utils/categoryIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
+import { prendiSalvataggio } from "@/utils/esitoAssistente";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function AssistantScreen() {
@@ -59,6 +60,29 @@ export default function AssistantScreen() {
   const [showPicker, setShowPicker] = useState(false);
   //chiudere con una proposta ancora da confermare la perderebbe senza avviso
   const { dialogo } = useConfirmDiscard(pendingExpense !== null || expenseText.trim() !== "");
+  //la proposta aperta nel form con "Modifica": serve al ritorno, per mostrare
+  //l'esito o rimettere la card se l'utente non ha salvato.
+  //Un ref e non uno stato: cambiarlo non deve rilanciare l'effetto qui sotto
+  const propostaInModifica = useRef<ExpenseConfirmation | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      const proposta = propostaInModifica.current;
+      if (!proposta) return; //prima apertura, o ritorno da altro
+      propostaInModifica.current = null;
+      const salvata = prendiSalvataggio();
+      if (salvata) {
+        //la stessa card di "Conferma", con i dati come sono stati salvati dal form
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now().toString(), sender: "system", expenseData: salvata },
+        ]);
+      } else {
+        //uscito senza salvare: la proposta torna in chat invece di sparire
+        setPendingExpense(proposta);
+      }
+    }, [])
+  );
   
   async function handleSend() {
     const userMessage: ChatMessage = {
@@ -178,8 +202,10 @@ function handleDatePickerDismiss() {
 
   function handleEdit() {
     if (!pendingExpense) return;
-    // la card sparisce: la proposta prosegue nel form, che salva per conto suo
+    // la card sparisce: la proposta prosegue nel form, che salva per conto suo;
+    // al ritorno useFocusEffect mostra l'esito o la rimette in chat
     const proposal = pendingExpense;
+    propostaInModifica.current = proposal;
     setPendingExpense(null);
     router.push({
       pathname: "/add_expense",
@@ -190,6 +216,8 @@ function handleDatePickerDismiss() {
         recurring: String(proposal.recurring),
         ...(proposal.category_id !== null && { categoryId: String(proposal.category_id) }),
         ...(proposal.frequency !== null && { frequency: proposal.frequency }),
+        fromAssistant: "true",
+        autoRenew: String(autoRenew),
       },
     });
   }

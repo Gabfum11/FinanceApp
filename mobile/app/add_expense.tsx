@@ -19,6 +19,7 @@ import { fromDateString, toDateString } from "@/utils/date";
 import { styles, colors } from "../styles/add-expense.styles";
 import { iconaPerGruppo } from "@/utils/categoryIcons";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
+import { segnalaSalvataggio } from "@/utils/esitoAssistente";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 type Category = {
@@ -59,6 +60,8 @@ export default function AddExpenseScreen() {
     recurring?: string;
     frequency?: string;
     editId?: string; //presente solo quando si modifica un elemento esistente
+    fromAssistant?: string; //aperto da "Modifica" dell'assistente: l'esito torna alla chat
+    autoRenew?: string; //scelto nella card dell'assistente, il form non ha un campo per cambiarlo
   }>();
   const editId = params.editId;
   const isEditing = !!editId;
@@ -193,7 +196,12 @@ export default function AddExpenseScreen() {
         //in modifica si sposta il prossimo addebito: la data di partenza
         //ha gia' generato le spese arretrate e non si tocca
         ? { ...common, frequency, next_date: toDateString(date) }
-        : { ...common, frequency, start_date: toDateString(date) }
+        : {
+            ...common,
+            frequency,
+            start_date: toDateString(date),
+            ...(params.autoRenew !== undefined && { auto_renew: params.autoRenew === "true" }),
+          }
       : { ...common, date: toDateString(date) };
 
     try {
@@ -216,6 +224,20 @@ export default function AddExpenseScreen() {
               : "Non è stato possibile salvare la spesa. Riprova.")
         );
         return;
+      }
+      if (params.fromAssistant === "true") {
+        const saved = await response.json();
+        segnalaSalvataggio({
+          id: saved.id,
+          description: saved.description,
+          amount: saved.amount,
+          date: toDateString(date),
+          category_id: saved.category_id,
+          category_name: saved.category_name ?? null,
+          category_group: saved.category_group ?? null,
+          recurring: isSubscription,
+          frequency: isSubscription ? frequency : null,
+        });
       }
       lasciaUscire();
       router.back();
