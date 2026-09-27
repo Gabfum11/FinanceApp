@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, IconButton, ActivityIndicator } from "react-native-paper";
+import { Text, IconButton, ActivityIndicator, Portal } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -18,6 +18,8 @@ import { apiFetch } from "@/utils/apiFetch";
 import { fromDateString, toDateString } from "@/utils/date";
 import { styles, colors } from "../styles/add-expense.styles";
 import { iconaPerGruppo } from "@/utils/categoryIcons";
+import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 type Category = {
   id: number;
@@ -91,6 +93,26 @@ export default function AddExpenseScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // I valori di partenza del form, per capire se l'utente ha cambiato qualcosa:
+  // uscire da un form intatto non deve chiedere conferma.
+  const [iniziali] = useState(() => ({
+    amountRaw,
+    description,
+    date: toDateString(date),
+    isSubscription,
+    frequency,
+  }));
+  // la categoria proposta si conosce solo dopo aver caricato l'elenco
+  const [categoriaIniziale, setCategoriaIniziale] = useState<number | null>(null);
+  const modificato =
+    amountRaw !== iniziali.amountRaw ||
+    description !== iniziali.description ||
+    toDateString(date) !== iniziali.date ||
+    isSubscription !== iniziali.isSubscription ||
+    frequency !== iniziali.frequency ||
+    (category?.id ?? null) !== categoriaIniziale;
+  const { lasciaUscire, dialogo } = useConfirmDiscard(modificato);
+
   const amount = parseFloat(amountRaw.replace(",", "."));
   const canSave = !isSaving && amount > 0 && category !== null;
 
@@ -108,7 +130,10 @@ export default function AddExpenseScreen() {
           const preselected = data
             .flatMap((gruppo) => gruppo.children)
             .find((c) => c.id === cercato);
-          if (preselected) setCategory(preselected);
+          if (preselected) {
+            setCategoriaIniziale(preselected.id);
+            setCategory(preselected);
+          }
         }
       } catch {
         // le categorie restano vuote: il picker mostrerà lo stato di lista vuota
@@ -192,6 +217,7 @@ export default function AddExpenseScreen() {
         );
         return;
       }
+      lasciaUscire();
       router.back();
     } catch {
       setError("Errore di rete. Riprova.");
@@ -206,6 +232,9 @@ export default function AddExpenseScreen() {
   }
 
   return (
+    // i dialoghi vanno disegnati dentro la modale: con l'host globale, su iOS
+    // finirebbero sotto la schermata presentata
+    <Portal.Host>
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <IconButton icon="chevron-left" size={28} onPress={() => router.back()} />
@@ -458,7 +487,9 @@ export default function AddExpenseScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+      <ConfirmDialog {...dialogo} />
     </SafeAreaView>
+    </Portal.Host>
   );
 }
 

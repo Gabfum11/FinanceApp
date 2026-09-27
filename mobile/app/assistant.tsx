@@ -1,7 +1,7 @@
 import { KeyboardAvoidingView, View, FlatList, Platform, Pressable, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../styles/tokens";
-import { Text, IconButton, TextInput, Button, Switch } from "react-native-paper";
+import { Text, IconButton, TextInput, Button, Switch, Portal } from "react-native-paper";
 import { useState } from "react";
 import { API_URL } from "@/config";
 import { styles } from "../styles/assistant.styles";
@@ -11,6 +11,8 @@ import { apiFetch } from "@/utils/apiFetch";
 import { toDateString, fromDateString } from "@/utils/date"
 import { iconaPerGruppo } from "@/utils/categoryIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function AssistantScreen() {
   type ExpenseConfirmation = {
@@ -55,6 +57,8 @@ export default function AssistantScreen() {
   ]);
   const [autoRenew, setAutoRenew] = useState(true);
   const [showPicker, setShowPicker] = useState(false);
+  //chiudere con una proposta ancora da confermare la perderebbe senza avviso
+  const { dialogo } = useConfirmDiscard(pendingExpense !== null || expenseText.trim() !== "");
   
   async function handleSend() {
     const userMessage: ChatMessage = {
@@ -199,7 +203,10 @@ function handleDatePickerDismiss() {
   }
 
   return (
-    //senza safe area il benvenuto finiva sotto la barra di stato e l'input sotto i tasti di navigazione
+    //i dialoghi vanno disegnati dentro la modale: con l'host globale, su iOS
+    //finirebbero sotto la schermata presentata
+    <Portal.Host>
+    {/* senza safe area il benvenuto finiva sotto la barra di stato e l'input sotto i tasti di navigazione */}
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
     <KeyboardAvoidingView
       style={styles.container}
@@ -360,6 +367,16 @@ function handleDatePickerDismiss() {
         />
       </View>
     </KeyboardAvoidingView>
+    <ConfirmDialog
+      {...dialogo}
+      title="Chiudere l'assistente?"
+      message={pendingExpense
+        ? "La spesa proposta non è ancora stata salvata e andrà persa."
+        : "Il messaggio che stavi scrivendo andrà perso."}
+      confirmLabel="Chiudi"
+      cancelLabel="Resta"
+    />
     </SafeAreaView>
+    </Portal.Host>
   );
 }

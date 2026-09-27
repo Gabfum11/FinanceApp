@@ -1,5 +1,5 @@
 import { View , FlatList } from "react-native";
-import { IconButton, Text, Button } from "react-native-paper";
+import { IconButton, Text, Button, ActivityIndicator, Snackbar } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { useCallback, useEffect, useState } from "react";
@@ -38,18 +38,28 @@ type ConfermaInAttesa =
 export default function BudgetScreen() {
   const [subscriptions, setSubscriptions]=useState<Subscription[]>([]);
   const [conferma, setConferma] = useState<ConfermaInAttesa | null>(null);
+  //distingue "sto caricando" da "non ci sono abbonamenti": senza, il messaggio
+  //di lista vuota lampeggerebbe a ogni apertura
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const activeSubscriptions = subscriptions.filter(sub => sub.is_active);
   const pausedSubscriptions = subscriptions.filter(sub => !sub.is_active);
   const today = new Date();
   const dueForRenewal = subscriptions.filter(sub=> sub.is_active && !sub.auto_renew && new Date(sub.next_date)<=today)
   async function loadSubscriptions() {
-      const response = await apiFetch("/subscriptions/");
-      if(response.ok) {
-        const data = await response.json()
-        setSubscriptions(data);
-        //le notifiche sono pianificate sulle date attuali: se un abbonamento
-        //e' stato aggiunto, messo in pausa o spostato, vanno rifatte
-        ripianificaPromemoria();
+      setLoadError(false);
+      try {
+        const response = await apiFetch("/subscriptions/");
+        if(response.ok) {
+          const data = await response.json()
+          setSubscriptions(data);
+          setLoaded(true);
+          //le notifiche sono pianificate sulle date attuali: se un abbonamento
+          //e' stato aggiunto, messo in pausa o spostato, vanno rifatte
+          ripianificaPromemoria();
+        } else setLoadError(true);
+      } catch {
+        setLoadError(true);
       }
     }
     useFocusEffect(
@@ -161,6 +171,23 @@ export default function BudgetScreen() {
             <IconButton icon="pause" size={18} onPress={()=>confirmToggle(item.id, true)} />
           </View>
         )}
+        ListEmptyComponent={
+          !loaded ? (
+            loadError ? null : <ActivityIndicator size="large" style={styles.loader} />
+          ) : (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="autorenew" size={40} color="#C7C7CC" />
+              <Text style={styles.emptyTitle}>
+                {subscriptions.length === 0 ? "Nessun abbonamento" : "Nessun abbonamento attivo"}
+              </Text>
+              {subscriptions.length === 0 && (
+                <Text style={styles.emptyHint}>
+                  Tocca il pulsante + in basso e scegli “Abbonamento” per aggiungerne uno
+                </Text>
+              )}
+            </View>
+          )
+        }
       />
       {pausedSubscriptions.length >0 && (
         <>
@@ -225,6 +252,14 @@ export default function BudgetScreen() {
         onConfirm={eseguiConferma}
         onDismiss={() => setConferma(null)}
       />
+
+      <Snackbar
+        visible={loadError}
+        onDismiss={() => setLoadError(false)}
+        action={{ label: "Riprova", onPress: loadSubscriptions }}
+      >
+        Impossibile caricare gli abbonamenti. Controlla la connessione.
+      </Snackbar>
     </View>
   );
 }

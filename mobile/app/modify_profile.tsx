@@ -5,6 +5,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { apiFetch } from "@/utils/apiFetch";
 import { styles } from "@/styles/modify-profile.styles";
+import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function modify_profile() {
     const [nickname, setNickname] = useState("");
@@ -12,6 +14,9 @@ export default function modify_profile() {
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [snackbarVisible, setSnackbarVisible] = useState(false);
+    //il nome letto dal server: serve a capire se l'utente l'ha cambiato
+    const [nicknameOriginale, setNicknameOriginale] = useState("");
+    const { lasciaUscire, dialogo } = useConfirmDiscard(nickname !== nicknameOriginale);
 
     useEffect(() => {
         async function loadUser() {
@@ -19,6 +24,7 @@ export default function modify_profile() {
             if (response.ok) {
                 const data = await response.json();
                 setNickname(data.nickname);
+                setNicknameOriginale(data.nickname);
                 setEmail(data.email);
             }
         }
@@ -34,6 +40,7 @@ export default function modify_profile() {
                 body: JSON.stringify({ nickname }),
             });
             if (response.ok) {
+                lasciaUscire();
                 router.back();
             } else {
                 const error = await response.json();
@@ -84,6 +91,8 @@ export default function modify_profile() {
             <Snackbar visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} duration={3000}>
                 {errorMessage}
             </Snackbar>
+
+            <ConfirmDialog {...dialogo} />
         </View>
     );
 }

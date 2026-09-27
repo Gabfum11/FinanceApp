@@ -32,6 +32,8 @@ export default function ProfileScreen() {
     const [promemoriaInCorso, setPromemoriaInCorso] = useState(false);
     const [showSupportDialog, setShowSupportDialog] = useState(false);
     const [showLogoutAllDialog, setShowLogoutAllDialog] = useState(false);
+    //l'icona di logout e' piccola e in alto: un tocco per sbaglio non deve buttare fuori
+    const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
     async function handleContatta() {
         setShowSupportDialog(false);
@@ -143,6 +145,7 @@ export default function ProfileScreen() {
         .slice(0, 2);
 
     async function handleLogout() {
+        setShowLogoutDialog(false);
         await SecureStore.deleteItemAsync("token");
         router.replace("/login");
     }
@@ -155,7 +158,7 @@ export default function ProfileScreen() {
                     icon="logout"
                     mode="outlined"
                     iconColor={colors.danger}
-                    onPress={handleLogout}
+                    onPress={() => setShowLogoutDialog(true)}
                     style={styles.logoutButton}
                 />
             </View>
@@ -254,6 +257,16 @@ export default function ProfileScreen() {
             >
                 Elimina account
             </Button>
+
+            <ConfirmDialog
+                visible={showLogoutDialog}
+                title="Esci"
+                message="Vuoi uscire dal tuo account su questo dispositivo?"
+                confirmLabel="Esci"
+                destructive
+                onConfirm={handleLogout}
+                onDismiss={() => setShowLogoutDialog(false)}
+            />
 
             <ConfirmDialog
                 visible={showLogoutAllDialog}

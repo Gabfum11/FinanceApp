@@ -4,6 +4,8 @@ import { View } from "react-native";
 import { styles } from "@/styles/change-password.styles";
 import { Text, TextInput, Button, IconButton, Snackbar } from "react-native-paper";
 import { router } from "expo-router";
+import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function changePassw() {
     const [pass, setPass] = useState("");
@@ -13,6 +15,7 @@ export default function changePassw() {
     const [showNewPass, setShowNewPass] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [snackbarVisible, setSnackbarVisible] = useState(false);
+    const { lasciaUscire, dialogo } = useConfirmDiscard(pass !== "" || newPass !== "");
 
     async function handleModPass() {
         try {
@@ -23,6 +26,7 @@ export default function changePassw() {
                 body: JSON.stringify({ current_password: pass, new_password: newPass }),
             });
             if (response.ok) {
+                lasciaUscire();
                 router.back();
             } else {
                 const error = await response.json();
@@ -92,6 +96,8 @@ export default function changePassw() {
             <Snackbar visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} duration={3000}>
                 {errorMessage}
             </Snackbar>
+
+            <ConfirmDialog {...dialogo} />
         </View>
     );
 }

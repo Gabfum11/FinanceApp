@@ -4,6 +4,8 @@ import { useState } from "react";
 import { router } from "expo-router";
 import { apiFetch } from "@/utils/apiFetch";
 import { styles } from "@/styles/set-budget.styles";
+import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function SetBudgetScreen() {
     const [amount, setAmount] = useState("");
@@ -11,6 +13,7 @@ export default function SetBudgetScreen() {
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [snackbarVisible, setSnackbarVisible] = useState(false);
+    const { lasciaUscire, dialogo } = useConfirmDiscard(amount !== "" || startDay !== "1");
 
     async function handleSave() {
         const parsedAmount = parseFloat(amount);
@@ -39,6 +42,7 @@ export default function SetBudgetScreen() {
             });
 
             if (response.ok) {
+                lasciaUscire();
                 router.back();
             } else {
                 const error = await response.json();
@@ -101,6 +105,8 @@ export default function SetBudgetScreen() {
             <Snackbar visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} duration={3000}>
                 {errorMessage}
             </Snackbar>
+
+            <ConfirmDialog {...dialogo} />
         </View>
     );
 }

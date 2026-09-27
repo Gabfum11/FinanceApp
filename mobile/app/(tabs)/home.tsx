@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, FlatList, Pressable } from "react-native";
+import { View, FlatList, Pressable, BackHandler } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Button, Text } from "react-native-paper";
+import { Button, Text, Snackbar } from "react-native-paper";
 import { BarChart } from "react-native-gifted-charts";
 import { API_URL } from "@/config";
 import { styles } from "../../styles/home.styles";
@@ -9,6 +9,7 @@ import { colors } from "../../styles/tokens";
 import { apiFetch } from "@/utils/apiFetch";
 import { Link, useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -75,6 +76,9 @@ export default function HomeScreen() {
   const [nickname, setNickname] = useState("");
   const [budgetStatus, setBudgetStatus] = useState<{ budget: number | null; spent: number; remaining: number | null; cycle_start: string; cycle_end: string } | null>(null);
   const [weeklyStats, setWeeklyStats] = useState<DayStat[]>([]);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  //senza avviso, un server irraggiungibile sembrerebbe un account senza dati
+  const [loadError, setLoadError] = useState(false);
   const rotazioneBot = useSharedValue(0);
   const riduciMovimento = useReducedMotion();
 
@@ -104,7 +108,7 @@ export default function HomeScreen() {
       // console.log("Spese ricevute:",data) // dati sensibili, non loggare in produzione
       setExpenses(data);
       setExpensesLoaded(true);
-    }
+    } else throw new Error(`${response.status}`);
     // else
     //   console.log("Spese non ricevute, status",response.status, await response.text());
   }
@@ -113,21 +117,39 @@ export default function HomeScreen() {
     if (response.ok) {
       const data = await response.json();
       setBudgetStatus(data);
-    }
+    } else throw new Error(`${response.status}`);
   }
   async function loadWeeklyStats() {
     const response = await apiFetch("/expenses/weekly-stats");
     if (response.ok) {
       const data = await response.json();
       setWeeklyStats(data.days);
+    } else throw new Error(`${response.status}`);
+  }
+  async function loadAll() {
+    setLoadError(false);
+    try {
+      await Promise.all([loadExpenses(), loadBudget(), loadWeeklyStats()]);
+    } catch {
+      setLoadError(true);
     }
   }
   useFocusEffect(
     useCallback(()=>{
-      loadExpenses();
-      loadBudget();
-      loadWeeklyStats();
+      loadAll();
     },[])
+  )
+
+  //su Android il tasto indietro dalla Home chiuderebbe l'app di colpo:
+  //l'ascolto vale solo mentre la Home e' a fuoco, le altre schermate tornano indietro normalmente
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        setShowExitDialog(true);
+        return true; //true = gestito qui, il sistema non chiude l'app
+      });
+      return () => sub.remove();
+    }, [])
   )
 
 
@@ -289,6 +311,23 @@ export default function HomeScreen() {
           ) : null
         }
       />
+
+      <ConfirmDialog
+        visible={showExitDialog}
+        title="Esci dall'app"
+        message="Vuoi chiudere l'app?"
+        confirmLabel="Esci"
+        onConfirm={() => BackHandler.exitApp()}
+        onDismiss={() => setShowExitDialog(false)}
+      />
+
+      <Snackbar
+        visible={loadError}
+        onDismiss={() => setLoadError(false)}
+        action={{ label: "Riprova", onPress: loadAll }}
+      >
+        Impossibile caricare i dati. Controlla la connessione.
+      </Snackbar>
     </View>
   );
 }

@@ -106,4 +106,24 @@ export const styles=StyleSheet.create({
         flexDirection: "row",
         gap: 10,
     },
+    emptyState: {
+        alignItems: "center",
+        paddingVertical: 28,
+        paddingHorizontal: 32,
+        gap: 6,
+    },
+    emptyTitle: {
+        fontWeight: "600",
+        color: colors.textSecondary,
+        marginTop: 4,
+    },
+    emptyHint: {
+        textAlign: "center",
+        color: colors.textMuted,
+        fontSize: 13,
+        lineHeight: 18,
+    },
+    loader: {
+        marginTop: 28,
+    },
 })
