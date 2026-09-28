@@ -6,12 +6,12 @@ import { impostaPromemoria, promemoriaAttivi, NOTIFICHE_DISPONIBILI } from "@/ut
 import { contattaSupporto, SUPPORT_EMAIL } from "@/utils/support";
 import * as WebBrowser from "expo-web-browser";
 import { PRIVACY_URL } from "@/config";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { styles } from "@/styles/profile.styles";
 import { colors } from "@/styles/tokens";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 
 export default function ProfileScreen() {
@@ -125,17 +125,24 @@ export default function ProfileScreen() {
         }
     }
 
-    useEffect(() => {
-        async function loadUser() {
-            const response = await apiFetch("/auth/me");
-            if (response.ok) {
-                const data = await response.json();
-                setNickname(data.nickname);
-                setEmail(data.email);
-                setHasPassword(data.has_password);
+    //a ogni ritorno sulla scheda, non solo alla prima apertura:
+    //cosi' il nome cambiato in "Modifica profilo" compare subito
+    useFocusEffect(
+        useCallback(() => {
+            async function loadUser() {
+                const response = await apiFetch("/auth/me");
+                if (response.ok) {
+                    const data = await response.json();
+                    setNickname(data.nickname);
+                    setEmail(data.email);
+                    setHasPassword(data.has_password);
+                }
             }
-        }
-        loadUser();
+            loadUser();
+        }, [])
+    );
+
+    useEffect(() => {
         promemoriaAttivi().then(setPromemoria);
     }, []);
 

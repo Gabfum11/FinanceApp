@@ -32,6 +32,16 @@ export default function modify_profile() {
     }, []);
 
     async function handleSave() {
+        if (nickname.trim() === "") {
+            setErrorMessage("Il nome non può essere vuoto");
+            setSnackbarVisible(true);
+            return;
+        }
+        if (nickname.length > 50) {
+            setErrorMessage("Il nome può avere al massimo 50 caratteri");
+            setSnackbarVisible(true);
+            return;
+        }
         try {
             setLoading(true);
             const response = await apiFetch("/auth/updateProfile", {
@@ -43,8 +53,11 @@ export default function modify_profile() {
                 lasciaUscire();
                 router.back();
             } else {
-                const error = await response.json();
-                setErrorMessage(error.detail ?? "Errore nel salvataggio");
+                const detail = await response
+                    .json()
+                    .then((body) => (typeof body?.detail === "string" ? body.detail : null))
+                    .catch(() => null);
+                setErrorMessage(detail ?? "Errore nel salvataggio");
                 setSnackbarVisible(true);
             }
         } catch (error) {

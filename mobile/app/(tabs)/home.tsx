@@ -151,23 +151,23 @@ export default function HomeScreen() {
       return () => sub.remove();
     }, [])
   )
+  async function loadUser() {
+      const response = await apiFetch("/auth/me");
+      if (response.ok) {
+      const data = await response.json();
+      // console.log("Dati utente ricevuti:", data); // dati sensibili, non loggare in produzione
+      setNickname(data.nickname);
+      }
+      // else {
+      //   console.log("Errore /auth/me:", await response.text())
+      // }
 
-
-  useEffect(() => {
-    async function loadUser() {
-        const response = await apiFetch("/auth/me");
-        if (response.ok) {
-        const data = await response.json();
-        // console.log("Dati utente ricevuti:", data); // dati sensibili, non loggare in produzione
-        setNickname(data.nickname);
-        }
-        // else {
-        //   console.log("Errore /auth/me:", await response.text())
-        // }
-
-    }
-    loadUser();
+  }
+  useEffect(
+    useCallback(() => {
+      loadUser();
     }, [])
+  );
 
   const percentage = budgetStatus?.budget
     ? Math.min((budgetStatus.spent / budgetStatus.budget) * 100, 100)
