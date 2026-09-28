@@ -17,7 +17,7 @@ export default function verify_email(){
     const [code,setCode]=useState("")
     const[step,setStep]=useState<"typing" | "invalid" | "correct">("typing")
     const {email}=useLocalSearchParams();
-    const [secondsleft,setSecondsLeft]=useState(0);
+    const [secondsleft,setSecondsLeft]=useState(60);
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [snackbarVisible, setSnackbarVisible] = useState(false);

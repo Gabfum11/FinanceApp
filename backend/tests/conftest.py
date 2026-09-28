@@ -72,17 +72,17 @@ def db_session():
     yield Session
 
     app.dependency_overrides.clear()
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(bind=engine) #svuota il database alla fine del test
 
 
-@pytest.fixture
+@pytest.fixture #le fixture sono funzioni che vengono eseguite prima di ogni test e possono restituire valori da usare nei test
 def client(db_session):
-    return TestClient(app, raise_server_exceptions=False)
+    return TestClient(app, raise_server_exceptions=False) #crea un client per testare l'app FastAPI, senza sollevare eccezioni per gli errori HTTP (le risposte con status code 4xx o 5xx non sollevano eccezioni)
 
 
 @pytest.fixture
 def make_user(db_session):
-    """Crea un utente e restituisce il suo id."""
+    """Crea un utente e restituisce il suo id. senza passare dall'endpoint di registrazione, che richiede email reale e invio di email."""
 
     def _make(email="test@example.com", password=None, verified=True, **extra):
         db = db_session()

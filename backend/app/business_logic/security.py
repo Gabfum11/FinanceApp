@@ -48,7 +48,7 @@ def _validate_secret_key(key: str | None) -> str:
     return key
 
 
-SECRET_KEY = _validate_secret_key(SECRET_KEY)
+SECRET_KEY = _validate_secret_key(SECRET_KEY) #la chiave è stata generata con python -c "import secrets; print(secrets.token_hex(32))" e salvata in backend/.env
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
@@ -62,7 +62,7 @@ def verify_password(plain_password: str, hashed_password: str): #plain_password 
     return pwd_context.verify(plain_password, hashed_password) #verifica se la password inserita corrisponde a quella salvata nel db, restituendo True o False
 
 def create_access_token(data: dict, expire_minutes:int=ACCESS_TOKEN_EXPIRE_MINUTES):
-    to_encode = data.copy()
+    to_encode = data.copy() #crea una copia del dizionario dei dati da codificare nel token
     expire = datetime.now(timezone.utc) + timedelta(minutes=expire_minutes)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM) #genera e restituisce il token

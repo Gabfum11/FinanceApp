@@ -43,7 +43,7 @@ class Category(Base):
     #mai al gruppo, così i totali non sono mai ambigui
     parent_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
 
-    parent = relationship("Category", remote_side=[id], back_populates="children")
+    parent = relationship("Category", remote_side=[id], back_populates="children")  
     children = relationship("Category", back_populates="parent")
 
     expenses = relationship("Expense", back_populates="category") #comodità per scrivere category.expenses e ottenere tutte le spese di quella categoria senza quey manuale

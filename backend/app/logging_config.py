@@ -13,7 +13,7 @@ import sys
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
 #i campi standard di LogRecord: tutto ciò che non è qui è contesto aggiunto da noi
-_CAMPI_STANDARD = {
+_CAMPI_STANDARD = { 
     "name", "msg", "args", "levelname", "levelno", "pathname", "filename",
     "module", "exc_info", "exc_text", "stack_info", "lineno", "funcName",
     "created", "msecs", "relativeCreated", "thread", "threadName",

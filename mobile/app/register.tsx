@@ -120,7 +120,7 @@ export default function RegisterScreen() {
 
             {/* vale per entrambi i pulsanti: anche "Continua con Google" crea l'account */}
             <Text style={styles.legal}>
-                Registrandoti accetti l&apos;
+                Registrandoti confermi di aver letto l&apos;
                 <Text style={styles.legalLink} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
                     informativa sulla privacy
                 </Text>
