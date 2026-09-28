@@ -4,6 +4,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { esportaCsv } from "@/utils/exportData";
 import { impostaPromemoria, promemoriaAttivi, NOTIFICHE_DISPONIBILI } from "@/utils/notifications";
 import { contattaSupporto, SUPPORT_EMAIL } from "@/utils/support";
+import * as WebBrowser from "expo-web-browser";
+import { PRIVACY_URL } from "@/config";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -234,6 +236,12 @@ export default function ProfileScreen() {
                     <MaterialCommunityIcons name="help-circle-outline" size={20} color={colors.primary} />
                     <Text style={styles.rowLabel}>Contattaci</Text>
                     <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
+                </Pressable>
+                <View style={styles.rowDivider} />
+                <Pressable style={styles.row} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
+                    <MaterialCommunityIcons name="shield-lock-outline" size={20} color={colors.primary} />
+                    <Text style={styles.rowLabel}>Privacy policy</Text>
+                    <MaterialCommunityIcons name="open-in-new" size={20} color={colors.chevron} />
                 </Pressable>
             </View>
 

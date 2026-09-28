@@ -1,6 +1,8 @@
 import os
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request, Response, status
+from fastapi.responses import FileResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from slowapi.errors import RateLimitExceeded
@@ -105,6 +107,16 @@ app.include_router(export.router)
 @app.get("/")
 def read_root():
     return {"message": "Finance App API is running"}
+
+
+#pagina pubblica: il Play Store chiede un link all'informativa raggiungibile
+#senza app ne' account, e l'app apre lo stesso indirizzo dal Profilo
+PRIVACY_PAGE = Path(__file__).parent / "static" / "privacy.html"
+
+
+@app.get("/privacy", include_in_schema=False)
+def privacy_policy():
+    return FileResponse(PRIVACY_PAGE, media_type="text/html; charset=utf-8")
 
 
 @app.get("/health")

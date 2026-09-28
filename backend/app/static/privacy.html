@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrackIt — Informativa sulla privacy</title>
+<style>
+  :root {
+    --bg: #F7F8FA; --surface: #FFFFFF; --text: #1C2B22; --muted: #5F6B64;
+    --primary: #1E9E57; --border: #E3E7E5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101613; --surface: #17201B; --text: #E8EFEA; --muted: #9BA8A0;
+      --primary: #2ECC71; --border: #26332C;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .logo {
+    width: 40px; height: 40px; border-radius: 10px; background: #2ECC71;
+    display: flex; align-items: flex-end; justify-content: center; gap: 4px; padding-bottom: 10px;
+  }
+  .logo span { width: 5px; border-radius: 3px; background: #fff; }
+  .logo span:last-child { background: #F1C40F; }
+  h1 { font-size: 26px; line-height: 1.25; margin: 0; }
+  h2 { font-size: 19px; margin: 36px 0 8px; }
+  .aggiornata { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px; margin: 12px 0;
+  }
+  ul { padding-left: 20px; }
+  li { margin: 6px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+  a { color: var(--primary); }
+  .tabella { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="logo" aria-hidden="true">
+      <span style="height:8px"></span><span style="height:13px"></span><span style="height:18px"></span>
+    </div>
+    <h1>Informativa sulla privacy</h1>
+  </header>
+  <p class="aggiornata">Ultimo aggiornamento: 27 settembre 2026</p>
+
+  <p>
+    Questa informativa spiega quali dati raccoglie l'app <strong>TrackIt</strong>, perché li
+    raccoglie, con chi li condivide e quali diritti hai. È redatta ai sensi del Regolamento
+    (UE) 2016/679 (GDPR).
+  </p>
+
+  <h2>1. Titolare del trattamento</h2>
+  <div class="card">
+    <strong>Gabriele Fumarola</strong><br>
+    Email: <a href="mailto:gabrifu03@gmail.com">gabrifu03@gmail.com</a>
+  </div>
+  <p>Per qualsiasi domanda sui tuoi dati puoi scrivere a questo indirizzo.</p>
+
+  <h2>2. Quali dati raccogliamo</h2>
+  <ul>
+    <li><strong>Dati dell'account:</strong> indirizzo email, nickname e password. La password
+      non viene mai salvata in chiaro, ma solo in forma cifrata (hash). Se accedi con Google
+      riceviamo da Google il tuo indirizzo email, il nome e un identificativo dell'account;
+      non riceviamo la tua password Google.</li>
+    <li><strong>Dati che inserisci:</strong> spese e abbonamenti (importo, descrizione,
+      categoria, data, frequenza di rinnovo) e il budget mensile con il giorno di inizio del ciclo.</li>
+    <li><strong>Testo inviato all'assistente:</strong> le frasi che scrivi all'assistente
+      (ad esempio "pizza 15 euro ieri") per registrare una spesa a parole.</li>
+    <li><strong>Codici di verifica:</strong> codici temporanei inviati via email per verificare
+      l'indirizzo o reimpostare la password.</li>
+    <li><strong>Dati tecnici:</strong> quando l'app comunica con il server, il fornitore
+      dell'infrastruttura registra dati tecnici come l'indirizzo IP, l'orario e l'esito della
+      richiesta. I nostri log registrano solo il tipo di richiesta e l'esito, mai il contenuto
+      (password, importi o descrizioni).</li>
+  </ul>
+  <p>
+    TrackIt <strong>non</strong> raccoglie la tua posizione, i contatti, le foto, né dati
+    bancari: le spese le inserisci tu, l'app non si collega al tuo conto. Non usiamo
+    pubblicità né strumenti di profilazione o analisi del comportamento.
+  </p>
+
+  <h2>3. Perché li usiamo</h2>
+  <ul>
+    <li>Creare e gestire il tuo account e permetterti di accedere.</li>
+    <li>Salvare le tue spese e i tuoi abbonamenti e mostrarti statistiche e budget.</li>
+    <li>Interpretare il testo che scrivi all'assistente e proporti la spesa da salvare.</li>
+    <li>Inviarti i codici di verifica via email.</li>
+    <li>Proteggere il servizio da abusi (ad esempio limitando i tentativi di accesso ripetuti).</li>
+  </ul>
+  <p>
+    La base giuridica è l'esecuzione del servizio che richiedi registrandoti (art. 6.1.b GDPR)
+    e, per la protezione da abusi, il nostro legittimo interesse alla sicurezza del servizio
+    (art. 6.1.f GDPR).
+  </p>
+
+  <h2>4. Con chi condividiamo i dati</h2>
+  <p>
+    Non vendiamo né cediamo i tuoi dati. Per far funzionare l'app ci affidiamo ai seguenti
+    fornitori, che trattano i dati per nostro conto e solo per lo scopo indicato:
+  </p>
+  <div class="tabella">
+    <table>
+      <thead><tr><th>Fornitore</th><th>A cosa serve</th><th>Quali dati</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Render</strong> (Render Services, Inc., USA)</td>
+          <td>Server e database dell'app</td><td>Tutti i dati dell'account e quelli che inserisci</td></tr>
+        <tr><td><strong>Groq</strong> (Groq, Inc., USA)</td>
+          <td>Intelligenza artificiale dell'assistente</td>
+          <td>Solo il testo che scrivi all'assistente, insieme all'elenco delle categorie. Non
+            vengono inviati email, nome o altre spese</td></tr>
+        <tr><td><strong>Brevo</strong> (Francia)</td>
+          <td>Invio delle email con i codici di verifica</td><td>Indirizzo email e codice</td></tr>
+        <tr><td><strong>Google</strong> (Google LLC, USA)</td>
+          <td>Accesso con Google, solo se lo scegli</td><td>Dati necessari all'autenticazione</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Alcuni di questi fornitori hanno sede negli Stati Uniti, quindi i dati possono essere
+    trasferiti fuori dall'Unione Europea. Questi trasferimenti avvengono sulla base delle
+    garanzie previste dal GDPR, come l'EU-U.S. Data Privacy Framework o le clausole
+    contrattuali standard approvate dalla Commissione Europea.
+  </p>
+  <p>
+    <strong>Un consiglio:</strong> l'assistente serve solo a descrivere spese. Evita di
+    scrivergli dati personali non necessari, come nomi di altre persone o numeri di carte.
+  </p>
+
+  <h2>5. Notifiche</h2>
+  <p>
+    I promemoria per gli abbonamenti in scadenza sono pianificati direttamente sul tuo
+    telefono: non passano dal nostro server. Puoi disattivarli in qualsiasi momento dal
+    Profilo dell'app o dalle impostazioni del telefono.
+  </p>
+
+  <h2>6. Per quanto tempo conserviamo i dati</h2>
+  <ul>
+    <li>I dati dell'account e quelli che inserisci restano salvati finché il tuo account esiste.</li>
+    <li>Quando elimini l'account, cancelliamo subito e definitivamente profilo, spese,
+      abbonamenti e codici di verifica.</li>
+    <li>I codici di verifica scadono dopo 10 minuti.</li>
+    <li>I log tecnici sono conservati dal fornitore dell'infrastruttura per un periodo limitato
+      e poi cancellati automaticamente.</li>
+  </ul>
+
+  <h2>7. I tuoi diritti</h2>
+  <p>In base al GDPR puoi in qualsiasi momento:</p>
+  <ul>
+    <li><strong>Accedere ai tuoi dati e portarli altrove:</strong> dal Profilo puoi esportare
+      spese e abbonamenti in formato CSV.</li>
+    <li><strong>Correggerli:</strong> puoi modificare nickname, spese e abbonamenti direttamente nell'app.</li>
+    <li><strong>Cancellarli:</strong> dal Profilo, con "Elimina account", cancelli
+      definitivamente tutti i tuoi dati.</li>
+    <li><strong>Limitare il trattamento od opporti</strong>, scrivendoci all'indirizzo indicato sopra.</li>
+    <li><strong>Proporre reclamo</strong> al Garante per la protezione dei dati personali
+      (<a href="https://www.garanteprivacy.it">www.garanteprivacy.it</a>).</li>
+  </ul>
+
+  <h2>8. Sicurezza</h2>
+  <p>
+    Le comunicazioni tra l'app e il server sono cifrate (HTTPS). Le password sono salvate solo
+    in forma cifrata e il token di accesso è conservato nell'archivio sicuro del telefono. Se
+    perdi il telefono, dal Profilo puoi disconnettere tutti i dispositivi.
+  </p>
+
+  <h2>9. Minori</h2>
+  <p>
+    TrackIt non è destinata a minori di 14 anni. Se ritieni che un minore ci abbia fornito
+    dati personali, scrivici e li cancelleremo.
+  </p>
+
+  <h2>10. Modifiche a questa informativa</h2>
+  <p>
+    Se cambiamo il modo in cui trattiamo i dati aggiorneremo questa pagina e la data in alto.
+    In caso di modifiche importanti te lo segnaleremo nell'app.
+  </p>
+</main>
+</body>
+</html>

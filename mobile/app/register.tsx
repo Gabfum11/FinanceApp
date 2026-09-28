@@ -3,10 +3,11 @@ import { View, Image } from "react-native";
 import { TextInput, Button, Text, Snackbar } from "react-native-paper";
 import {styles} from "../styles/auth.styles";
 import { Link } from "expo-router";
-import { API_URL } from "@/config";
+import { API_URL, PRIVACY_URL } from "@/config";
 import { router } from "expo-router";
 import { useGoogleLogin } from "@/utils/useGoogleLogin";
 import { GoogleButton } from "@/components/GoogleButton";
+import * as WebBrowser from "expo-web-browser";
 
 export default function RegisterScreen() {
     const[nickname,setnickName]=useState("");
@@ -116,6 +117,14 @@ export default function RegisterScreen() {
                     />
                 </>
             )}
+
+            {/* vale per entrambi i pulsanti: anche "Continua con Google" crea l'account */}
+            <Text style={styles.legal}>
+                Registrandoti accetti l&apos;
+                <Text style={styles.legalLink} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
+                    informativa sulla privacy
+                </Text>
+            </Text>
 
             <Text style={styles.link}>
                 Hai già un account?{" "}

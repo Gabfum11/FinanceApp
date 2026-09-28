@@ -3,11 +3,12 @@ import { View, Image } from "react-native";
 import { TextInput, Button, Text, Snackbar } from "react-native-paper";
 import {styles} from "../styles/auth.styles";
 import { Link } from "expo-router";
-import { API_URL } from "@/config";
+import { API_URL, PRIVACY_URL } from "@/config";
 import * as SecureStore from "expo-secure-store"; //permette di salvare in maniera persistente il token al riavvio dell'app
 import { useRouter } from "expo-router";
 import { useGoogleLogin } from "@/utils/useGoogleLogin";
 import { GoogleButton } from "@/components/GoogleButton";
+import * as WebBrowser from "expo-web-browser";
 
 
 export default function LoginScreen() {
@@ -111,6 +112,14 @@ export default function LoginScreen() {
             onPress={google.signIn}
             disabled={google.isLoading || loading}
           />
+          {/* dal login, Google crea l'account a chi non ce l'ha: senza avviso
+              l'utente si registrerebbe senza aver visto l'informativa */}
+          <Text style={styles.legal}>
+            Continuando con Google accetti l&apos;
+            <Text style={styles.legalLink} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
+              informativa sulla privacy
+            </Text>
+          </Text>
         </>
       )}
 

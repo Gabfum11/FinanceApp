@@ -51,6 +51,17 @@ export const styles = StyleSheet.create({
     fontSize:16
     
   },
+  legal: {
+    marginTop: 16,
+    textAlign: "center",
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.textMuted,
+  },
+  legalLink: {
+    color: colors.primary,
+    textDecorationLine: "underline",
+  },
   linkAction:{
     color: colors.primary,
     fontWeight:"bold"
