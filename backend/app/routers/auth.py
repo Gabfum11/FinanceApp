@@ -300,7 +300,7 @@ def change_password(data: schemas.ChangePassword, db:Session=Depends(get_db), cu
     }
 
 @router.patch("/updateProfile")
-def update_profile(nickname: str, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
-    current_user.nickname = nickname
+def update_profile(nickname : schemas.UpdateProfile, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    current_user.nickname = nickname.nickname
     db.commit()
     return {"nickname": current_user.nickname}

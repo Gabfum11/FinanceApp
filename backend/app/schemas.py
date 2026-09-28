@@ -24,7 +24,7 @@ class ExpenseOut(BaseModel): # rappresenta i dati che tu mandi al frontend dopo 
     created_at: datetime
 
     class Config:
-        from_attributes=True
+        from_attributes=True #serve per convertire un oggetto SQLAlchemy in un dizionario, altrimenti FastAPI non sa come fare e solleva un errore
 
 class ExpenseUpdate(BaseModel): #modifica parziale: i campi assenti restano invariati
     description: str | None = Field(None, min_length=1, max_length=200)
@@ -165,3 +165,7 @@ class DeleteAccount(BaseModel): #la password conferma un'operazione irreversibil
 class GoogleLogin(BaseModel):
     id_token: str #token rilasciato da Google all'app, che il server verifica
     remember_me: bool = False
+
+class UpdateProfile(BaseModel):
+    nickname: str = Field(..., min_length=1, max_length=50)
+    

@@ -16,13 +16,13 @@ export default function modify_profile() {
     const [snackbarVisible, setSnackbarVisible] = useState(false);
     //il nome letto dal server: serve a capire se l'utente l'ha cambiato
     const [nicknameOriginale, setNicknameOriginale] = useState("");
-    const { lasciaUscire, dialogo } = useConfirmDiscard(nickname !== nicknameOriginale);
+    const { lasciaUscire, dialogo } = useConfirmDiscard(nickname !== nicknameOriginale); //se il nickname è cambiato, chiedo conferma prima di uscire
 
     useEffect(() => {
         async function loadUser() {
             const response = await apiFetch("/auth/me");
             if (response.ok) {
-                const data = await response.json();
+                const data = await response.json(); 
                 setNickname(data.nickname);
                 setNicknameOriginale(data.nickname);
                 setEmail(data.email);
