@@ -93,3 +93,17 @@ class OtpCode(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     attempts=Column(Integer, default=0) #numero di tentativi di inserimento del codice OTP)
     user =relationship("User")
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    #solo l'hash: chi riuscisse a leggere il database non potrebbe usare i token
+    token_hash = Column(String, unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    #valorizzato quando il token viene scambiato con uno nuovo: se torna
+    #indietro un token gia' usato, qualcuno l'ha copiato
+    used_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    user = relationship("User")
