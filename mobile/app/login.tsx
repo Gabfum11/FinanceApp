@@ -4,7 +4,7 @@ import { TextInput, Button, Text, Snackbar } from "react-native-paper";
 import {styles} from "../styles/auth.styles";
 import { Link } from "expo-router";
 import { API_URL, PRIVACY_URL } from "@/config";
-import * as SecureStore from "expo-secure-store"; //permette di salvare in maniera persistente il token al riavvio dell'app
+import { salvaSessione } from "@/utils/session"; //salva i token in modo persistente al riavvio dell'app
 import { useRouter } from "expo-router";
 import { useGoogleLogin } from "@/utils/useGoogleLogin";
 import { GoogleButton } from "@/components/GoogleButton";
@@ -44,7 +44,7 @@ export default function LoginScreen() {
     }
 
     const data = await response.json(); //json decodifica la rispota in un oggetto js utilizzabile
-    await SecureStore.setItemAsync("token", data.access_token); //permette la persistenza del token al riavvio
+    await salvaSessione(data); //permette la persistenza dei token al riavvio
     console.log("Login riuscito, token salvato"); //il token è necessario per una navigazione automatica post login
     router.replace("/(tabs)/home")
   } catch (error) {

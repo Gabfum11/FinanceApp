@@ -1,8 +1,7 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import * as SecureStore from "expo-secure-store";
 import { View, ActivityIndicator } from "react-native";
-import { refreshTokenIfNeeded } from "@/utils/session";
+import { haSessione, rinnovaSeInScadenza } from "@/utils/session";
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
@@ -10,16 +9,16 @@ export default function Index() {
 
   useEffect(() => {
     async function checkToken() {
-      const token = await SecureStore.getItemAsync("token"); //asincrono:richiede un breve momento per leggere dal disco del telefono
-      setHasToken(!!token);
+      const sessione = await haSessione(); //asincrono:richiede un breve momento per leggere dal disco del telefono
+      setHasToken(sessione);
       setIsLoading(false);
 
       //il rinnovo parte DOPO aver deciso dove andare: verificare il token prima
       //significava tenere l'utente sullo spinner in attesa della rete, e senza
       //connessione mandarlo al login pur avendone uno valido.
-      //Se il token fosse davvero scaduto, la prima richiesta dà 401 e apiFetch
+      //Se la sessione non fosse più valida, la prima richiesta dà 401 e apiFetch
       //reindirizza al login da sé.
-      if (token) refreshTokenIfNeeded();
+      if (sessione) rinnovaSeInScadenza();
     }
     checkToken();
   }, []);

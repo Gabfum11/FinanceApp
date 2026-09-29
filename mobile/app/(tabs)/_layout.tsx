@@ -2,21 +2,22 @@ import { Tabs, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { TouchableOpacity, View, AppState } from "react-native";
 import { useEffect } from "react";
-import { refreshTokenIfNeeded } from "@/utils/session";
+import { rinnovaSeInScadenza } from "@/utils/session";
 import { sincronizzaDispositivo } from "@/utils/notifications";
 
 export default function TabsLayout() {
   const router=useRouter()
 
-  //un'app lasciata aperta per settimane non passerebbe mai da index.tsx:
-  //il rinnovo va tentato anche al rientro in primo piano
+  //un'app lasciata in background non passa da index.tsx: al rientro in primo
+  //piano il token di accesso è quasi sempre scaduto, e conviene rinnovarlo
+  //prima che le schermate ripartano con le loro richieste
   useEffect(() => {
     //il push token può cambiare o il permesso essere stato tolto dalle
     //impostazioni: il backend deve saperlo per sapere dove inviare i promemoria
     sincronizzaDispositivo();
-    const sub = AppState.addEventListener("change", (stato) => {
+    const sub = AppState.addEventListener("change", async (stato) => {
       if (stato === "active") {
-        refreshTokenIfNeeded();
+        await rinnovaSeInScadenza();
         sincronizzaDispositivo();
       }
     });

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
+import { salvaSessione } from "@/utils/session";
 import { View } from "react-native";
 import { styles } from "@/styles/change-password.styles";
 import { Text, TextInput, Button, IconButton, Snackbar } from "react-native-paper";
@@ -26,6 +27,9 @@ export default function changePassw() {
                 body: JSON.stringify({ current_password: pass, new_password: newPass }),
             });
             if (response.ok) {
+                //il server ha chiuso tutte le sessioni, compresa questa:
+                //senza i token nuovi la richiesta successiva manderebbe al login
+                await salvaSessione(await response.json());
                 lasciaUscire();
                 router.back();
             } else {

@@ -7,7 +7,7 @@ import { contattaSupporto, SUPPORT_EMAIL } from "@/utils/support";
 import * as WebBrowser from "expo-web-browser";
 import { PRIVACY_URL } from "@/config";
 import { useFocusEffect, useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
+import { cancellaSessione, chiudiSessione } from "@/utils/session";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { styles } from "@/styles/profile.styles";
 import { colors } from "@/styles/tokens";
@@ -91,8 +91,8 @@ export default function ProfileScreen() {
             if (!response.ok) return;
             //il server ha gia' tolto anche il push token: resta da spegnere lo stato locale
             await dimenticaDispositivo(false);
-            //il token in uso e' appena stato invalidato: va buttato anche qui
-            await SecureStore.deleteItemAsync("token");
+            //i token in uso sono appena stati invalidati: vanno buttati anche qui
+            await cancellaSessione();
             router.replace("/login");
         } catch {
             //senza rete la revoca non parte: l'utente resta dov'e'
@@ -125,8 +125,8 @@ export default function ProfileScreen() {
                 return;
             }
             await dimenticaDispositivo(false);
-            //l'account non esiste piu': il token va buttato, non solo la sessione
-            await SecureStore.deleteItemAsync("token");
+            //l'account non esiste piu': i token vanno buttati anche qui
+            await cancellaSessione();
             router.replace("/login");
         } catch {
             setDeleteError("Errore di rete. Riprova.");
@@ -167,7 +167,8 @@ export default function ProfileScreen() {
         setShowLogoutDialog(false);
         //finché c'è il token di accesso: dopo il server non saprebbe di chi è il telefono
         await dimenticaDispositivo();
-        await SecureStore.deleteItemAsync("token");
+        //il server revoca il refresh token: copiato altrove, non varrebbe piu'
+        await chiudiSessione();
         router.replace("/login");
     }
 

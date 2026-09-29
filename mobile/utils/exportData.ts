@@ -1,7 +1,6 @@
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import * as SecureStore from "expo-secure-store";
-import { API_URL } from "@/config";
+import { apiFetch } from "@/utils/apiFetch";
 
 // L'esportazione risponde al diritto di portabilità (art. 20 GDPR) oltre che
 // all'uso pratico: i dati devono poter uscire dall'app in un formato leggibile.
@@ -28,10 +27,9 @@ export async function esportaCsv(tipo: Tipo): Promise<RisultatoEsportazione> {
       return { esito: "errore", messaggio: "Condivisione non disponibile su questo dispositivo." };
     }
 
-    const token = await SecureStore.getItemAsync("token");
-    const response = await fetch(`${API_URL}/export/${tipo}.csv`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    //apiFetch e non fetch: il token di accesso dura pochi minuti, e senza il
+    //rinnovo automatico l'esportazione fallirebbe dopo ogni pausa
+    const response = await apiFetch(`/export/${tipo}.csv`);
     if (!response.ok) {
       //401 = sessione scaduta, 404 = rotta assente, 500 = errore del server:
       //a schermo il messaggio resta uno solo, nei log si distinguono

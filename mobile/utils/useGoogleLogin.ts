@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Constants from "expo-constants";
-import * as SecureStore from "expo-secure-store";
+import { salvaSessione } from "@/utils/session";
 import { API_URL } from "@/config";
 
 // Il modulo nativo non esiste in Expo Go: importarlo in cima farebbe fallire
@@ -113,7 +113,7 @@ export function useGoogleLogin({ onSuccess, onError }: Options) {
       }
 
       const data = await res.json();
-      await SecureStore.setItemAsync("token", data.access_token);
+      await salvaSessione(data);
       onSuccess();
     } catch (errore) {
       console.error("[google] rete non raggiungibile:", API_URL, errore);

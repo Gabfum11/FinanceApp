@@ -3,7 +3,7 @@ import {Text,TextInput,Button, Snackbar } from "react-native-paper"
 import {useEffect, useState } from "react"
 import { API_URL } from "@/config";
 import { router, useLocalSearchParams } from "expo-router";
-import * as SecureStore from "expo-secure-store"
+import { salvaSessione } from "@/utils/session"
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { styles } from "@/styles/verify-email.styles";
 const num=[0,1,2,3,4,5]
@@ -80,7 +80,7 @@ export default function verify_email(){
             }
             setStep("correct")
             const data= await response.json();
-            await SecureStore.setItemAsync("token", data.access_token);
+            await salvaSessione(data);
             console.log("registrazione riuscita, token salvato");
         } catch(error){
             console.log("errore di rete", error)
