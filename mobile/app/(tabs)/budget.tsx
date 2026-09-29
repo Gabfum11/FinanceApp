@@ -37,6 +37,8 @@ type ConfermaInAttesa =
 export default function BudgetScreen() {
   const [subscriptions, setSubscriptions]=useState<Subscription[]>([]);
   const [conferma, setConferma] = useState<ConfermaInAttesa | null>(null);
+  //ogni conferma registra una spesa: un doppio tocco ne creerebbe due
+  const [inPagamento, setInPagamento] = useState<number | null>(null);
   //distingue "sto caricando" da "non ci sono abbonamenti": senza, il messaggio
   //di lista vuota lampeggerebbe a ogni apertura
   const [loaded, setLoaded] = useState(false);
@@ -138,10 +140,16 @@ export default function BudgetScreen() {
 
     }
     async function handleMarkPaid(subId: number) {
-      const response = await apiFetch(`/subscriptions/${subId}/mark-paid`, { method: "POST" });
-      if (response.ok) {
-        const updated = await response.json();
-        setSubscriptions(subs => subs.map(sub => sub.id === subId ? updated : sub));
+      if (inPagamento !== null) return;
+      setInPagamento(subId);
+      try {
+        const response = await apiFetch(`/subscriptions/${subId}/mark-paid`, { method: "POST" });
+        if (response.ok) {
+          const updated = await response.json();
+          setSubscriptions(subs => subs.map(sub => sub.id === subId ? updated : sub));
+        }
+      } finally {
+        setInPagamento(null);
       }
     }
   return (
@@ -230,7 +238,14 @@ export default function BudgetScreen() {
                         Il pagamento non è automatico: hai rinnovato per {mesi[new Date().getMonth()]}?
                     </Text>
                     <View style={styles.dueActions}>
-                        <Button mode="contained" onPress={() => handleMarkPaid(item.id)}>Ho rinnovato</Button>
+                        <Button
+                            mode="contained"
+                            onPress={() => handleMarkPaid(item.id)}
+                            loading={inPagamento === item.id}
+                            disabled={inPagamento !== null}
+                        >
+                            Ho rinnovato
+                        </Button>
                         <Button mode="outlined" onPress={() => confirmToggle(item.id, true)}>Non rinnovo</Button>
                     </View>
                 </View>

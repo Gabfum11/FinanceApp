@@ -73,13 +73,27 @@ def create_subscription(subscription: schemas.SubscriptionCreate, db: Session=De
     attach_category_names(new_subscription)
     return new_subscription
 
+def abbonamenti_bloccati(db: Session, user_id: int):
+    """Gli abbonamenti dell'utente, bloccati fino alla fine della transazione.
+
+    La Home chiede spese, budget e statistiche in parallelo, e ognuna di quelle
+    richieste esegue i rinnovi: senza blocco tutte leggevano la stessa next_date
+    scaduta e registravano ciascuna la propria spesa (tre spese per un rinnovo).
+    Con FOR UPDATE la seconda aspetta la prima e trova la data gia' avanzata.
+    """
+    return (
+        db.query(models.Subscriptions)
+        .filter(models.Subscriptions.user_id == user_id)
+        .with_for_update()
+    )
+
+
 def run_due_renewals(db: Session, user_id: int) -> list[models.Subscriptions]:
     """Genera le spese dei rinnovi scaduti e restituisce gli abbonamenti dell'utente.
     Va chiamata da ogni endpoint che legge spese o budget: altrimenti i dati sono
     aggiornati solo quando l'utente apre la schermata Abbonamenti."""
     today=date.today()
-    subscriptions=db.query(models.Subscriptions).filter(models.Subscriptions.user_id==user_id).all()
-    changed = False
+    subscriptions=abbonamenti_bloccati(db, user_id).all()
     for sub in subscriptions:
         if not sub.is_active:
             continue
@@ -95,9 +109,9 @@ def run_due_renewals(db: Session, user_id: int) -> list[models.Subscriptions]:
             )
             db.add(new_expense)
             sub.next_date = advance(sub.next_date, sub.frequency)
-            changed = True
-    if changed:
-        db.commit()
+    #sempre, anche senza rinnovi: il commit rilascia il blocco, che altrimenti
+    #durerebbe fino alla fine della richiesta e farebbe aspettare le altre
+    db.commit()
     return subscriptions
 
 
@@ -122,10 +136,12 @@ def toggle_subscription(subscription_id:int, db: Session=Depends(get_db), curren
 
 @router.post("/{subscription_id}/mark-paid", response_model=schemas.SubscriptionOut)
 def mark_subscription_paid(subscription_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    #bloccato come nei rinnovi: due conferme simultanee leggerebbero la stessa
+    #next_date e la avanzerebbero una volta sola a fronte di due spese
     sub = db.query(models.Subscriptions).filter(
         models.Subscriptions.id == subscription_id,
         models.Subscriptions.user_id == current_user.id
-    ).first()
+    ).with_for_update().first()
     if sub is None:
         raise HTTPException(status_code=404, detail="Subscription not found")
 
