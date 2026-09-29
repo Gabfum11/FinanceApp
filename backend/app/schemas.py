@@ -168,4 +168,8 @@ class GoogleLogin(BaseModel):
 
 class UpdateProfile(BaseModel):
     nickname: str = Field(..., min_length=1, max_length=50)
+
+class PushToken(BaseModel):
+    #solo il formato di Expo: qualsiasi altra stringa farebbe fallire ogni invio
+    token: str = Field(..., max_length=200, pattern=r"^ExponentPushToken\[.+\]$")
     

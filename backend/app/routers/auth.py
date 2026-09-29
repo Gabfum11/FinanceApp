@@ -199,6 +199,8 @@ def logout_all_devices(request: Request, db: Session = Depends(get_db), current_
     #su quella corrente, altrimenti il commit non lo vede
     utente = db.query(models.User).filter(models.User.id == current_user.id).first()
     utente.token_version += 1
+    #il telefono perso non deve continuare a ricevere i promemoria
+    utente.push_token = None
     db.commit()
     return {"detail": "Sessioni chiuse su tutti i dispositivi"}
 
@@ -304,3 +306,32 @@ def update_profile(nickname : schemas.UpdateProfile, db: Session = Depends(get_d
     current_user.nickname = nickname.nickname
     db.commit()
     return {"nickname": current_user.nickname}
+
+@router.put("/push-token")
+def set_push_token(payload: schemas.PushToken, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    """Registra il telefono che riceve i promemoria dell'utente.
+
+    PUT perche' imposta un valore: l'app lo richiama a ogni apertura senza
+    effetti collaterali, e se il token cambia l'ultimo sovrascrive il precedente.
+    """
+    #stesso telefono, account diverso (logout e login con un altro utente):
+    #il token va tolto al vecchio account, altrimenti i suoi promemoria
+    #arriverebbero a chi usa il telefono adesso
+    db.query(models.User).filter(
+        models.User.push_token == payload.token,
+        models.User.id != current_user.id,
+    ).update({models.User.push_token: None})
+
+    #current_user puo' arrivare da un'altra sessione: va modificato su questa
+    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
+    utente.push_token = payload.token
+    db.commit()
+    return {"detail": "Dispositivo registrato per le notifiche"}
+
+@router.delete("/push-token")
+def delete_push_token(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    """Promemoria spenti o logout: il telefono smette di ricevere le push."""
+    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
+    utente.push_token = None
+    db.commit()
+    return {"detail": "Notifiche disattivate per questo dispositivo"}

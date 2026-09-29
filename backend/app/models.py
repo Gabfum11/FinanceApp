@@ -25,6 +25,9 @@ class User(Base):
     #diventano invalidi. E' l'unico modo per disconnettere un dispositivo
     #perso prima della scadenza naturale del token
     token_version = Column(Integer, default=0, nullable=False, server_default="0")
+    #indirizzo del telefono per le notifiche push (ExponentPushToken[...]).
+    #Uno solo: l'ultimo dispositivo che ha acceso i promemoria. Null = nessuna push
+    push_token = Column(String, nullable=True)
     expenses = relationship("Expense", back_populates="owner")
 
     @property
