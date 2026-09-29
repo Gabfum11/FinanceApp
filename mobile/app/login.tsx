@@ -115,7 +115,7 @@ export default function LoginScreen() {
           {/* dal login, Google crea l'account a chi non ce l'ha: senza avviso
               l'utente si registrerebbe senza aver visto l'informativa */}
           <Text style={styles.legal}>
-            Continuando con Google accetti l&apos;
+            Continuando con Google confermi di aver letto l&apos;
             <Text style={styles.legalLink} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
               informativa sulla privacy
             </Text>
