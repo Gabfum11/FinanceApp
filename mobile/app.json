@@ -13,6 +13,7 @@
     "android": {
       "predictiveBackGestureEnabled": false,
       "package": "com.gabrifu03.trackIt",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo/trackit-adaptive-foreground-1024.png",
         "monochromeImage": "./assets/images/logo/trackit-adaptive-monochrome-1024.png",
