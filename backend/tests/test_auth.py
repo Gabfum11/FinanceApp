@@ -175,6 +175,7 @@ class TestGoogle:
         with patch("httpx.get", return_value=google_response("nuovo@gmail.com", "g-1")):
             r = client.post("/auth/google", json={"id_token": "finto"})
         assert r.status_code == 200
+        assert r.json()["refresh_token"]
 
         db = db_session()
         user = db.query(models.User).filter(models.User.email == "nuovo@gmail.com").first()

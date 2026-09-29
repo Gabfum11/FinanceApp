@@ -114,7 +114,12 @@ class UserOut(BaseModel):
 
 class Token(BaseModel):
     access_token: str
+    #assente solo dove non si apre una sessione: token di reset e login da Swagger
+    refresh_token: str | None = None
     token_type: str
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
 
 class UserLogin(BaseModel):
     email:str

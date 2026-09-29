@@ -12,9 +12,19 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime, timedelta, timezone
 router = APIRouter(prefix="/auth", tags=["auth"])
 MAX_OTP_ATTEMPTS = 5  # Numero massimo di tentativi consentiti per l'inserimento del codice OTP
-#durata unica per tutti i login: il client rinnova prima della scadenza, quindi
-#chi apre l'app almeno una volta al mese non rivede mai la schermata di accesso
-ACCESS_TOKEN_DAYS = 30
+
+
+def _session_tokens(db: Session, user: models.User) -> dict:
+    """Token di accesso breve e refresh token: cio' che riceve chi apre una sessione.
+
+    Il client usa il primo in ogni richiesta e il secondo solo per ottenere
+    nuove coppie: chi apre l'app almeno una volta al mese resta autenticato.
+    """
+    return {
+        "access_token": security.create_user_token(user),
+        "refresh_token": security.create_refresh_token(db, user),
+        "token_type": "bearer",
+    }
 
 #response model dice a FastAPI che qualunque cosa la funzione restituisca, formattala secondo questo schema pydantic prima di mandarla al client
 @router.post("/register", response_model=schemas.UserOut)
@@ -73,17 +83,20 @@ async def verify_otp(request: Request, verify: schemas.VerifyEmail, db: Session=
         otp.attempts += 1
         db.commit()
         raise HTTPException(status_code=401, detail="Invalid code")
-    if otp.purpose=="email_verification":
-        otp.user.is_verified=True
-        access_token=security.create_user_token(otp.user)
-    else:
-        #il token di reset non porta la versione: il cambio password la
-        #incrementa, e il token si invaliderebbe prima di poter essere usato
-        access_token=security.create_access_token(
-            {"sub": str(otp.user_id), "purpose": "password_reset"}
-        )
-    db.query(models.OtpCode).filter(models.OtpCode.user_id==otp.user_id).delete()
+    user = otp.user
+    purpose = otp.purpose
+    if purpose=="email_verification":
+        user.is_verified=True
+    db.query(models.OtpCode).filter(models.OtpCode.user_id==user.id).delete()
     db.commit()
+    if purpose=="email_verification":
+        return _session_tokens(db, user)
+    #il token di reset non porta la versione: il cambio password la
+    #incrementa, e il token si invaliderebbe prima di poter essere usato.
+    #Niente refresh token: serve solo a cambiare la password, non apre una sessione
+    access_token=security.create_access_token(
+        {"sub": str(user.id), "purpose": "password_reset"}
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login", response_model=schemas.Token)
@@ -97,10 +110,7 @@ def login(request: Request, credentials: schemas.UserLogin, db: Session=Depends(
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not auth_user.is_verified:
         raise HTTPException(status_code=403,detail="User not verified")
-    #durata unica: il client rinnova il token prima della scadenza, quindi
-    #la scelta "resta connesso" non aveva piu' effetto pratico
-    access_token=security.create_user_token(auth_user, 60 * 24 * ACCESS_TOKEN_DAYS)
-    return {"access_token": access_token, "token_type": "bearer"}
+    return _session_tokens(db, auth_user)
     #token_type dice al client come deve usare il token nelle richieste successive
     #in questo caso sarà sempre la stringa fissa bearer, significa che il client deve mandare questo token
     #nell'header HTTP authorization con il formato bearer<token
@@ -143,8 +153,7 @@ def login_with_google(request: Request, payload: schemas.GoogleLogin, db: Sessio
         auth_user.is_verified = True
         db.commit()
 
-    access_token = security.create_user_token(auth_user, 60 * 24 * ACCESS_TOKEN_DAYS)
-    return {"access_token": access_token, "token_type": "bearer"}
+    return _session_tokens(db, auth_user)
 
 
 @router.post("/token", response_model=schemas.Token)
@@ -160,6 +169,8 @@ def login_for_swagger(request: Request, form_data: OAuth2PasswordRequestForm = D
     if not auth_user.is_verified:
         raise HTTPException(status_code=403, detail="User not verified")
 
+    #solo il token di accesso: Swagger non sa rinnovarlo, e un refresh token
+    #emesso a ogni prova resterebbe nel database senza che nessuno lo usi
     access_token = security.create_user_token(auth_user)
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -169,21 +180,36 @@ def get_me(current_user: models.User = Depends(security.get_current_user)):
 
 
 @router.post("/refresh", response_model=schemas.Token)
-@limiter.limit("20/hour")
-def refresh_token(request: Request, current_user: models.User = Depends(security.get_current_user)):
-    """Restituisce un token nuovo a chi ne ha uno ancora valido.
+#un rinnovo ogni 15 minuti per dispositivo: il margine copre piu' telefoni
+#dietro lo stesso IP e i tentativi ripetuti di una rete instabile
+@limiter.limit("60/hour")
+def refresh_token(request: Request, payload: schemas.RefreshRequest, db: Session = Depends(get_db)):
+    """Scambia il refresh token con una coppia nuova.
 
-    Senza, alla scadenza l'utente si ritrova al login senza spiegazione. Il
-    client chiede il rinnovo quando il token e' a meta' vita, così chi apre
-    l'app almeno una volta al mese resta sempre autenticato.
-
-    Non e' un refresh token: è lo stesso tipo di token, con scadenza rinnovata.
-    Un token scaduto non viene accettato, quindi la finestra resta limitata.
+    Non richiede il token di accesso: il client lo chiama proprio quando
+    quello e' scaduto. Il refresh token ricevuto viene consumato, e se torna
+    una seconda volta si chiudono tutte le sessioni dell'utente.
     """
+    user, new_refresh_token = security.rotate_refresh_token(db, payload.refresh_token)
     return {
-        "access_token": security.create_user_token(current_user, 60 * 24 * ACCESS_TOKEN_DAYS),
+        "access_token": security.create_user_token(user),
+        "refresh_token": new_refresh_token,
         "token_type": "bearer",
     }
+
+
+@router.post("/logout")
+@limiter.limit("20/minute")
+def logout(request: Request, payload: schemas.RefreshRequest, db: Session = Depends(get_db)):
+    """Chiude la sessione di questo dispositivo.
+
+    Basta il refresh token: e' la credenziale della sessione, e chi lo possiede
+    puo' gia' fare di peggio che chiuderla. Il token di accesso resta valido
+    fino alla sua scadenza, al massimo 15 minuti, ma il client lo cancella.
+    Un token sconosciuto non da' errore: la sessione e' comunque chiusa.
+    """
+    security.revoke_refresh_token(db, payload.refresh_token)
+    return {"detail": "Sessione chiusa"}
 
 
 @router.post("/logout-all")
@@ -191,13 +217,14 @@ def refresh_token(request: Request, current_user: models.User = Depends(security
 def logout_all_devices(request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
     """Invalida tutti i token dell'utente, compreso quello in uso.
 
-    Serve quando un dispositivo viene perso: cancellare il token dal telefono
-    non basta, perche' quello emesso resta valido fino alla scadenza (con
-    "Ricordami" sono 30 giorni). Chi rifa' login ottiene un token nuovo.
+    Serve quando un dispositivo viene perso: cancellare i token dal telefono
+    non basta, perche' quelli emessi restano validi fino alla scadenza.
+    Chi rifa' login ottiene token nuovi.
     """
     #current_user puo' arrivare da un'altra sessione: l'incremento va fatto
     #su quella corrente, altrimenti il commit non lo vede
     utente = db.query(models.User).filter(models.User.id == current_user.id).first()
+    security.revoke_all_refresh_tokens(db, utente.id)
     utente.token_version += 1
     #il telefono perso non deve continuare a ricevere i promemoria
     utente.push_token = None
@@ -221,6 +248,7 @@ def delete_me(request: Request, payload: schemas.DeleteAccount, db: Session = De
     #prima dell'utente, altrimenti restano righe orfane che puntano a un id inesistente
     user_id = current_user.id
     db.query(models.OtpCode).filter(models.OtpCode.user_id == user_id).delete()
+    security.revoke_all_refresh_tokens(db, user_id)
     db.query(models.Subscriptions).filter(models.Subscriptions.user_id == user_id).delete()
     db.query(models.Expense).filter(models.Expense.user_id == user_id).delete()
     #rileggiamo l'utente da questa sessione: current_user puo' arrivare da un'altra
@@ -265,6 +293,7 @@ async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=De
 async def resetPassword(passw:schemas.ResetPassword,db:Session=Depends(get_db),user:str=Depends(security.get_reset_password_user)):
     user.hashed_password=security.hash_password(passw.new_password)
     #chi ha chiesto il reset ha perso l'accesso: ogni sessione aperta va chiusa
+    security.revoke_all_refresh_tokens(db, user.id)
     user.token_version += 1
     db.commit()
     return {"detail": "Password aggiornata con successo"}
@@ -289,16 +318,16 @@ def change_password(data: schemas.ChangePassword, db:Session=Depends(get_db), cu
     utente = db.query(models.User).filter(models.User.id == current_user.id).first()
     utente.hashed_password = security.hash_password(data.new_password)
     #chi avesse rubato un token resterebbe dentro con la password vecchia:
-    #l'incremento invalida tutti i token gia' emessi
+    #la revoca chiude i rinnovi, l'incremento i token di accesso gia' emessi
+    security.revoke_all_refresh_tokens(db, utente.id)
     utente.token_version += 1
     db.commit()
     db.refresh(utente)
-    #chi ha cambiato la password verrebbe disconnesso dal proprio incremento:
-    #gli diamo subito un token aggiornato
+    #chi ha cambiato la password verrebbe disconnesso dalla propria revoca:
+    #gli diamo subito una sessione nuova
     return {
         "detail": "Password aggiornata con successo",
-        "access_token": security.create_user_token(utente),
-        "token_type": "bearer",
+        **_session_tokens(db, utente),
     }
 
 @router.patch("/updateProfile")

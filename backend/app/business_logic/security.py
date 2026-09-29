@@ -52,7 +52,9 @@ def _validate_secret_key(key: str | None) -> str:
 
 SECRET_KEY = _validate_secret_key(SECRET_KEY) #la chiave è stata generata con python -c "import secrets; print(secrets.token_hex(32))" e salvata in backend/.env
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+#breve di proposito: un token rubato vale pochi minuti. La sessione dura di
+#piu' grazie al refresh token, che il client scambia per uno nuovo
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
@@ -97,11 +99,19 @@ def create_refresh_token(db: Session, user: models.User) -> str:
     Il token in chiaro esce da qui una volta sola, verso il client: il server
     non lo conserva e non potrebbe ricostruirlo.
     """
+    now = datetime.now(timezone.utc)
+    #ogni rinnovo lascia una riga consumata: quelle scadute non servono piu'
+    #nemmeno a riconoscere un riuso, perche' verrebbero rifiutate comunque.
+    #Pulirle qui impedisce alla tabella di crescere senza limite
+    db.query(models.RefreshToken).filter(
+        models.RefreshToken.user_id == user.id,
+        models.RefreshToken.expires_at < now,
+    ).delete()
     token = secrets.token_urlsafe(32)
     db.add(models.RefreshToken(
         user_id=user.id,
         token_hash=_hash_refresh_token(token),
-        expires_at=datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_DAYS),
+        expires_at=now + timedelta(days=REFRESH_TOKEN_DAYS),
     ))
     db.commit()
     return token

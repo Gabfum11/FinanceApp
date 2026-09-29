@@ -41,6 +41,23 @@ class TestCreazione:
         attesa = datetime.now(timezone.utc) + timedelta(days=security.REFRESH_TOKEN_DAYS)
         assert abs(riga.expires_at - attesa) < timedelta(minutes=1)
 
+    def test_cancella_le_righe_scadute_dell_utente(self, db, make_user):
+        """Ogni rinnovo lascia una riga: senza pulizia la tabella crescerebbe sempre."""
+        user_id = make_user()
+        altro_id = make_user("altro@example.com")
+        security.create_refresh_token(db, _user(db, user_id))
+        security.create_refresh_token(db, _user(db, altro_id))
+        for riga in db.query(models.RefreshToken).all():
+            riga.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+        db.commit()
+
+        security.create_refresh_token(db, _user(db, user_id))
+
+        mie = db.query(models.RefreshToken).filter(models.RefreshToken.user_id == user_id).count()
+        altrui = db.query(models.RefreshToken).filter(models.RefreshToken.user_id == altro_id).count()
+        assert mie == 1
+        assert altrui == 1  #quelle degli altri utenti le pulisce il loro prossimo login
+
     def test_due_token_dello_stesso_utente_sono_diversi(self, db, make_user):
         user = _user(db, make_user())
         assert security.create_refresh_token(db, user) != security.create_refresh_token(db, user)
