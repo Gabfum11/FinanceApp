@@ -4,8 +4,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiFetch } from "@/utils/apiFetch";
 
 // expo-notifications è stato rimosso da Expo Go con SDK 53: importarlo in cima
-// farebbe fallire il caricamento della schermata Abbonamenti. Con require()
-// dentro un try, in Expo Go l'app parte e i promemoria restano disattivati.
+// farebbe fallire il caricamento delle schermate che usano questo file. Con
+// require() dentro un try, in Expo Go l'app parte e i promemoria restano disattivati.
 const IN_EXPO_GO = Constants.appOwnership === "expo";
 
 let Notifications: any = null;
@@ -22,23 +22,19 @@ export const NOTIFICHE_DISPONIBILI = Notifications !== null;
 
 // Promemoria per gli abbonamenti in scadenza: il giorno prima alle 9:00.
 //
-// Le notifiche sono pianificate localmente, non inviate dal server: arrivano
-// anche ad app chiusa e non richiedono un servizio che giri di continuo. Il
-// prezzo è che vanno ripianificate ogni volta che gli abbonamenti cambiano.
+// Li invia il server come notifiche push. Prima erano pianificati sul telefono,
+// ma se all'ora prevista era spento l'avviso andava perso; una push invece
+// resta in coda sui server di Google e arriva alla riaccensione.
+// Qui l'app si limita a registrare il telefono presso il backend (push token).
 
 const CHIAVE_ATTIVE = "promemoria_abbonamenti";
-const ORA_AVVISO = 9;
-const GIORNI_PRIMA = 1;
+//deve coincidere con il channelId che il backend mette nelle push
+const CANALE = "abbonamenti";
 
-type Abbonamento = {
-  id: number;
-  description: string;
-  amount: number;
-  next_date: string;
-  is_active: boolean;
-};
+export type EsitoPromemoria = "attivi" | "spenti" | "permesso_negato" | "errore";
 
 if (Notifications) {
+  //di default una notifica che arriva ad app aperta non viene mostrata
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowBanner: true,
@@ -68,82 +64,92 @@ async function preparaCanaleAndroid() {
   if (!Notifications || Platform.OS !== "android") return;
   //senza un canale esplicito Android usa quello predefinito, che l'utente
   //non può regolare separatamente dalle altre notifiche dell'app
-  await Notifications.setNotificationChannelAsync("abbonamenti", {
+  await Notifications.setNotificationChannelAsync(CANALE, {
     name: "Promemoria abbonamenti",
     importance: Notifications.AndroidImportance.DEFAULT,
     sound: null,
   });
 }
 
+/** Ottiene il push token del telefono e lo consegna al backend. */
+async function registraDispositivo(): Promise<boolean> {
+  await preparaCanaleAndroid();
+  //le versioni precedenti pianificavano i promemoria sul telefono: vanno
+  //tolti, altrimenti arriverebbero doppi insieme alle push
+  await Notifications.cancelAllScheduledNotificationsAsync();
+
+  const projectId =
+    Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+  const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
+
+  const response = await apiFetch("/auth/push-token", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  return response.ok;
+}
+
 /**
- * Ricalcola tutte le notifiche a partire dagli abbonamenti attuali.
+ * Da chiamare a ogni apertura dell'app.
  *
- * Si cancella e ripianifica tutto invece di aggiornare le singole: un
- * abbonamento può essere stato eliminato, messo in pausa o spostato di data,
- * e tenere traccia di ogni caso sarebbe più fragile che rifare da capo.
+ * Il token può cambiare (reinstallazione, dati cancellati) e il backend deve
+ * avere sempre l'ultimo; se nel frattempo l'utente ha tolto il permesso dalle
+ * impostazioni del telefono, il server smette di inviare.
  */
-export async function ripianificaPromemoria(): Promise<void> {
+export async function sincronizzaDispositivo(): Promise<void> {
   if (!Notifications) return;
   try {
-    await Notifications.cancelAllScheduledNotificationsAsync();
     if (!(await promemoriaAttivi())) return;
-
     const { status } = await Notifications.getPermissionsAsync();
-    if (status !== "granted") return;
-
-    await preparaCanaleAndroid();
-
-    const response = await apiFetch("/subscriptions/");
-    if (!response.ok) return;
-    const abbonamenti: Abbonamento[] = await response.json();
-
-    for (const sub of abbonamenti) {
-      if (!sub.is_active) continue;
-
-      const rinnovo = new Date(sub.next_date);
-      const quando = new Date(
-        rinnovo.getFullYear(),
-        rinnovo.getMonth(),
-        rinnovo.getDate() - GIORNI_PRIMA,
-        ORA_AVVISO,
-        0,
-        0
-      );
-      //una data già passata verrebbe rifiutata: succede quando il rinnovo
-      //è domani o oggi, e in quel caso l'avviso non serve più
-      if (quando.getTime() <= Date.now()) continue;
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Abbonamento in scadenza",
-          body: `${sub.description} si rinnova domani, ${sub.amount.toFixed(2).replace(".", ",")} €`,
-          data: { subscriptionId: sub.id },
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DATE,
-          date: quando,
-          channelId: "abbonamenti",
-        },
-      });
+    if (status !== "granted") {
+      await dimenticaDispositivo();
+      return;
     }
+    await registraDispositivo();
   } catch {
-    //senza rete o senza permesso i promemoria saltano: si riproverà
-    //alla prossima apertura della schermata Abbonamenti
+    //senza rete si riproverà alla prossima apertura: il token già
+    //registrato resta valido nel frattempo
   }
 }
 
-/** Accende o spegne i promemoria. Restituisce lo stato effettivo. */
-export async function impostaPromemoria(attivi: boolean): Promise<boolean> {
-  if (!Notifications) return false;
-  if (!attivi) {
-    await AsyncStorage.setItem(CHIAVE_ATTIVE, "false");
-    await Notifications.cancelAllScheduledNotificationsAsync();
-    return false;
+/**
+ * Il telefono smette di ricevere i promemoria di questo account.
+ *
+ * avvisaServer=false quando il server l'ha già fatto da sé (logout da tutti i
+ * dispositivi, account eliminato): lì il token di accesso non è più valido e
+ * la chiamata risponderebbe 401.
+ */
+export async function dimenticaDispositivo(avvisaServer = true): Promise<void> {
+  //prima lo stato locale: chi entra dopo su questo telefono non deve
+  //ritrovarsi registrato con i promemoria di qualcun altro
+  await AsyncStorage.setItem(CHIAVE_ATTIVE, "false");
+  if (!avvisaServer) return;
+  try {
+    await apiFetch("/auth/push-token", { method: "DELETE" });
+  } catch {
+    //senza rete il token resta sul server finché un altro account non lo
+    //registra: il backend lo toglie a chiunque lo avesse prima
   }
+}
 
-  if (!(await assicuraPermesso())) return false;
+/** Accende o spegne i promemoria. Restituisce l'esito, da cui dipende lo switch. */
+export async function impostaPromemoria(attivi: boolean): Promise<EsitoPromemoria> {
+  if (!Notifications) return "spenti";
+  try {
+    if (!attivi) {
+      const response = await apiFetch("/auth/push-token", { method: "DELETE" });
+      //se il server non lo sa, continuerebbe a inviare: lo switch resta acceso
+      if (!response.ok) return "errore";
+      await AsyncStorage.setItem(CHIAVE_ATTIVE, "false");
+      return "spenti";
+    }
 
-  await AsyncStorage.setItem(CHIAVE_ATTIVE, "true");
-  await ripianificaPromemoria();
-  return true;
+    if (!(await assicuraPermesso())) return "permesso_negato";
+    if (!(await registraDispositivo())) return "errore";
+    await AsyncStorage.setItem(CHIAVE_ATTIVE, "true");
+    return "attivi";
+  } catch {
+    return "errore";
+  }
 }

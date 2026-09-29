@@ -4,7 +4,6 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { useCallback, useEffect, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
-import { ripianificaPromemoria } from "@/utils/notifications";
 import { styles } from "@/styles/budget.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 function getRenewal(next_date:string){
@@ -54,9 +53,6 @@ export default function BudgetScreen() {
           const data = await response.json()
           setSubscriptions(data);
           setLoaded(true);
-          //le notifiche sono pianificate sulle date attuali: se un abbonamento
-          //e' stato aggiunto, messo in pausa o spostato, vanno rifatte
-          ripianificaPromemoria();
         } else setLoadError(true);
       } catch {
         setLoadError(true);

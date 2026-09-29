@@ -2,7 +2,7 @@ import { View, Pressable } from "react-native";
 import { Text, IconButton, Button, Dialog, Portal, TextInput, ActivityIndicator, Snackbar, Switch } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { esportaCsv } from "@/utils/exportData";
-import { impostaPromemoria, promemoriaAttivi, NOTIFICHE_DISPONIBILI } from "@/utils/notifications";
+import { impostaPromemoria, promemoriaAttivi, dimenticaDispositivo, NOTIFICHE_DISPONIBILI } from "@/utils/notifications";
 import { contattaSupporto, SUPPORT_EMAIL } from "@/utils/support";
 import * as WebBrowser from "expo-web-browser";
 import { PRIVACY_URL } from "@/config";
@@ -50,12 +50,19 @@ export default function ProfileScreen() {
     async function handlePromemoria(attivi: boolean) {
         setPromemoriaInCorso(true);
         //lo stato lo decide la funzione, non lo switch: se il permesso viene
-        //negato resta spento, altrimenti mostrerebbe "attivo" senza esserlo
-        const effettivo = await impostaPromemoria(attivi);
-        setPromemoria(effettivo);
+        //negato o il server non risponde, mostrerebbe uno stato non vero
+        const esito = await impostaPromemoria(attivi);
         setPromemoriaInCorso(false);
-        if (attivi && !effettivo) {
+        if (esito === "attivi") setPromemoria(true);
+        else if (esito === "spenti") setPromemoria(false);
+        else if (esito === "permesso_negato") {
+            setPromemoria(false);
             setMessaggio("Per i promemoria servono le notifiche: attivale dalle impostazioni del telefono.");
+        } else {
+            //errore: lo switch resta com'era, perché il server ha ancora lo stato precedente
+            setMessaggio(attivi
+                ? "Non è stato possibile attivare i promemoria. Riprova."
+                : "Non è stato possibile disattivare i promemoria. Riprova.");
         }
     }
 
@@ -82,6 +89,8 @@ export default function ProfileScreen() {
         try {
             const response = await apiFetch("/auth/logout-all", { method: "POST" });
             if (!response.ok) return;
+            //il server ha gia' tolto anche il push token: resta da spegnere lo stato locale
+            await dimenticaDispositivo(false);
             //il token in uso e' appena stato invalidato: va buttato anche qui
             await SecureStore.deleteItemAsync("token");
             router.replace("/login");
@@ -115,6 +124,7 @@ export default function ProfileScreen() {
                 );
                 return;
             }
+            await dimenticaDispositivo(false);
             //l'account non esiste piu': il token va buttato, non solo la sessione
             await SecureStore.deleteItemAsync("token");
             router.replace("/login");
@@ -155,6 +165,8 @@ export default function ProfileScreen() {
 
     async function handleLogout() {
         setShowLogoutDialog(false);
+        //finché c'è il token di accesso: dopo il server non saprebbe di chi è il telefono
+        await dimenticaDispositivo();
         await SecureStore.deleteItemAsync("token");
         router.replace("/login");
     }

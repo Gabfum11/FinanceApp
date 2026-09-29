@@ -3,6 +3,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { TouchableOpacity, View, AppState } from "react-native";
 import { useEffect } from "react";
 import { refreshTokenIfNeeded } from "@/utils/session";
+import { sincronizzaDispositivo } from "@/utils/notifications";
 
 export default function TabsLayout() {
   const router=useRouter()
@@ -10,8 +11,14 @@ export default function TabsLayout() {
   //un'app lasciata aperta per settimane non passerebbe mai da index.tsx:
   //il rinnovo va tentato anche al rientro in primo piano
   useEffect(() => {
+    //il push token può cambiare o il permesso essere stato tolto dalle
+    //impostazioni: il backend deve saperlo per sapere dove inviare i promemoria
+    sincronizzaDispositivo();
     const sub = AppState.addEventListener("change", (stato) => {
-      if (stato === "active") refreshTokenIfNeeded();
+      if (stato === "active") {
+        refreshTokenIfNeeded();
+        sincronizzaDispositivo();
+      }
     });
     return () => sub.remove();
   }, []);
