@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, IconButton, ActivityIndicator, Portal } from "react-native-paper";
+import { Text, IconButton, ActivityIndicator, Portal, Switch } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -61,7 +61,7 @@ export default function AddExpenseScreen() {
     frequency?: string;
     editId?: string; //presente solo quando si modifica un elemento esistente
     fromAssistant?: string; //aperto da "Modifica" dell'assistente: l'esito torna alla chat
-    autoRenew?: string; //scelto nella card dell'assistente, il form non ha un campo per cambiarlo
+    autoRenew?: string; //dalla card dell'assistente o dall'abbonamento in modifica
   }>();
   const editId = params.editId;
   const isEditing = !!editId;
@@ -85,6 +85,8 @@ export default function AddExpenseScreen() {
       ? (params.frequency as Frequency)
       : "monthly"
   );
+  //spento = "Manuale": a ogni scadenza l'app chiede se si è rinnovato
+  const [autoRenew, setAutoRenew] = useState(params.autoRenew !== "false");
 
   // L'importo non è un TextInput, quindi il "focus" è esplicito: regge
   // la visibilità del tastierino e del cursore lampeggiante.
@@ -104,6 +106,7 @@ export default function AddExpenseScreen() {
     date: toDateString(date),
     isSubscription,
     frequency,
+    autoRenew,
   }));
   // la categoria proposta si conosce solo dopo aver caricato l'elenco
   const [categoriaIniziale, setCategoriaIniziale] = useState<number | null>(null);
@@ -113,6 +116,7 @@ export default function AddExpenseScreen() {
     toDateString(date) !== iniziali.date ||
     isSubscription !== iniziali.isSubscription ||
     frequency !== iniziali.frequency ||
+    autoRenew !== iniziali.autoRenew ||
     (category?.id ?? null) !== categoriaIniziale;
   const { lasciaUscire, dialogo } = useConfirmDiscard(modificato);
 
@@ -195,13 +199,8 @@ export default function AddExpenseScreen() {
       ? isEditing
         //in modifica si sposta il prossimo addebito: la data di partenza
         //ha gia' generato le spese arretrate e non si tocca
-        ? { ...common, frequency, next_date: toDateString(date) }
-        : {
-            ...common,
-            frequency,
-            start_date: toDateString(date),
-            ...(params.autoRenew !== undefined && { auto_renew: params.autoRenew === "true" }),
-          }
+        ? { ...common, frequency, auto_renew: autoRenew, next_date: toDateString(date) }
+        : { ...common, frequency, auto_renew: autoRenew, start_date: toDateString(date) }
       : { ...common, date: toDateString(date) };
 
     try {
@@ -362,6 +361,26 @@ export default function AddExpenseScreen() {
                   );
                 })}
               </View>
+            </View>
+          )}
+
+          {isSubscription && (
+            <View style={styles.autoRenewRow}>
+              <View style={styles.autoRenewText}>
+                <Text style={styles.autoRenewLabel}>Rinnovo automatico</Text>
+                <Text style={styles.autoRenewHint}>
+                  {autoRenew
+                    ? "La spesa viene registrata da sola a ogni rinnovo"
+                    : "A ogni scadenza ti chiediamo se hai rinnovato"}
+                </Text>
+              </View>
+              <Switch
+                value={autoRenew}
+                onValueChange={(valore) => {
+                  setIsAmountFocused(false);
+                  setAutoRenew(valore);
+                }}
+              />
             </View>
           )}
 

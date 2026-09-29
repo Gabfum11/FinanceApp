@@ -104,6 +104,29 @@ export const styles = StyleSheet.create({
     color: colors.darkGreen,
     fontWeight: "700",
   },
+  autoRenewRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  autoRenewText: {
+    flex: 1,
+  },
+  autoRenewLabel: {
+    fontSize: 15,
+    color: colors.text,
+  },
+  autoRenewHint: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
   amountSection: {
     alignItems: "center",
     paddingVertical: 24,
