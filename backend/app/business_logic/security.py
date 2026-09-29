@@ -1,5 +1,7 @@
 from passlib.context import CryptContext #classe che gestisce l'hashing
+import hashlib
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from fastapi import Depends, HTTPException
@@ -23,8 +25,8 @@ WEAK_SECRET_KEYS = {
 
 
 def _validate_secret_key(key: str | None) -> str:
-    """Interrompe l'avvio se la chiave manca o e' debole.
-
+    """Interrompe l'avvio dell'app se la chiave manca o e' debole 
+    se la chiave è debole significa che è stata lasciata quella di esempio, e chiunque può generare token validi per qualsiasi utente.
     os.getenv restituisce None senza protestare: l'app partirebbe, /health
     risponderebbe OK, e il fallimento arriverebbe al primo login con un errore
     incomprensibile. Meglio non partire affatto, con un messaggio chiaro.
@@ -78,6 +80,86 @@ def create_user_token(user: models.User, expire_minutes: int = ACCESS_TOKEN_EXPI
         {"sub": str(user.id), "ver": user.token_version, **extra},
         expire_minutes,
     )
+
+
+REFRESH_TOKEN_DAYS = 30
+
+
+def _hash_refresh_token(token: str) -> str:
+    #SHA-256 e non argon2: serve un hash deterministico per ritrovare la riga,
+    #e un token casuale da 32 byte non si indovina, quindi la lentezza non serve
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def create_refresh_token(db: Session, user: models.User) -> str:
+    """Emette un refresh token per l'utente e ne salva solo l'hash.
+
+    Il token in chiaro esce da qui una volta sola, verso il client: il server
+    non lo conserva e non potrebbe ricostruirlo.
+    """
+    token = secrets.token_urlsafe(32)
+    db.add(models.RefreshToken(
+        user_id=user.id,
+        token_hash=_hash_refresh_token(token),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_DAYS),
+    ))
+    db.commit()
+    return token
+
+
+def revoke_all_refresh_tokens(db: Session, user_id: int) -> None:
+    """Cancella tutti i refresh token dell'utente, senza commit.
+
+    Va sempre insieme all'incremento di token_version, nello stesso commit:
+    questa chiude i rinnovi futuri, l'incremento i token di accesso gia' emessi.
+    """
+    db.query(models.RefreshToken).filter(models.RefreshToken.user_id == user_id).delete()
+
+
+def revoke_refresh_token(db: Session, token: str) -> None:
+    """Cancella un solo refresh token: e' il logout del dispositivo che lo possiede."""
+    db.query(models.RefreshToken).filter(
+        models.RefreshToken.token_hash == _hash_refresh_token(token)
+    ).delete()
+    db.commit()
+
+
+def rotate_refresh_token(db: Session, token: str) -> tuple[models.User, str]:
+    """Consuma il refresh token e ne restituisce uno nuovo, con il suo utente.
+
+    Un token gia' consumato che torna indietro significa che ne esistono due
+    copie: quella del client legittimo e quella di chi l'ha rubato. Non sapendo
+    quale sia quale, si chiudono tutte le sessioni dell'utente.
+    """
+    refresh_exception = HTTPException(status_code=401, detail="Invalid refresh token")
+    row = db.query(models.RefreshToken).filter(
+        models.RefreshToken.token_hash == _hash_refresh_token(token)
+    ).first()
+    if row is None:
+        raise refresh_exception
+    now = datetime.now(timezone.utc)
+    if row.expires_at < now:
+        raise refresh_exception
+
+    #il controllo e la marcatura in un'unica UPDATE: con due richieste
+    #contemporanee sullo stesso token, solo una trova used_at ancora vuoto
+    consumed = db.query(models.RefreshToken).filter(
+        models.RefreshToken.id == row.id,
+        models.RefreshToken.used_at.is_(None),
+    ).update({"used_at": now}, synchronize_session=False)
+    if consumed == 0:
+        user = db.query(models.User).filter(models.User.id == row.user_id).first()
+        revoke_all_refresh_tokens(db, row.user_id)
+        if user is not None:
+            user.token_version += 1
+        db.commit()
+        raise refresh_exception
+
+    user = db.query(models.User).filter(models.User.id == row.user_id).first()
+    if user is None or not user.is_active:
+        db.rollback()
+        raise refresh_exception
+    return user, create_refresh_token(db, user)
 
 
 def decode_access_token(token: str) -> dict | None:

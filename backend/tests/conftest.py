@@ -45,6 +45,7 @@ class UtcDateTime(TypeDecorator):
 
 
 models.OtpCode.__table__.c.expires_at.type = UtcDateTime()
+models.RefreshToken.__table__.c.expires_at.type = UtcDateTime()
 
 
 @pytest.fixture
