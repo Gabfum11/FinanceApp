@@ -91,12 +91,10 @@ async def verify_otp(request: Request, verify: schemas.VerifyEmail, db: Session=
     db.commit()
     if purpose=="email_verification":
         return _session_tokens(db, user)
-    #il token di reset non porta la versione: il cambio password la
-    #incrementa, e il token si invaliderebbe prima di poter essere usato.
+    #il token di reset porta la versione: /resetPassword la incrementa dopo
+    #averlo accettato, e cosi' lo stesso token non puo' servire una seconda volta.
     #Niente refresh token: serve solo a cambiare la password, non apre una sessione
-    access_token=security.create_access_token(
-        {"sub": str(user.id), "purpose": "password_reset"}
-    )
+    access_token=security.create_user_token(user, purpose="password_reset")
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login", response_model=schemas.Token)

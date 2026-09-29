@@ -232,5 +232,9 @@ def get_reset_password_user(token:str = Depends(oauth2_scheme), db:Session=Depen
     user = db.query(models.User).filter(models.User.id == int(user_id)).first()
     if user is None:
         raise password_exception
-    
+    #il reset incrementa la versione: un token gia' usato non corrisponde piu',
+    #e resta rifiutato anche se non e' ancora scaduto
+    if payload.get("ver", 0) != user.token_version:
+        raise password_exception
+
     return user

@@ -157,28 +157,60 @@ class TestCambioPassword:
 
 
 class TestTokenDiReset:
-    def test_il_token_di_reset_non_porta_la_versione(self, db_session, make_user):
-        """Il reset incrementa la versione: se il token la portasse, si
-        invaliderebbe prima di poter essere usato."""
+    """Il token di reset porta la versione: il reset la incrementa dopo averlo
+    accettato, quindi lo stesso token vale una volta sola."""
+
+    @staticmethod
+    def token_di_reset(db_session, user_id):
+        return security.create_user_token(utente_di(db_session, user_id), purpose="password_reset")
+
+    @staticmethod
+    def reset(client, token, password="nuovapassword123"):
+        return client.post(
+            "/auth/resetPassword",
+            json={"new_password": password},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    def test_il_token_di_reset_viene_accettato(self, db_session, make_user):
         user_id = make_user(email="p@t.it")
-        token = security.create_access_token({"sub": str(user_id), "purpose": "password_reset"})
+        token = self.token_di_reset(db_session, user_id)
         db = db_session()
         try:
             assert security.get_reset_password_user(token=token, db=db).id == user_id
         finally:
             db.close()
 
-    def test_resta_valido_anche_dopo_un_incremento(self, db_session, make_user):
-        user_id = make_user(email="q@t.it")
-        token = security.create_access_token({"sub": str(user_id), "purpose": "password_reset"})
+    def test_il_primo_uso_funziona(self, client, db_session, make_user):
+        user_id = make_user(email="q@t.it", password=PASSWORD)
+        assert self.reset(client, self.token_di_reset(db_session, user_id)).status_code == 200
+
+    def test_il_secondo_uso_viene_rifiutato(self, client, db_session, make_user):
+        """Chi intercettasse il token dopo l'uso non potrebbe cambiare di nuovo la password."""
+        user_id = make_user(email="r@t.it", password=PASSWORD)
+        token = self.token_di_reset(db_session, user_id)
+
+        assert self.reset(client, token).status_code == 200
+        assert self.reset(client, token, "dellattaccante123").status_code == 401
+
+        r = client.post("/auth/login", json={"email": "r@t.it", "password": "nuovapassword123"})
+        assert r.status_code == 200
+
+    def test_un_logout_globale_lo_invalida(self, client, db_session, make_user):
+        user_id = make_user(email="s@t.it", password=PASSWORD)
+        token = self.token_di_reset(db_session, user_id)
 
         db = db_session()
-        db.query(models.User).filter(models.User.id == user_id).first().token_version += 5
+        db.query(models.User).filter(models.User.id == user_id).first().token_version += 1
         db.commit()
         db.close()
 
-        db = db_session()
-        try:
-            assert security.get_reset_password_user(token=token, db=db).id == user_id
-        finally:
-            db.close()
+        assert self.reset(client, token).status_code == 401
+
+    def test_non_vale_come_token_di_accesso(self, db_session, make_user):
+        """Portando la versione somiglia a un token di accesso: il purpose lo distingue."""
+        user_id = make_user(email="t@t.it")
+        token = self.token_di_reset(db_session, user_id)
+        with pytest.raises(Exception) as e:
+            chiama_con(db_session, token)
+        assert e.value.status_code == 401
