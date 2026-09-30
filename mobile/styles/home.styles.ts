@@ -54,6 +54,17 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  //il margine predefinito di IconButton lo staccherebbe dal pulsante accanto
+  eyeButton: {
+    margin: 0,
+    //stesso grigio dell'icona: con il colore di bordo del tema sembravano due elementi
+    borderColor: colors.textSecondary,
+  },
   budgButt: {
     borderRadius: 20,
   },

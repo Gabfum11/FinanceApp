@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { View, FlatList, Pressable, BackHandler } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Button, Text, Snackbar } from "react-native-paper";
+import { Button, Text, Snackbar, IconButton } from "react-native-paper";
 import { BarChart } from "react-native-gifted-charts";
 import { API_URL } from "@/config";
 import { styles } from "../../styles/home.styles";
 import { colors } from "../../styles/tokens";
 import { apiFetch } from "@/utils/apiFetch";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -67,6 +68,9 @@ function formatExpenseTime(dateString: string, createdAt: string): string {
   return `${formattedDate}, ${time}`;
 }
 
+//scelta dell'utente sull'occhio: resta valida anche dopo aver chiuso l'app
+const CHIAVE_SALDO = "mostra_saldo";
+
 export default function HomeScreen() {
   const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[]>([]); //questo stato contiene un array di expense, inizialmente vuoto
@@ -79,7 +83,28 @@ export default function HomeScreen() {
   const [showExitDialog, setShowExitDialog] = useState(false);
   //senza avviso, un server irraggiungibile sembrerebbe un account senza dati
   const [loadError, setLoadError] = useState(false);
+  //chi usa l'app in pubblico può nascondere le cifre, come nelle app bancarie
+  const [saldoVisibile, setSaldoVisibile] = useState(true);
   const rotazioneBot = useSharedValue(0);
+
+  useEffect(() => {
+    AsyncStorage.getItem(CHIAVE_SALDO)
+      .then((valore) => {
+        if (valore === "false") setSaldoVisibile(false);
+      })
+      .catch(() => {});
+  }, []);
+
+  function cambiaVisibilita() {
+    const nuovo = !saldoVisibile;
+    setSaldoVisibile(nuovo);
+    AsyncStorage.setItem(CHIAVE_SALDO, String(nuovo)).catch(() => {});
+  }
+
+  //un solo punto decide come mostrare una cifra: in chiaro o coperta
+  function importo(valore: number) {
+    return saldoVisibile ? `€${valore.toFixed(2)}` : "€ ••••";
+  }
   const riduciMovimento = useReducedMotion();
 
   useEffect(() => {
@@ -163,7 +188,9 @@ export default function HomeScreen() {
       // }
 
   }
-  useEffect(
+  //a ogni ritorno sulla Home, non a ogni ridisegno: il nome cambiato in
+  //"Modifica profilo" compare subito senza richieste continue a /auth/me
+  useFocusEffect(
     useCallback(() => {
       loadUser();
     }, [])
@@ -181,7 +208,9 @@ export default function HomeScreen() {
       label: GIORNI_SETTIMANA[new Date(day.date).getDay() === 0 ? 6 : new Date(day.date).getDay() - 1],
       frontColor: isToday ? colors.primary : colors.overlayMuted,
       topLabelComponent: () => (
-        <Text style={styles.weeklyBarLabel}>€{day.total.toFixed(0)}</Text>
+        <Text style={styles.weeklyBarLabel}>
+          {saldoVisibile ? `€${day.total.toFixed(0)}` : "••"}
+        </Text>
       ),
     };
   });
@@ -223,11 +252,26 @@ export default function HomeScreen() {
       <View>
         <View style={styles.headerRow}>
           <Text variant="titleMedium">Budget</Text>
-          <Link href="/set_budget" asChild>
-            <Button mode="contained" style={styles.budgButt} labelStyle={styles.buttonLabel}>
-              + Nuovo
-            </Button>
-          </Link>
+          <View style={styles.headerActions}>
+            {/* nella riga del titolo e non nella card: la card compare solo
+                con un budget impostato, le transazioni invece sempre */}
+            <Link href="/set_budget" asChild>
+              <Button mode="contained" style={styles.budgButt} labelStyle={styles.buttonLabel}>
+                + Nuovo
+              </Button>
+            </Link>
+            {/* con il bordo, come il logout del profilo: un'icona da sola
+                accanto a un pulsante vero non sembrava toccabile */}
+            <IconButton
+              icon={saldoVisibile ? "eye-outline" : "eye-off-outline"}
+              mode="outlined"
+              size={20}
+              iconColor={colors.textSecondary}
+              onPress={cambiaVisibilita}
+              style={styles.eyeButton}
+              accessibilityLabel={saldoVisibile ? "Nascondi importi" : "Mostra importi"}
+            />
+          </View>
         </View>
         {budgetStatus?.budget != null && (
           <View style={styles.budgetCard}>
@@ -239,8 +283,8 @@ export default function HomeScreen() {
               </Text>
             </View>
             <View style={styles.budgetAmountRow}>
-              <Text style={styles.budgetRemaining}>€{budgetStatus.remaining?.toFixed(2)}</Text>
-              <Text style={styles.budgetOf}>di €{budgetStatus.budget.toFixed(2)}</Text>
+              <Text style={styles.budgetRemaining}>{importo(budgetStatus.remaining ?? 0)}</Text>
+              <Text style={styles.budgetOf}>di {importo(budgetStatus.budget)}</Text>
             </View>
             <View style={styles.progressBarBackground}>
               <View style={[styles.progressBarFill, { width: `${percentage}%` }]} />
@@ -248,7 +292,7 @@ export default function HomeScreen() {
             <View style={styles.budgetLegendRow}>
               <View style={styles.budgetLegendItem}>
                 <View style={[styles.budgetLegendDot, { backgroundColor: colors.primary }]} />
-                <Text style={styles.budgetLegendText}>Speso {budgetStatus.spent.toFixed(2)}</Text>
+                <Text style={styles.budgetLegendText}>Speso {importo(budgetStatus.spent)}</Text>
               </View>
             </View>
           </View>
@@ -296,7 +340,7 @@ export default function HomeScreen() {
               <Text style={styles.expenseDescription}>{item.description}</Text>
               <Text style={styles.expenseMeta}>{item.category_name ?? "Non assegnata"}{" · "}{formatExpenseTime(item.date, item.created_at)}</Text>
             </View>
-            <Text style={styles.expenseAmount}>- €{item.amount.toFixed(2)}</Text>
+            <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
           </View>
         )}
         ListEmptyComponent={
