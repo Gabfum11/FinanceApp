@@ -79,6 +79,9 @@ class Subscriptions(Base):
     is_active=Column(Boolean, default=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    #la next_date per cui il promemoria push e' gia' partito: se il cron chiama
+    #due volte lo stesso giorno, il secondo giro non manda doppioni
+    reminder_sent_for = Column(Date, nullable=True)
 
     user = relationship("User")
     category = relationship("Category")
