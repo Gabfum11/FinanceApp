@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -98,6 +99,31 @@ async def log_richieste_fallite(request: Request, call_next):
             },
         )
     return response
+
+
+def origini_web(valore: str) -> list[str]:
+    """Siti autorizzati a chiamare l'API dal browser, separati da virgole.
+
+    Solo il dominio, senza percorso ne' barra finale: il browser confronta
+    l'origine esatta (https://gabfum11.github.io, non .../FinanceApp/).
+    """
+    return [o.strip().rstrip("/") for o in valore.split(",") if o.strip()]
+
+
+#le app native non ne hanno bisogno; il browser invece blocca le chiamate verso
+#un altro dominio se il server non autorizza esplicitamente il sito.
+#Aggiunto per ultimo cosi' avvolge gli altri middleware: anche le risposte di
+#errore portano l'intestazione, e il browser ne legge il messaggio invece di
+#un generico "Failed to fetch". Niente cookie (allow_credentials): l'app usa
+#token nell'intestazione Authorization, che un altro sito non puo' riusare
+ORIGINI_WEB = origini_web(os.getenv("CORS_ORIGINS", ""))
+if ORIGINI_WEB:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=ORIGINI_WEB,
+        allow_methods=["*"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
 app.include_router(expenses.router)
 app.include_router(categories.router)
 app.include_router(auth.router)

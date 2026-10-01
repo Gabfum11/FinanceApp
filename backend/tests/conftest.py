@@ -21,6 +21,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("GROQ_API_KEY", "test-key")
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-non-usata-in-produzione")
+# un sito fittizio autorizzato: i test CORS controllano che passi lui e nessun altro
+os.environ.setdefault("CORS_ORIGINS", "https://sito-autorizzato.test")
 
 from app.database import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402
