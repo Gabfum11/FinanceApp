@@ -40,7 +40,9 @@ export default function TabsLayout() {
         options={{
           title: "Statistiche",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="chart-donut" color={color} size={size} />
+            <View ref={bersaglio("statistiche")} collapsable={false}>
+              <MaterialCommunityIcons name="chart-donut" color={color} size={size} />
+            </View>
           ),
         }}
       />
@@ -92,7 +94,9 @@ export default function TabsLayout() {
         options={{
           title: "Profilo",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account" color={color} size={size} />
+            <View ref={bersaglio("profilo")} collapsable={false}>
+              <MaterialCommunityIcons name="account" color={color} size={size} />
+            </View>
           ),
         }}
       />

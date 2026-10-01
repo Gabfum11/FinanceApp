@@ -28,14 +28,14 @@ const PASSAGGI: Passaggio[] = [
   {
     bersaglio: "aggiungi",
     titolo: "Aggiungi una spesa",
-    testo: "Tocca + per registrarla. Scegliendo “Abbonamento” in alto, ti avviso il giorno prima di ogni rinnovo.",
+    testo: "Tocca + per registrarla.\nSe è un abbonamento, ti avviso il giorno prima di ogni rinnovo.",
     margine: 6,
     raggio: 34,
   },
   {
     bersaglio: "nuovo-budget",
     titolo: "Imposta il budget",
-    testo: "Decidi quanto spendere al mese: qui sotto vedrai quanto ti resta.",
+    testo: "Decidi quanto spendere al mese.",
     margine: 6,
     raggio: 24,
   },
@@ -54,9 +54,27 @@ const PASSAGGI: Passaggio[] = [
     raggio: 24,
   },
   {
+    bersaglio: "statistiche",
+    titolo: "Le tue statistiche",
+    testo: "Puoi vedere come hai speso il tuo budget ogni mese.",
+    margine: 4,
+    raggio: 14,
+    colonnaTab: true,
+  },
+  {
     bersaglio: "abbonamenti",
     titolo: "I tuoi abbonamenti",
     testo: "Qui li trovi tutti: mettili in pausa, modificali e conferma quelli da rinnovare.",
+    margine: 4,
+    raggio: 14,
+    colonnaTab: true,
+  },
+  {
+    //subito dopo gli abbonamenti: i promemoria sono spenti finche' non si
+    //accendono qui, e il passaggio 1 li promette
+    bersaglio: "profilo",
+    titolo: "Il tuo profilo",
+    testo: "Attiva qui i promemoria degli abbonamenti. Puoi anche esportare i tuoi dati e rivedere questo tutorial.",
     margine: 4,
     raggio: 14,
     colonnaTab: true,

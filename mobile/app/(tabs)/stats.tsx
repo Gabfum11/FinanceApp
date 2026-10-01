@@ -1,11 +1,13 @@
 import { useCallback, useState } from "react";
-import { View } from "react-native";
+import { View, Pressable } from "react-native";
 import { IconButton, Text, Snackbar, ActivityIndicator } from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import { PieChart } from "react-native-gifted-charts";
 import { styles } from "@/styles/stats.styles";
-import { useFocusEffect } from "expo-router";
+import { colors } from "@/styles/tokens";
+import { useFocusEffect, useRouter } from "expo-router";
 
 type CategoryStat = {
   category_name: string;
@@ -20,6 +22,7 @@ function formatCycleLabel(cycleStart: string, cycleEnd: string): string {
 }
 
 export default function StatsScreen() {
+  const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -28,6 +31,8 @@ export default function StatsScreen() {
   const [cycleStart, setCycleStart] = useState<string | null>(null);
   const [cycleEnd, setCycleEnd] = useState<string | null>(null);
   const [budgetRemaining, setBudgetRemaining] = useState<number | null>(null);
+  //null finche' non si sa: l'invito a impostarlo non deve lampeggiare all'apertura
+  const [budgetImpostato, setBudgetImpostato] = useState<boolean | null>(null);
   const colori = ["#2ECC71", "#F5C518", "#3498DB", "#E74C3C", "#BDC3C7", "#9B59B6", "#1ABC9C", "#E67E22"];
 
   async function loadStats() {
@@ -59,6 +64,7 @@ export default function StatsScreen() {
     if (response.ok) {
       const data = await response.json();
       setBudgetRemaining(data.remaining);
+      setBudgetImpostato(data.budget != null);
     }
   }
 
@@ -95,6 +101,24 @@ export default function StatsScreen() {
       <View style={styles.card}>
         {loading ? (
           <ActivityIndicator size="large" />
+        ) : stats.length === 0 ? (
+          //senza spese la ciambella era vuota e non diceva nulla: come in home,
+          //si spiega cosa manca e, nel mese in corso, come rimediare
+          <Pressable
+            style={styles.emptyState}
+            onPress={cycleOffset === 0 ? () => router.push("/add_expense") : undefined}
+            disabled={cycleOffset !== 0}
+          >
+            <MaterialCommunityIcons name="chart-donut" size={40} color={colors.chevron} />
+            <Text style={styles.emptyTitle}>
+              {cycleOffset === 0 ? "Nessuna spesa in questo mese" : "Nessuna spesa in questo periodo"}
+            </Text>
+            {cycleOffset === 0 && (
+              <Text style={styles.emptyHint}>
+                Le statistiche compaiono dopo la prima spesa. Tocca + per aggiungerla.
+              </Text>
+            )}
+          </Pressable>
         ) : (
           <>
             <View style={styles.legendContainer}>
@@ -137,6 +161,13 @@ export default function StatsScreen() {
           </>
         )}
       </View>
+
+      {/* solo nel mese in corso: per i mesi passati il budget di allora non si ricostruisce */}
+      {!loading && cycleOffset === 0 && stats.length > 0 && budgetImpostato === false && (
+        <Text style={styles.budgetHint} onPress={() => router.push("/set_budget")}>
+          Imposta un budget per vedere quanto ti resta
+        </Text>
+      )}
 
       <Snackbar visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} duration={3000}>
         {errorMessage}

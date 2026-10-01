@@ -62,4 +62,30 @@ export const styles = StyleSheet.create({
         fontWeight: "bold",
         fontSize: 18,
     },
+    //stesso riquadro vuoto della home e della scheda Abbonamenti
+    emptyState: {
+        flex: 1,
+        alignItems: "center",
+        paddingVertical: 28,
+        paddingHorizontal: 12,
+        gap: 6,
+    },
+    emptyTitle: {
+        fontWeight: "600",
+        color: colors.textSecondary,
+        marginTop: 4,
+        textAlign: "center",
+    },
+    emptyHint: {
+        textAlign: "center",
+        color: colors.textMuted,
+        fontSize: 13,
+        lineHeight: 18,
+    },
+    budgetHint: {
+        marginTop: 16,
+        textAlign: "center",
+        color: colors.primary,
+        fontWeight: "bold",
+    },
 });
