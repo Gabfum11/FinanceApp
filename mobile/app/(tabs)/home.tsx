@@ -11,7 +11,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { benvenutoVisto } from "@/utils/benvenuto";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -81,6 +80,8 @@ export default function HomeScreen() {
   //senza, il messaggio di lista vuota lampeggerebbe a ogni apertura
   const [expensesLoaded, setExpensesLoaded] = useState(false);
   const [nickname, setNickname] = useState("");
+  //null finche' /auth/me non risponde: il tutorial non deve partire prima di saperlo
+  const [tutorialVisto, setTutorialVisto] = useState<boolean | null>(null);
   const [budgetStatus, setBudgetStatus] = useState<{ budget: number | null; spent: number; remaining: number | null; cycle_start: string; cycle_end: string } | null>(null);
   const [weeklyStats, setWeeklyStats] = useState<DayStat[]>([]);
   const [showExitDialog, setShowExitDialog] = useState(false);
@@ -145,12 +146,6 @@ export default function HomeScreen() {
     if (response.ok) {
       const data = await response.json();
       setBudgetStatus(data);
-      //il tutorial e' per chi parte da zero: chi ha gia' un budget non lo vede,
-      //cosi' vale sia dopo la registrazione sia al primo accesso con Google
-      if (data.budget === null && !benvenutoAperto.current && !(await benvenutoVisto())) {
-        benvenutoAperto.current = true;
-        router.push("/welcome");
-      }
     } else throw new Error(`${response.status}`);
   }
   async function loadWeeklyStats() {
@@ -191,6 +186,7 @@ export default function HomeScreen() {
       const data = await response.json();
       // console.log("Dati utente ricevuti:", data); // dati sensibili, non loggare in produzione
       setNickname(data.nickname);
+      setTutorialVisto(data.tutorial_visto);
       }
       // else {
       //   console.log("Errore /auth/me:", await response.text())
@@ -204,6 +200,15 @@ export default function HomeScreen() {
       loadUser();
     }, [])
   );
+
+  //il tutorial e' per chi parte da zero: chi ha gia' un budget non lo vede,
+  //cosi' vale sia dopo la registrazione sia al primo accesso con Google.
+  //Utente e budget arrivano da due richieste separate: si decide quando ci sono entrambi
+  useEffect(() => {
+    if (tutorialVisto !== false || budgetStatus?.budget !== null || benvenutoAperto.current) return;
+    benvenutoAperto.current = true;
+    router.push("/welcome");
+  }, [tutorialVisto, budgetStatus, router]);
 
   const percentage = budgetStatus?.budget
     ? Math.min((budgetStatus.spent / budgetStatus.budget) * 100, 100)

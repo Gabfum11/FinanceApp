@@ -28,6 +28,9 @@ class User(Base):
     #indirizzo del telefono per le notifiche push (ExponentPushToken[...]).
     #Uno solo: l'ultimo dispositivo che ha acceso i promemoria. Null = nessuna push
     push_token = Column(String, nullable=True)
+    #il tutorial di primo avvio e' per account, non per telefono: chi lo ha
+    #visto non lo rivede su un altro dispositivo, chi crea un account nuovo si'
+    tutorial_visto = Column(Boolean, default=False, nullable=False, server_default="false")
     expenses = relationship("Expense", back_populates="owner")
 
     @property

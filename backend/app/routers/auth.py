@@ -355,6 +355,17 @@ def set_push_token(payload: schemas.PushToken, db: Session = Depends(get_db), cu
     db.commit()
     return {"detail": "Dispositivo registrato per le notifiche"}
 
+@router.put("/tutorial-visto")
+def set_tutorial_visto(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    """Il tutorial di primo avvio e' stato completato o saltato.
+
+    PUT perche' imposta un valore: richiamarlo una seconda volta non cambia nulla.
+    """
+    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
+    utente.tutorial_visto = True
+    db.commit()
+    return {"detail": "Tutorial segnato come visto"}
+
 @router.delete("/push-token")
 def delete_push_token(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
     """Promemoria spenti o logout: il telefono smette di ricevere le push."""

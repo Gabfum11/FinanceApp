@@ -1,20 +1,11 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiFetch } from "@/utils/apiFetch";
 
-//vale per il dispositivo: chi reinstalla senza aver mai impostato un budget
-//rivede il tutorial, chi un budget ce l'ha non lo vede comunque
-const CHIAVE = "benvenuto_visto";
-
-export async function benvenutoVisto(): Promise<boolean> {
-  try {
-    return (await AsyncStorage.getItem(CHIAVE)) === "1";
-  } catch {
-    //meglio non mostrarlo che riproporlo a ogni apertura
-    return true;
-  }
-}
-
+//il flag sta sull'account (tutorial_visto in /auth/me), non sul telefono:
+//un account nuovo lo vede anche dove qualcun altro l'ha gia' visto.
+//Se la chiamata fallisce il tutorial ricompare alla prossima apertura:
+//meglio che fermare l'utente con un errore per una cosa del genere
 export async function segnaBenvenutoVisto() {
   try {
-    await AsyncStorage.setItem(CHIAVE, "1");
+    await apiFetch("/auth/tutorial-visto", { method: "PUT" });
   } catch {}
 }

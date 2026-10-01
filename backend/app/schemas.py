@@ -104,6 +104,7 @@ class UserOut(BaseModel):
     email: str
     nickname: str
     has_password: bool #False per gli account creati con Google
+    tutorial_visto: bool
 
     class Config:
         from_attributes = True

@@ -70,12 +70,11 @@ export default function Welcome() {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const indice = PASSAGGI.indexOf(passaggio);
 
-  //il flag va salvato prima di uscire: tornata a fuoco, la home ricontrolla
-  //e senza flag riaprirebbe il tutorial
+  //dal profilo e' gia' segnato come visto: non serve richiamare il server
   const fine = useCallback(async () => {
-    await segnaBenvenutoVisto();
+    if (!rivedi) await segnaBenvenutoVisto();
     router.back();
-  }, []);
+  }, [rivedi]);
 
   //il tasto indietro di Android vale come "Salta": uscire senza flag
   //farebbe ricomparire il tutorial appena la home torna a fuoco
