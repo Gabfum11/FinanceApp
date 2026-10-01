@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { View, FlatList, Pressable, BackHandler } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button, Text, Snackbar, IconButton } from "react-native-paper";
@@ -11,6 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { benvenutoVisto } from "@/utils/benvenuto";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -73,6 +74,8 @@ const CHIAVE_SALDO = "mostra_saldo";
 
 export default function HomeScreen() {
   const router = useRouter();
+  //loadAll puo' partire due volte di fila (focus e riprova): il tutorial va aperto una volta sola
+  const benvenutoAperto = useRef(false);
   const [expenses, setExpenses] = useState<Expense[]>([]); //questo stato contiene un array di expense, inizialmente vuoto
   //serve a distinguere "non ho ancora caricato" da "non ci sono spese":
   //senza, il messaggio di lista vuota lampeggerebbe a ogni apertura
@@ -142,6 +145,12 @@ export default function HomeScreen() {
     if (response.ok) {
       const data = await response.json();
       setBudgetStatus(data);
+      //il tutorial e' per chi parte da zero: chi ha gia' un budget non lo vede,
+      //cosi' vale sia dopo la registrazione sia al primo accesso con Google
+      if (data.budget === null && !benvenutoAperto.current && !(await benvenutoVisto())) {
+        benvenutoAperto.current = true;
+        router.push("/welcome");
+      }
     } else throw new Error(`${response.status}`);
   }
   async function loadWeeklyStats() {
@@ -246,7 +255,7 @@ export default function HomeScreen() {
             source={require("../../assets/images/logo/trackit-bot-1024.png")}
             style={[styles.assistantIcon, salutoStyle]}
           />
-          <Text style={styles.assistantButtonLabel}>Chiedi</Text>
+          <Text style={styles.assistantButtonLabel}>Assistente</Text>
         </Pressable>
       </View>
       <View>
@@ -273,6 +282,16 @@ export default function HomeScreen() {
             />
           </View>
         </View>
+        {/* solo a caricamento finito, se no lampeggerebbe a ogni apertura */}
+        {budgetStatus && budgetStatus.budget == null && (
+          <Pressable style={styles.emptyState} onPress={() => router.push("/set_budget")}>
+            <MaterialCommunityIcons name="target" size={40} color={colors.chevron} />
+            <Text style={styles.emptyTitle}>Nessun budget impostato</Text>
+            <Text style={styles.emptyHint}>
+              Tocca + Nuovo per decidere quanto spendere al mese e vedere quanto ti resta
+            </Text>
+          </Pressable>
+        )}
         {budgetStatus?.budget != null && (
           <View style={styles.budgetCard}>
             <View style={styles.budgetDecorCircle} />
