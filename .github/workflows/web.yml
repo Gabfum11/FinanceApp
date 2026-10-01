@@ -1,0 +1,51 @@
+# Versione web dell'app su GitHub Pages: https://gabfum11.github.io/FinanceApp/
+# Parte a ogni push che tocca l'app; le modifiche al solo backend non la rifanno.
+name: Web app
+
+on:
+  push:
+    branches: [main]
+    paths: ["mobile/**", ".github/workflows/web.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# due push ravvicinati: conta solo l'ultimo
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      # le EXPO_PUBLIC_ finiscono nel bundle: lo stesso backend dell'app Android
+      - run: npx expo export --platform web
+        env:
+          EXPO_PUBLIC_API_URL: https://financeapp-vt0o.onrender.com
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: mobile/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
