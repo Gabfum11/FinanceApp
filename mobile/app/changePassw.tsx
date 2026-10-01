@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
+import { messaggioErrore } from "@/utils/messaggioErrore";
 import { salvaSessione } from "@/utils/session";
 import { View } from "react-native";
 import { styles } from "@/styles/change-password.styles";
@@ -33,8 +34,7 @@ export default function changePassw() {
                 lasciaUscire();
                 router.back();
             } else {
-                const error = await response.json();
-                setErrorMessage(error.detail ?? "Errore nell'aggiornamento della password");
+                setErrorMessage(await messaggioErrore(response, "La nuova password deve avere almeno 8 caratteri"));
                 setSnackbarVisible(true);
             }
         } catch (error) {

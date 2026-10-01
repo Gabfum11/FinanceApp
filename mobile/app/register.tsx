@@ -7,6 +7,7 @@ import { API_URL, PRIVACY_URL } from "@/config";
 import { router } from "expo-router";
 import { useGoogleLogin } from "@/utils/useGoogleLogin";
 import { GoogleButton } from "@/components/GoogleButton";
+import { messaggioErrore } from "@/utils/messaggioErrore";
 import * as WebBrowser from "expo-web-browser";
 
 export default function RegisterScreen() {
@@ -33,10 +34,10 @@ export default function RegisterScreen() {
                 body:JSON.stringify({nickname,email,password}),
             });
             if(!response.ok) {
-                const error= await response.json();
-                setErrorMessage(error.detail)
+                const messaggio = await messaggioErrore(response, "Controlla i dati: la password deve avere almeno 8 caratteri");
+                setErrorMessage(messaggio)
                 setSnackbarVisible(true)
-                console.log("Registrazione fallita:", error.detail);
+                console.log("Registrazione fallita:", messaggio);
                 return;
             }
             const data=await response.json();

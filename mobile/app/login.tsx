@@ -8,6 +8,7 @@ import { salvaSessione } from "@/utils/session"; //salva i token in modo persist
 import { useRouter } from "expo-router";
 import { useGoogleLogin } from "@/utils/useGoogleLogin";
 import { GoogleButton } from "@/components/GoogleButton";
+import { messaggioErrore } from "@/utils/messaggioErrore";
 import * as WebBrowser from "expo-web-browser";
 
 
@@ -36,10 +37,10 @@ export default function LoginScreen() {
     });
 
     if (!response.ok) {
-      const error= await response.json();
-      setErrorMessage(error.detail)
+      const messaggio = await messaggioErrore(response, "Accesso non riuscito");
+      setErrorMessage(messaggio)
       setSnackbarVisible(true)
-      console.log("errore", error);
+      console.log("errore", messaggio);
       return;
     }
 

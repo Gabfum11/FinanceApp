@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { View } from "react-native";
 import { IconButton, Text, Snackbar, ActivityIndicator } from "react-native-paper";
 import { apiFetch } from "@/utils/apiFetch";
+import { messaggioErrore } from "@/utils/messaggioErrore";
 import { PieChart } from "react-native-gifted-charts";
 import { styles } from "@/styles/stats.styles";
 import { useFocusEffect } from "expo-router";
@@ -39,8 +40,7 @@ export default function StatsScreen() {
         setCycleStart(data.cycle_start);
         setCycleEnd(data.cycle_end);
       } else {
-        const error = await response.json();
-        setErrorMessage(error.detail);
+        setErrorMessage(await messaggioErrore(response, "Errore nel caricamento delle statistiche"));
         setSnackbarVisible(true);
       }
     } catch (error) {

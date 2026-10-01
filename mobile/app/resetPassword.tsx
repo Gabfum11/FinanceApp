@@ -5,6 +5,7 @@ import { API_URL } from "@/config";
 import { router, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { styles } from "@/styles/reset-password.styles";
+import { messaggioErrore } from "@/utils/messaggioErrore";
 const num=[0,1,2,3,4,5]
 const formatTime =(totseconds:number)=>{
     const minutes=Math.floor(totseconds/60);
@@ -46,9 +47,8 @@ export default function reset_password(){
             })
             if(!response.ok)
             {
-                const error= await response.json()
-               console.log("Codice errato",error);
-               setErrorMessage(error.detail)
+               setErrorMessage(await messaggioErrore(response, "Codice non valido"))
+               console.log("Codice errato");
                setSnackbarVisible(true)
                setStep("invalid")
                return;
@@ -72,8 +72,7 @@ export default function reset_password(){
                 body: JSON.stringify({email, purpose:"password_reset"})
             })
             if(!response.ok) {
-                const error= await response.json();
-                setErrorMessage(error.detail)
+                setErrorMessage(await messaggioErrore(response, "Errore nell'invio del codice"))
                 setSnackbarVisible(true)
                 console.log("errore nell'invio del nuovo codice")
                 return;
@@ -98,8 +97,7 @@ export default function reset_password(){
                  body: JSON.stringify({email, purpose:"password_reset"})
           })
           if(!response.ok) {
-            const error= await response.json();
-            setErrorMessage(error.detail)
+            setErrorMessage(await messaggioErrore(response, "Errore nell'invio del codice"))
             setSnackbarVisible(true)
                  console.log("errore nell'invio del nuovo codice")
                  return;
@@ -113,6 +111,11 @@ export default function reset_password(){
        }
    }
    async function handleSavePassword() {
+        if (new_password.length < 8) {
+            setErrorMessage("La password deve avere almeno 8 caratteri")
+            setSnackbarVisible(true)
+            return;
+        }
         try{
             setLoading(true)
             const response= await fetch(`${API_URL}/auth/resetPassword`, {
@@ -125,8 +128,7 @@ export default function reset_password(){
                 body: JSON.stringify({new_password, purpose:"password_reset"})
             })
             if(!response.ok) {
-                const error= await response.json();
-                setErrorMessage(error.detail)
+                setErrorMessage(await messaggioErrore(response, "Errore nel salvataggio della password"))
                 setSnackbarVisible(true)
                  console.log("errore nel salvataggio della password")
                  return;

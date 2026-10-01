@@ -3,6 +3,7 @@ import { Text, TextInput, Button, Snackbar, IconButton } from "react-native-pape
 import { useState } from "react";
 import { router } from "expo-router";
 import { apiFetch } from "@/utils/apiFetch";
+import { messaggioErrore } from "@/utils/messaggioErrore";
 import { styles } from "@/styles/set-budget.styles";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -45,8 +46,7 @@ export default function SetBudgetScreen() {
                 lasciaUscire();
                 router.back();
             } else {
-                const error = await response.json();
-                setErrorMessage(error.detail ?? "Errore nel salvataggio");
+                setErrorMessage(await messaggioErrore(response, "Errore nel salvataggio"));
                 setSnackbarVisible(true);
             }
         } catch (error) {

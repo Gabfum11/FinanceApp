@@ -6,6 +6,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { salvaSessione } from "@/utils/session"
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { styles } from "@/styles/verify-email.styles";
+import { messaggioErrore } from "@/utils/messaggioErrore";
 const num=[0,1,2,3,4,5]
 const formatTime =(totseconds:number)=>{
     const minutes=Math.floor(totseconds/60);
@@ -44,8 +45,7 @@ export default function verify_email(){
                 body: JSON.stringify({email, purpose:"email_verification"})
             })
             if(!response.ok) {
-                const error= await response.json();
-                setErrorMessage(error.detail)
+                setErrorMessage(await messaggioErrore(response, "Errore nell'invio del codice"))
                 setSnackbarVisible(true)
                 console.log("errore nell'invio del nuovo codice")
                 return;
@@ -71,10 +71,9 @@ export default function verify_email(){
             })
             if(!response.ok)
             {
-                const error= await response.json()
-                setErrorMessage(error.detail)
+                setErrorMessage(await messaggioErrore(response, "Codice non valido"))
                 setSnackbarVisible(true)
-               console.log("Codice errato",error);
+               console.log("Codice errato");
                setStep("invalid")
                return;
             }
