@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View, FlatList, Pressable, BackHandler } from "react-native";
+import { View, ScrollView, Pressable, BackHandler, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button, Text, Snackbar, IconButton } from "react-native-paper";
 import { BarChart } from "react-native-gifted-charts";
@@ -55,6 +56,8 @@ const CHIAVE_SALDO = "mostra_saldo";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width: larghezzaSchermo } = useWindowDimensions();
   //loadAll puo' partire due volte di fila (focus e riprova): il tour va aperto una volta sola
   const benvenutoAperto = useRef(false);
   const [tourVisibile, setTourVisibile] = useState(false);
@@ -236,9 +239,21 @@ export default function HomeScreen() {
   const speseMassime = Math.max(...weeklyStats.map((day) => day.total), 0);
   // il fattore lascia spazio sopra la barra piu alta per l'etichetta del valore
   const weeklyMaxValue = Math.max(speseMassime * 1.3, SOGLIA_SCALA);
+  //con barre da 35 fisse il grafico chiedeva ~410 punti: sotto, la domenica
+  //usciva dal riquadro. Si parte dallo spazio vero (schermo meno i margini
+  //della pagina e della card) e le barre si stringono quanto serve
+  const SPAZIO_BARRE = 8;
+  const spazioGrafico = larghezzaSchermo - 2 * 24 - 2 * 20 - 2 * SPAZIO_BARRE;
+  const larghezzaBarra = Math.max(
+    16,
+    Math.min(35, (spazioGrafico - SPAZIO_BARRE * (GIORNI_SETTIMANA.length - 1)) / GIORNI_SETTIMANA.length)
+  );
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screen}>
+      {/* la pagina scorre: con schermi bassi o caratteri di sistema grandi
+          i blocchi superavano l'altezza e le transazioni finivano sotto la barra */}
+      <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}>
       <View style={styles.titleRow}>
         <Text variant="headlineMedium" style={styles.title}>
           Ciao {nickname}!
@@ -333,8 +348,11 @@ export default function HomeScreen() {
           <View style={styles.weeklyChartWrapper}>
             <BarChart
               data={weeklyChartData}
-              barWidth={35}
-              spacing={8}
+              barWidth={larghezzaBarra}
+              spacing={SPAZIO_BARRE}
+              initialSpacing={SPAZIO_BARRE}
+              endSpacing={SPAZIO_BARRE}
+              yAxisLabelWidth={0}
               roundedTop
               hideRules
               hideYAxisText
@@ -359,30 +377,27 @@ export default function HomeScreen() {
             <Text style={styles.linkExpenses}>Vedi tutte</Text>
           </Link>
         )}
-      <FlatList
-        data={expenses.slice(0,2)}
-        keyExtractor={(item) => item.id.toString()} //dice a react come identificare univocamente ogni riga
-        renderItem={({ item }) => ( //funzione che dice come mostrare ogni riga
-          <View style={styles.expenseRow}>
-            <View style={styles.expenseInfo}>
-              <Text style={styles.expenseDescription}>{item.description}</Text>
-              <Text style={styles.expenseMeta}>{item.category_name ?? "Non assegnata"}{" · "}{formatDataSpesa(item.date)}</Text>
-            </View>
-            <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
+      {/* due righe al massimo: un semplice elenco, perche' una FlatList
+          dentro uno ScrollView che scorre nello stesso verso da' problemi */}
+      {expenses.slice(0, 2).map((item) => (
+        <View key={item.id} style={styles.expenseRow}>
+          <View style={styles.expenseInfo}>
+            <Text style={styles.expenseDescription}>{item.description}</Text>
+            <Text style={styles.expenseMeta}>{item.category_name ?? "Non assegnata"}{" · "}{formatDataSpesa(item.date)}</Text>
           </View>
-        )}
-        ListEmptyComponent={
-          expensesLoaded ? (
-            <Pressable style={styles.emptyState} onPress={() => router.push("/add_expense")}>
-              <MaterialCommunityIcons name="receipt-text-outline" size={40} color="#C7C7CC" />
-              <Text style={styles.emptyTitle}>Nessuna spesa registrata</Text>
-              <Text style={styles.emptyHint}>
-                Tocca il pulsante + in basso per aggiungere la tua prima spesa
-              </Text>
-            </Pressable>
-          ) : null
-        }
-      />
+          <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
+        </View>
+      ))}
+      {expensesLoaded && expenses.length === 0 && (
+        <Pressable style={styles.emptyState} onPress={() => router.push("/add_expense")}>
+          <MaterialCommunityIcons name="receipt-text-outline" size={40} color="#C7C7CC" />
+          <Text style={styles.emptyTitle}>Nessuna spesa registrata</Text>
+          <Text style={styles.emptyHint}>
+            Tocca il pulsante + in basso per aggiungere la tua prima spesa
+          </Text>
+        </Pressable>
+      )}
+      </ScrollView>
 
       {(tourVisibile || tourDalProfilo) && <TourGuidato onFine={fineTour} />}
 

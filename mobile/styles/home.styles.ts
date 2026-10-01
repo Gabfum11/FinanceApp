@@ -2,10 +2,14 @@ import { StyleSheet } from "react-native";
 import { colors, cardShadow } from "./tokens";
 
 export const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
+  },
+  //contenuto dello ScrollView: il margine in alto lo calcola la schermata
+  //dalla barra di stato, quello in basso tiene l'ultima riga lontana dal +
+  container: {
     padding: 24,
-    paddingTop: 60,
+    paddingBottom: 48,
   },
   // il margine sta sulla riga, così il saluto e l'icona restano allineati
   titleRow: {
