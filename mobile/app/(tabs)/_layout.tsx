@@ -3,6 +3,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { TouchableOpacity, View, AppState } from "react-native";
 import { useEffect } from "react";
 import { rinnovaSeInScadenza } from "@/utils/session";
+import { bersaglio } from "@/utils/tour";
 import { sincronizzaDispositivo } from "@/utils/notifications";
 
 export default function TabsLayout() {
@@ -50,6 +51,7 @@ export default function TabsLayout() {
           tabBarButton: () => (
             <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
             <TouchableOpacity
+              ref={bersaglio("aggiungi")}
               onPress={() => router.push("/add_expense")}
               style={{
                 top: -20, //sposta il pulsante verso l'alto
@@ -78,7 +80,10 @@ export default function TabsLayout() {
       options={{
         title: "Abbonamenti",
       tabBarIcon: ({ color, size }) => (
-        <MaterialCommunityIcons name="autorenew" color={color} size={size} />
+        //il tour misura l'icona e allarga il riquadro a tutta la colonna
+        <View ref={bersaglio("abbonamenti")} collapsable={false}>
+          <MaterialCommunityIcons name="autorenew" color={color} size={size} />
+        </View>
       ),
       }}
       />

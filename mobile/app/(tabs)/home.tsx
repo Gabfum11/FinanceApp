@@ -8,9 +8,12 @@ import { styles } from "../../styles/home.styles";
 import { colors } from "../../styles/tokens";
 import { apiFetch } from "@/utils/apiFetch";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Link, useRouter } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { TourGuidato } from "@/components/TourGuidato";
+import { segnaBenvenutoVisto } from "@/utils/benvenuto";
+import { bersaglio } from "@/utils/tour";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -73,8 +76,12 @@ const CHIAVE_SALDO = "mostra_saldo";
 
 export default function HomeScreen() {
   const router = useRouter();
-  //loadAll puo' partire due volte di fila (focus e riprova): il tutorial va aperto una volta sola
+  //loadAll puo' partire due volte di fila (focus e riprova): il tour va aperto una volta sola
   const benvenutoAperto = useRef(false);
+  const [tourVisibile, setTourVisibile] = useState(false);
+  //"Rivedi il tutorial" dal profilo arriva qui con ?tour=1
+  const { tour } = useLocalSearchParams<{ tour?: string }>();
+  const tourDalProfilo = tour === "1";
   const [expenses, setExpenses] = useState<Expense[]>([]); //questo stato contiene un array di expense, inizialmente vuoto
   //serve a distinguere "non ho ancora caricato" da "non ci sono spese":
   //senza, il messaggio di lista vuota lampeggerebbe a ogni apertura
@@ -201,14 +208,26 @@ export default function HomeScreen() {
     }, [])
   );
 
-  //il tutorial e' per chi parte da zero: chi ha gia' un budget non lo vede,
-  //cosi' vale sia dopo la registrazione sia al primo accesso con Google.
-  //Utente e budget arrivano da due richieste separate: si decide quando ci sono entrambi
+  //il flag sta sull'account: vale dopo la registrazione, al primo accesso
+  //con Google e su un telefono nuovo. Il ritardo lascia disegnare la home,
+  //altrimenti il tour misurerebbe i pulsanti prima che siano al loro posto
   useEffect(() => {
-    if (tutorialVisto !== false || budgetStatus?.budget !== null || benvenutoAperto.current) return;
+    if (tutorialVisto !== false || benvenutoAperto.current) return;
     benvenutoAperto.current = true;
-    router.push("/welcome");
-  }, [tutorialVisto, budgetStatus, router]);
+    const id = setTimeout(() => setTourVisibile(true), 400);
+    return () => clearTimeout(id);
+  }, [tutorialVisto]);
+
+  const fineTour = useCallback(() => {
+    setTourVisibile(false);
+    if (tourDalProfilo) {
+      //dal profilo e' gia' segnato come visto: basta togliere il parametro,
+      //che altrimenti farebbe ripartire il tour al ritorno sulla home
+      router.setParams({ tour: undefined });
+    } else {
+      segnaBenvenutoVisto();
+    }
+  }, [tourDalProfilo, router]);
 
   const percentage = budgetStatus?.budget
     ? Math.min((budgetStatus.spent / budgetStatus.budget) * 100, 100)
@@ -246,6 +265,7 @@ export default function HomeScreen() {
           Ciao {nickname}!
         </Text>
         <Pressable
+          ref={bersaglio("assistente")}
           onPress={() => router.push("/assistant")}
           accessibilityRole="button"
           accessibilityLabel="Apri l'assistente"
@@ -269,13 +289,17 @@ export default function HomeScreen() {
           <View style={styles.headerActions}>
             {/* nella riga del titolo e non nella card: la card compare solo
                 con un budget impostato, le transazioni invece sempre */}
-            <Link href="/set_budget" asChild>
-              <Button mode="contained" style={styles.budgButt} labelStyle={styles.buttonLabel}>
-                + Nuovo
-              </Button>
-            </Link>
+            {/* le View con collapsable={false} servono al tour per misurare il pulsante */}
+            <View ref={bersaglio("nuovo-budget")} collapsable={false}>
+              <Link href="/set_budget" asChild>
+                <Button mode="contained" style={styles.budgButt} labelStyle={styles.buttonLabel}>
+                  + Nuovo
+                </Button>
+              </Link>
+            </View>
             {/* con il bordo, come il logout del profilo: un'icona da sola
                 accanto a un pulsante vero non sembrava toccabile */}
+            <View ref={bersaglio("occhio")} collapsable={false}>
             <IconButton
               icon={saldoVisibile ? "eye-outline" : "eye-off-outline"}
               mode="outlined"
@@ -285,6 +309,7 @@ export default function HomeScreen() {
               style={styles.eyeButton}
               accessibilityLabel={saldoVisibile ? "Nascondi importi" : "Mostra importi"}
             />
+            </View>
           </View>
         </View>
         {/* solo a caricamento finito, se no lampeggerebbe a ogni apertura */}
@@ -379,6 +404,8 @@ export default function HomeScreen() {
           ) : null
         }
       />
+
+      {(tourVisibile || tourDalProfilo) && <TourGuidato onFine={fineTour} />}
 
       <ConfirmDialog
         visible={showExitDialog}

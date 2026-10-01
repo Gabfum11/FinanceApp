@@ -32,8 +32,6 @@ export default function RootLayout() {
           <Stack.Screen name="set_budget" options={{ headerShown: false }} />
           <Stack.Screen name="modify_profile" options={{ headerShown: false }} />
           <Stack.Screen name="changePassw" options={{ headerShown: false }} />
-          {/* senza swipe indietro: si esce solo da "Salta" o "Inizia", che salvano il flag */}
-          <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: false }} />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

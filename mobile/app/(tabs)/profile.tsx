@@ -252,7 +252,7 @@ export default function ProfileScreen() {
 
             <Text style={styles.sectionLabel}>SUPPORTO</Text>
             <View style={styles.sectionCard}>
-                <Pressable style={styles.row} onPress={() => router.push({ pathname: "/welcome", params: { rivedi: "1" } })}>
+                <Pressable style={styles.row} onPress={() => router.navigate({ pathname: "/(tabs)/home", params: { tour: "1" } })}>
                     <MaterialCommunityIcons name="school-outline" size={20} color={colors.primary} />
                     <Text style={styles.rowLabel}>Rivedi il tutorial</Text>
                     <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
