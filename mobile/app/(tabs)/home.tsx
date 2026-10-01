@@ -7,6 +7,7 @@ import { API_URL } from "@/config";
 import { styles } from "../../styles/home.styles";
 import { colors } from "../../styles/tokens";
 import { apiFetch } from "@/utils/apiFetch";
+import { formatDataSpesa } from "@/utils/date";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
@@ -47,28 +48,6 @@ function formatCycleRange(cycleStart: string, cycleEnd: string): string {
   const end = new Date(cycleEnd);
   const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
   return `${start.toLocaleDateString("it-IT", opts)} - ${end.toLocaleDateString("it-IT", opts)}`;
-}
-
-function formatExpenseTime(dateString: string, createdAt: string): string {
-  const expenseDate = new Date(dateString); //in questa maniera è possibile fare confronti e calcoli
-  const today = new Date();
-  // toDateString ->converte una data in una stringa che rappresenta solo giorno/mese/anno
-  const isToday = expenseDate.toDateString() === today.toDateString(); 
-  //prendiamo createdAt e lo formattiamo come orario leggibile . es 18.24
-  const time = new Date(createdAt).toLocaleTimeString("it-IT", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  if (isToday) {
-    return `Oggi, ${time}`;
-  }
-  //caso : non è oggi
-  const formattedDate = expenseDate.toLocaleDateString("it-IT", {
-    day: "numeric",
-    month: "short",
-  });
-  return `${formattedDate}, ${time}`;
 }
 
 //scelta dell'utente sull'occhio: resta valida anche dopo aver chiuso l'app
@@ -387,7 +366,7 @@ export default function HomeScreen() {
           <View style={styles.expenseRow}>
             <View style={styles.expenseInfo}>
               <Text style={styles.expenseDescription}>{item.description}</Text>
-              <Text style={styles.expenseMeta}>{item.category_name ?? "Non assegnata"}{" · "}{formatExpenseTime(item.date, item.created_at)}</Text>
+              <Text style={styles.expenseMeta}>{item.category_name ?? "Non assegnata"}{" · "}{formatDataSpesa(item.date)}</Text>
             </View>
             <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
           </View>

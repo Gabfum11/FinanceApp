@@ -4,6 +4,7 @@ import { IconButton, Text, Searchbar } from "react-native-paper";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
+import { formatDataSpesa } from "@/utils/date";
 import { styles } from "@/styles/all_expenses.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -18,27 +19,6 @@ type Expense = {
   category_name: string | null;
   created_at : string;
 };
-function formatExpenseTime(dateString: string, createdAt: string): string {
-  const expenseDate = new Date(dateString); //in questa maniera è possibile fare confronti e calcoli
-  const today = new Date();
-  // toDateString ->converte una data in una stringa che rappresenta solo giorno/mese/anno
-  const isToday = expenseDate.toDateString() === today.toDateString(); 
-  //prendiamo createdAt e lo formattiamo come orario leggibile . es 18.24
-  const time = new Date(createdAt).toLocaleTimeString("it-IT", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  if (isToday) {
-    return `Oggi, ${time}`;
-  }
-  //caso : non è oggi
-  const formattedDate = expenseDate.toLocaleDateString("it-IT", {
-    day: "numeric",
-    month: "short",
-  });
-  return `${formattedDate}, ${time}`;
-}
 //"Caffè" va trovato anche digitando "caffe": togliamo accenti e maiuscole
 function normalize(text: string): string {
     return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -284,7 +264,7 @@ export default function ExpenseList() {
                 <View style={styles.expenseInfo}>
                     <Text style={styles.expenseDescription}>{item.description}</Text>
                     <Text style={styles.expenseMeta}>
-                        {item.category_name ?? "Non assegnata"} · {formatExpenseTime(item.date, item.created_at)}
+                        {item.category_name ?? "Non assegnata"} · {formatDataSpesa(item.date)}
                     </Text>
                 </View>
                 <Text style={styles.expenseAmount}>- €{item.amount.toFixed(2)}</Text>
