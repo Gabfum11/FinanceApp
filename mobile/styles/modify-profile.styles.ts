@@ -4,8 +4,11 @@ import { colors } from "./tokens";
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    //contenuto di PaginaScorrevole: il margine in alto lo calcola lei dalla barra di stato
+    content: {
         padding: 24,
-        paddingTop: 60,
+        paddingBottom: 48,
     },
     header: {
         flexDirection: "row",

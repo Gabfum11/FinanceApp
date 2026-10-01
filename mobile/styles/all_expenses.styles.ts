@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 8,
-    paddingTop:60
+    //paddingTop lo aggiunge la schermata dalla barra di stato
   },
   //stessa larghezza dell'IconButton, così il titolo resta centrato
   headerSpacer: {

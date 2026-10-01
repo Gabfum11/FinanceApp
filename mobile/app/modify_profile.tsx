@@ -7,6 +7,7 @@ import { apiFetch } from "@/utils/apiFetch";
 import { styles } from "@/styles/modify-profile.styles";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 
 export default function modify_profile() {
     const [nickname, setNickname] = useState("");
@@ -70,36 +71,39 @@ export default function modify_profile() {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <Text onPress={() => router.back()} style={styles.headerAction}>Annulla</Text>
-                <Text variant="titleMedium">Modifica profilo</Text>
-                <Text onPress={loading ? undefined : handleSave} style={styles.headerActionPrimary}>
-                    {loading ? "Salvo..." : "Salva"}
-                </Text>
-            </View>
-            <View style={styles.formSection}>
-                <Text style={styles.label}>Nome</Text>
-                <TextInput value={nickname} onChangeText={setNickname} mode="outlined" style={styles.input} />
-                <Text style={styles.label}>Email</Text>
-                <TextInput
-                    value={email}
-                    editable={false}
-                    mode="outlined"
-                    style={styles.inputDisabled}
-                    textColor="#888"
-                    left={<TextInput.Icon icon="lock-outline" color="#aaa" />}
-                />
-                <Text style={styles.helperText}>L'email non può essere modificata</Text>
-            </View>
-            <View>
-                <Pressable style={styles.settingsItem} onPress={() => router.push("/changePassw")}>
-                    <MaterialCommunityIcons name="lock-outline" size={20} color="#666" />
-                    <View style={styles.settingsInfo}>
-                        <Text style={styles.settingsLabel}>Cambia password</Text>
-                    </View>
-                    <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
-                </Pressable>
-            </View>
+            <PaginaScorrevole style={styles.content} tastiera>
+                <View style={styles.header}>
+                    <Text onPress={() => router.back()} style={styles.headerAction}>Annulla</Text>
+                    <Text variant="titleMedium">Modifica profilo</Text>
+                    <Text onPress={loading ? undefined : handleSave} style={styles.headerActionPrimary}>
+                        {loading ? "Salvo..." : "Salva"}
+                    </Text>
+                </View>
+                <View style={styles.formSection}>
+                    <Text style={styles.label}>Nome</Text>
+                    <TextInput value={nickname} onChangeText={setNickname} mode="outlined" style={styles.input} />
+                    <Text style={styles.label}>Email</Text>
+                    <TextInput
+                        value={email}
+                        editable={false}
+                        mode="outlined"
+                        style={styles.inputDisabled}
+                        textColor="#888"
+                        left={<TextInput.Icon icon="lock-outline" color="#aaa" />}
+                    />
+                    <Text style={styles.helperText}>L'email non può essere modificata</Text>
+                </View>
+                <View>
+                    <Pressable style={styles.settingsItem} onPress={() => router.push("/changePassw")}>
+                        <MaterialCommunityIcons name="lock-outline" size={20} color="#666" />
+                        <View style={styles.settingsInfo}>
+                            <Text style={styles.settingsLabel}>Cambia password</Text>
+                        </View>
+                        <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
+                    </Pressable>
+                </View>
+
+            </PaginaScorrevole>
 
             <Snackbar visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} duration={3000}>
                 {errorMessage}

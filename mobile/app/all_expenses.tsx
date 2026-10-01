@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { FlatList, View, Pressable, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconButton, Text, Searchbar } from "react-native-paper";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -44,6 +45,7 @@ function periodStart(period: Period): Date | null {
 }
 
 export default function ExpenseList() {
+    const insets = useSafeAreaInsets();
     const [expenses, setExpenses]=useState<Expense[]>([]);
     const [expensesLoaded, setExpensesLoaded] = useState(false);
     const [query, setQuery] = useState("");
@@ -160,7 +162,7 @@ export default function ExpenseList() {
     }
     return (
        <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
             <IconButton icon="chevron-left" onPress={()=>router.back()} />
             <Text variant="titleMedium">Transazioni</Text>
             {hasFilters

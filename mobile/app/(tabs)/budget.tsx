@@ -1,4 +1,4 @@
-import { View , FlatList } from "react-native";
+import { View } from "react-native";
 import { IconButton, Text, Button, ActivityIndicator, Snackbar } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
 import { styles } from "@/styles/budget.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 function getRenewal(next_date:string){
   const today= new Date();
   today.setHours(0, 0, 0, 0);
@@ -155,12 +156,10 @@ export default function BudgetScreen() {
     }
   return (
     <View style={styles.container}>
-      <Text variant="headlineMedium">Abbonamenti attivi</Text>
-      <FlatList
-        data={activeSubscriptions}
-        keyExtractor={(item)=>item.id.toString()}
-        renderItem={({item})=> (
-          <View style={styles.subRow}>
+      <PaginaScorrevole style={styles.content}>
+        <Text variant="headlineMedium">Abbonamenti attivi</Text>
+        {activeSubscriptions.map((item) => (
+          <View key={item.id} style={styles.subRow}>
             <View style={styles.subIconContainer}>
               <MaterialCommunityIcons name="repeat" size={20} color="#2ECC71" />
             </View>
@@ -175,8 +174,8 @@ export default function BudgetScreen() {
             <IconButton icon="pencil-outline" size={18} onPress={()=>openEdit(item)} />
             <IconButton icon="pause" size={18} onPress={()=>confirmToggle(item.id, true)} />
           </View>
-        )}
-        ListEmptyComponent={
+        ))}
+        {activeSubscriptions.length === 0 && (
           !loaded ? (
             loadError ? null : <ActivityIndicator size="large" style={styles.loader} />
           ) : (
@@ -192,16 +191,12 @@ export default function BudgetScreen() {
               )}
             </View>
           )
-        }
-      />
-      {pausedSubscriptions.length >0 && (
-        <>
-        <Text variant="headlineMedium">Abbonamenti in pausa</Text>
-        <FlatList
-          data={pausedSubscriptions}
-          keyExtractor={(item)=>item.id.toString()}
-          renderItem={({item})=>(
-              <View style={styles.pausedRow}>
+        )}
+        {pausedSubscriptions.length > 0 && (
+          <>
+            <Text variant="headlineMedium">Abbonamenti in pausa</Text>
+            {pausedSubscriptions.map((item) => (
+              <View key={item.id} style={styles.pausedRow}>
                 <View style={styles.pausedIconContainer}>
                   <MaterialCommunityIcons name="pause" size={20} color="#999" />
                 </View>
@@ -210,50 +205,46 @@ export default function BudgetScreen() {
                   <Text style={styles.pausedMeta}>In pausa</Text>
                 </View>
                 <Text style={styles.reactivateLink} onPress={()=>confirmToggle(item.id, false)}>Riattiva</Text>
-                 <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} />
+                <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} />
               </View>
-          )}
-        />
-        </>
-      )}
+            ))}
+          </>
+        )}
 
-      {dueForRenewal.length > 0 && (
-        <>
-          <Text variant="headlineMedium">Da rinnovare</Text>
-          <FlatList
-            data={dueForRenewal}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-                <View style={styles.dueCard}>
-                    <View style={styles.dueHeader}>
-                        <View style={styles.subInfo}>
-                            <Text style={styles.subDesc}>{item.description}</Text>
-                            <View style={styles.dueBadgeRow}>
-                                <Text style={styles.dueBadge}>IN ATTESA</Text>
-                                <Text style={styles.dueOverdue}>{getOverdueText(item.next_date)}</Text>
-                            </View>
-                        </View>
-                        <Text style={styles.subAmount}>€{item.amount.toFixed(2)}</Text>
+        {dueForRenewal.length > 0 && (
+          <>
+            <Text variant="headlineMedium">Da rinnovare</Text>
+            {dueForRenewal.map((item) => (
+              <View key={item.id} style={styles.dueCard}>
+                <View style={styles.dueHeader}>
+                  <View style={styles.subInfo}>
+                    <Text style={styles.subDesc}>{item.description}</Text>
+                    <View style={styles.dueBadgeRow}>
+                      <Text style={styles.dueBadge}>IN ATTESA</Text>
+                      <Text style={styles.dueOverdue}>{getOverdueText(item.next_date)}</Text>
                     </View>
-                    <Text style={styles.dueQuestion}>
-                        Il pagamento non è automatico: hai rinnovato per {mesi[new Date().getMonth()]}?
-                    </Text>
-                    <View style={styles.dueActions}>
-                        <Button
-                            mode="contained"
-                            onPress={() => handleMarkPaid(item.id)}
-                            loading={inPagamento === item.id}
-                            disabled={inPagamento !== null}
-                        >
-                            Ho rinnovato
-                        </Button>
-                        <Button mode="outlined" onPress={() => confirmToggle(item.id, true)}>Non rinnovo</Button>
-                    </View>
+                  </View>
+                  <Text style={styles.subAmount}>€{item.amount.toFixed(2)}</Text>
                 </View>
-            )}
-          />
-        </>
-      )}
+                <Text style={styles.dueQuestion}>
+                  Il pagamento non è automatico: hai rinnovato per {mesi[new Date().getMonth()]}?
+                </Text>
+                <View style={styles.dueActions}>
+                  <Button
+                    mode="contained"
+                    onPress={() => handleMarkPaid(item.id)}
+                    loading={inPagamento === item.id}
+                    disabled={inPagamento !== null}
+                  >
+                    Ho rinnovato
+                  </Button>
+                  <Button mode="outlined" onPress={() => confirmToggle(item.id, true)}>Non rinnovo</Button>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
+      </PaginaScorrevole>
 
       <ConfirmDialog
         visible={conferma !== null}

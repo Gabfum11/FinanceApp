@@ -8,6 +8,7 @@ import { Text, TextInput, Button, IconButton, Snackbar } from "react-native-pape
 import { router } from "expo-router";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 
 export default function changePassw() {
     const [pass, setPass] = useState("");
@@ -47,55 +48,58 @@ export default function changePassw() {
 
     return (
         <View style={styles.container}>
-            <IconButton icon="chevron-left" onPress={() => router.back()} />
-            <Text variant="headlineMedium" style={styles.title}>Cambia password</Text>
-            <Text variant="bodyMedium" style={styles.subtitle}>
-                Inserisci la password attuale e quella nuova
-            </Text>
+            <PaginaScorrevole style={styles.content} tastiera>
+                <IconButton icon="chevron-left" onPress={() => router.back()} />
+                <Text variant="headlineMedium" style={styles.title}>Cambia password</Text>
+                <Text variant="bodyMedium" style={styles.subtitle}>
+                    Inserisci la password attuale e quella nuova
+                </Text>
 
-            <View style={styles.formSection}>
-                <Text style={styles.label}>Password attuale</Text>
-                <TextInput
-                    value={pass}
-                    onChangeText={setPass}
-                    secureTextEntry={!showPass}
-                    mode="outlined"
-                    outlineStyle={styles.inputOutline}
-                    style={styles.input}
-                    right={
-                        <TextInput.Icon
-                            icon={showPass ? "eye-off" : "eye"}
-                            onPress={() => setShowPass(!showPass)}
-                        />
-                    }
-                />
-                <Text style={styles.label}>Nuova password</Text>
-                <TextInput
-                    value={newPass}
-                    onChangeText={setNewPass}
-                    secureTextEntry={!showNewPass}
-                    mode="outlined"
-                    outlineStyle={styles.inputOutline}
-                    style={styles.input}
-                    right={
-                        <TextInput.Icon
-                            icon={showNewPass ? "eye-off" : "eye"}
-                            onPress={() => setShowNewPass(!showNewPass)}
-                        />
-                    }
-                />
-            </View>
+                <View style={styles.formSection}>
+                    <Text style={styles.label}>Password attuale</Text>
+                    <TextInput
+                        value={pass}
+                        onChangeText={setPass}
+                        secureTextEntry={!showPass}
+                        mode="outlined"
+                        outlineStyle={styles.inputOutline}
+                        style={styles.input}
+                        right={
+                            <TextInput.Icon
+                                icon={showPass ? "eye-off" : "eye"}
+                                onPress={() => setShowPass(!showPass)}
+                            />
+                        }
+                    />
+                    <Text style={styles.label}>Nuova password</Text>
+                    <TextInput
+                        value={newPass}
+                        onChangeText={setNewPass}
+                        secureTextEntry={!showNewPass}
+                        mode="outlined"
+                        outlineStyle={styles.inputOutline}
+                        style={styles.input}
+                        right={
+                            <TextInput.Icon
+                                icon={showNewPass ? "eye-off" : "eye"}
+                                onPress={() => setShowNewPass(!showNewPass)}
+                            />
+                        }
+                    />
+                </View>
 
-            <Button
-                mode="contained"
-                onPress={handleModPass}
-                style={styles.button}
-                labelStyle={styles.buttonLabel}
-                loading={loading}
-                disabled={loading}
-            >
-                Aggiorna Password
-            </Button>
+                <Button
+                    mode="contained"
+                    onPress={handleModPass}
+                    style={styles.button}
+                    labelStyle={styles.buttonLabel}
+                    loading={loading}
+                    disabled={loading}
+                >
+                    Aggiorna Password
+                </Button>
+
+            </PaginaScorrevole>
 
             <Snackbar visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} duration={3000}>
                 {errorMessage}

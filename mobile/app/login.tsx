@@ -10,6 +10,7 @@ import { useGoogleLogin } from "@/utils/useGoogleLogin";
 import { GoogleButton } from "@/components/GoogleButton";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import * as WebBrowser from "expo-web-browser";
+import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 
 
 export default function LoginScreen() {
@@ -57,79 +58,82 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>{/*container di tutta la schermata*/}
-      <View style={styles.logoContainer}>
-        <Image source={require("../assets/images/logo/trackit-icon-rounded-180.png")} style={styles.logo} />
-        <Text style={styles.logoLabel}>TrackIt</Text>
-      </View>
-      <Text variant="headlineMedium" style={styles.title}>
-        Bentornato
-      </Text>
+      <PaginaScorrevole style={styles.content} tastiera>
+        <View style={styles.logoContainer}>
+          <Image source={require("../assets/images/logo/trackit-icon-rounded-180.png")} style={styles.logo} />
+          <Text style={styles.logoLabel}>TrackIt</Text>
+        </View>
+        <Text variant="headlineMedium" style={styles.title}>
+          Bentornato
+        </Text>
 
-      <TextInput
-        label="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none" //evita che la prima lettera sia scelta in maiuscolo
-        mode="outlined"
-        outlineStyle={styles.inputOutline}
-        keyboardType="email-address"
-        style={styles.input}
-      />
-      <Text style={styles.linkAction} onPress={()=>router.push('/resetPassword')}>Password dimenticata?</Text>
-      <TextInput
-        label="Password"
-        value={password}
-        onChangeText={setPassword}
-         secureTextEntry={!showPassword} //nasconde i caratteri(mostra pallini o asteriscghi)
-        mode="outlined"
-        outlineStyle={styles.inputOutline}
-        style={styles.input}
-        right={
-        <TextInput.Icon 
-            icon={showPassword ? "eye-off" : "eye"} 
-            onPress={() => setShowPassword(!showPassword)} 
+        <TextInput
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none" //evita che la prima lettera sia scelta in maiuscolo
+          mode="outlined"
+          outlineStyle={styles.inputOutline}
+          keyboardType="email-address"
+          style={styles.input}
         />
-        }
-      />
-      <Button 
-        mode="contained" 
-        onPress={handleLogin} 
-        style={styles.button}
-        labelStyle={styles.buttonLabel}
-        loading={loading}
-        disabled={loading}
-        >
-        Accedi
-      </Button>
-
-      {google.isReady && (
-        <>
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>oppure</Text>
-            <View style={styles.dividerLine} />
-          </View>
-          <GoogleButton
-            onPress={google.signIn}
-            disabled={google.isLoading || loading}
+        <Text style={styles.linkAction} onPress={()=>router.push('/resetPassword')}>Password dimenticata?</Text>
+        <TextInput
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+           secureTextEntry={!showPassword} //nasconde i caratteri(mostra pallini o asteriscghi)
+          mode="outlined"
+          outlineStyle={styles.inputOutline}
+          style={styles.input}
+          right={
+          <TextInput.Icon 
+              icon={showPassword ? "eye-off" : "eye"} 
+              onPress={() => setShowPassword(!showPassword)} 
           />
-          {/* dal login, Google crea l'account a chi non ce l'ha: senza avviso
-              l'utente si registrerebbe senza aver visto l'informativa */}
-          <Text style={styles.legal}>
-            Continuando con Google confermi di aver letto l&apos;
-            <Text style={styles.legalLink} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
-              informativa sulla privacy
-            </Text>
-          </Text>
-        </>
-      )}
+          }
+        />
+        <Button 
+          mode="contained" 
+          onPress={handleLogin} 
+          style={styles.button}
+          labelStyle={styles.buttonLabel}
+          loading={loading}
+          disabled={loading}
+          >
+          Accedi
+        </Button>
 
-      <Text style={styles.link}>
-        Non hai un account?{" "}
-        <Link href="/register"> 
-         <Text style={styles.linkAction}> Registrati </Text>
-        </Link>
-      </Text>
+        {google.isReady && (
+          <>
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>oppure</Text>
+              <View style={styles.dividerLine} />
+            </View>
+            <GoogleButton
+              onPress={google.signIn}
+              disabled={google.isLoading || loading}
+            />
+            {/* dal login, Google crea l'account a chi non ce l'ha: senza avviso
+                l'utente si registrerebbe senza aver visto l'informativa */}
+            <Text style={styles.legal}>
+              Continuando con Google confermi di aver letto l&apos;
+              <Text style={styles.legalLink} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
+                informativa sulla privacy
+              </Text>
+            </Text>
+          </>
+        )}
+
+        <Text style={styles.link}>
+          Non hai un account?{" "}
+          <Link href="/register"> 
+           <Text style={styles.linkAction}> Registrati </Text>
+          </Link>
+        </Text>
+      </PaginaScorrevole>
+
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}

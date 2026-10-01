@@ -13,6 +13,7 @@ import { styles } from "@/styles/profile.styles";
 import { colors } from "@/styles/tokens";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
+import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 
 export default function ProfileScreen() {
     const router = useRouter();
@@ -174,123 +175,126 @@ export default function ProfileScreen() {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Profilo</Text>
-                <IconButton
-                    icon="logout"
-                    mode="outlined"
-                    iconColor={colors.danger}
-                    onPress={() => setShowLogoutDialog(true)}
-                    style={styles.logoutButton}
-                />
-            </View>
-
-            <View style={styles.profCard}>
-                <View style={styles.avatarCircle}>
-                    <Text style={styles.avatarInitials}>{initials}</Text>
-                </View>
-                <View style={styles.profileInfo}>
-                    <Text style={styles.profileName}>{nickname}</Text>
-                    <Text style={styles.profileEmail}>{email}</Text>
-                </View>
-                <Button mode="outlined" onPress={() => router.push("/modify_profile")} style={styles.button}>
-                    Modifica
-                </Button>
-                <View></View>
-            </View>
-
-            {/* in Expo Go il modulo delle notifiche non esiste: uno switch
-                che non puo' funzionare e' peggio di una voce assente */}
-            {NOTIFICHE_DISPONIBILI && (
-            <>
-            <Text style={styles.sectionLabel}>APP</Text>
-            <View style={styles.sectionCard}>
-                <View style={styles.row}>
-                    <MaterialCommunityIcons name="bell-outline" size={20} color={colors.accent} />
-                    <View style={styles.rowTextGroup}>
-                        <Text style={styles.rowLabelInGroup}>Promemoria abbonamenti</Text>
-                        <Text style={styles.rowHint}>
-                            {promemoria ? "Il giorno prima del rinnovo, alle 9:00" : "Disattivati"}
-                        </Text>
-                    </View>
-                    <Switch
-                        value={promemoria}
-                        onValueChange={handlePromemoria}
-                        disabled={promemoriaInCorso}
+            <PaginaScorrevole style={styles.content}>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Profilo</Text>
+                    <IconButton
+                        icon="logout"
+                        mode="outlined"
+                        iconColor={colors.danger}
+                        onPress={() => setShowLogoutDialog(true)}
+                        style={styles.logoutButton}
                     />
                 </View>
-            </View>
-            </>
-            )}
 
-            <Text style={styles.sectionLabel}>DATI</Text>
-            <View style={styles.sectionCard}>
-                <Pressable
-                    style={styles.row}
-                    onPress={() => handleExport("expenses")}
-                    disabled={esportazione !== null}
+                <View style={styles.profCard}>
+                    <View style={styles.avatarCircle}>
+                        <Text style={styles.avatarInitials}>{initials}</Text>
+                    </View>
+                    <View style={styles.profileInfo}>
+                        <Text style={styles.profileName}>{nickname}</Text>
+                        <Text style={styles.profileEmail}>{email}</Text>
+                    </View>
+                    <Button mode="outlined" onPress={() => router.push("/modify_profile")} style={styles.button}>
+                        Modifica
+                    </Button>
+                    <View></View>
+                </View>
+
+                {/* in Expo Go il modulo delle notifiche non esiste: uno switch
+                    che non puo' funzionare e' peggio di una voce assente */}
+                {NOTIFICHE_DISPONIBILI && (
+                <>
+                <Text style={styles.sectionLabel}>APP</Text>
+                <View style={styles.sectionCard}>
+                    <View style={styles.row}>
+                        <MaterialCommunityIcons name="bell-outline" size={20} color={colors.accent} />
+                        <View style={styles.rowTextGroup}>
+                            <Text style={styles.rowLabelInGroup}>Promemoria abbonamenti</Text>
+                            <Text style={styles.rowHint}>
+                                {promemoria ? "Il giorno prima del rinnovo, alle 9:00" : "Disattivati"}
+                            </Text>
+                        </View>
+                        <Switch
+                            value={promemoria}
+                            onValueChange={handlePromemoria}
+                            disabled={promemoriaInCorso}
+                        />
+                    </View>
+                </View>
+                </>
+                )}
+
+                <Text style={styles.sectionLabel}>DATI</Text>
+                <View style={styles.sectionCard}>
+                    <Pressable
+                        style={styles.row}
+                        onPress={() => handleExport("expenses")}
+                        disabled={esportazione !== null}
+                    >
+                        <MaterialCommunityIcons name="file-download-outline" size={20} color={colors.primary} />
+                        <Text style={styles.rowLabel}>Esporta spese</Text>
+                        {esportazione === "expenses"
+                            ? <ActivityIndicator size={18} />
+                            : <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />}
+                    </Pressable>
+                    <View style={styles.rowDivider} />
+                    <Pressable
+                        style={styles.row}
+                        onPress={() => handleExport("subscriptions")}
+                        disabled={esportazione !== null}
+                    >
+                        <MaterialCommunityIcons name="file-download-outline" size={20} color={colors.primary} />
+                        <Text style={styles.rowLabel}>Esporta abbonamenti</Text>
+                        {esportazione === "subscriptions"
+                            ? <ActivityIndicator size={18} />
+                            : <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />}
+                    </Pressable>
+                </View>
+
+                <Text style={styles.sectionLabel}>SUPPORTO</Text>
+                <View style={styles.sectionCard}>
+                    <Pressable style={styles.row} onPress={() => router.navigate({ pathname: "/(tabs)/home", params: { tour: "1" } })}>
+                        <MaterialCommunityIcons name="school-outline" size={20} color={colors.primary} />
+                        <Text style={styles.rowLabel}>Rivedi il tutorial</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
+                    </Pressable>
+                    <View style={styles.rowDivider} />
+                    <Pressable style={styles.row} onPress={() => setShowSupportDialog(true)}>
+                        <MaterialCommunityIcons name="help-circle-outline" size={20} color={colors.primary} />
+                        <Text style={styles.rowLabel}>Contattaci</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
+                    </Pressable>
+                    <View style={styles.rowDivider} />
+                    <Pressable style={styles.row} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
+                        <MaterialCommunityIcons name="shield-lock-outline" size={20} color={colors.primary} />
+                        <Text style={styles.rowLabel}>Privacy policy</Text>
+                        <MaterialCommunityIcons name="open-in-new" size={20} color={colors.chevron} />
+                    </Pressable>
+                </View>
+
+                {/* cancellare il token dal telefono non basta: quello emesso resta
+                    valido fino a 30 giorni, e un dispositivo perso resterebbe dentro */}
+                <Button
+                    mode="text"
+                    onPress={confirmLogoutAll}
+                    loading={isLoggingOutAll}
+                    disabled={isLoggingOutAll}
+                    style={styles.logoutAllButton}
                 >
-                    <MaterialCommunityIcons name="file-download-outline" size={20} color={colors.primary} />
-                    <Text style={styles.rowLabel}>Esporta spese</Text>
-                    {esportazione === "expenses"
-                        ? <ActivityIndicator size={18} />
-                        : <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />}
-                </Pressable>
-                <View style={styles.rowDivider} />
-                <Pressable
-                    style={styles.row}
-                    onPress={() => handleExport("subscriptions")}
-                    disabled={esportazione !== null}
+                    Disconnetti tutti i dispositivi
+                </Button>
+
+                <Button
+                    mode="text"
+                    textColor={colors.dangerDark}
+                    onPress={() => setShowDeleteDialog(true)}
+                    style={styles.deleteButton}
                 >
-                    <MaterialCommunityIcons name="file-download-outline" size={20} color={colors.primary} />
-                    <Text style={styles.rowLabel}>Esporta abbonamenti</Text>
-                    {esportazione === "subscriptions"
-                        ? <ActivityIndicator size={18} />
-                        : <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />}
-                </Pressable>
-            </View>
+                    Elimina account
+                </Button>
 
-            <Text style={styles.sectionLabel}>SUPPORTO</Text>
-            <View style={styles.sectionCard}>
-                <Pressable style={styles.row} onPress={() => router.navigate({ pathname: "/(tabs)/home", params: { tour: "1" } })}>
-                    <MaterialCommunityIcons name="school-outline" size={20} color={colors.primary} />
-                    <Text style={styles.rowLabel}>Rivedi il tutorial</Text>
-                    <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
-                </Pressable>
-                <View style={styles.rowDivider} />
-                <Pressable style={styles.row} onPress={() => setShowSupportDialog(true)}>
-                    <MaterialCommunityIcons name="help-circle-outline" size={20} color={colors.primary} />
-                    <Text style={styles.rowLabel}>Contattaci</Text>
-                    <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
-                </Pressable>
-                <View style={styles.rowDivider} />
-                <Pressable style={styles.row} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
-                    <MaterialCommunityIcons name="shield-lock-outline" size={20} color={colors.primary} />
-                    <Text style={styles.rowLabel}>Privacy policy</Text>
-                    <MaterialCommunityIcons name="open-in-new" size={20} color={colors.chevron} />
-                </Pressable>
-            </View>
-
-            {/* cancellare il token dal telefono non basta: quello emesso resta
-                valido fino a 30 giorni, e un dispositivo perso resterebbe dentro */}
-            <Button
-                mode="text"
-                onPress={confirmLogoutAll}
-                loading={isLoggingOutAll}
-                disabled={isLoggingOutAll}
-                style={styles.logoutAllButton}
-            >
-                Disconnetti tutti i dispositivi
-            </Button>
-
-            <Button
-                mode="text"
-                textColor={colors.dangerDark}
-                onPress={() => setShowDeleteDialog(true)}
-                style={styles.deleteButton}
-            >
-                Elimina account
-            </Button>
+            </PaginaScorrevole>
 
             <ConfirmDialog
                 visible={showLogoutDialog}

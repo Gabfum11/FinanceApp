@@ -3,7 +3,10 @@ import { colors, cardShadow } from "./tokens";
 export const styles=StyleSheet.create({
     container:{
         flex: 1, //deve occupare tutto lo spazio disponibile
-        paddingTop:60
+    },
+    //contenuto di PaginaScorrevole: il margine in alto lo calcola lei dalla barra di stato
+    content:{
+        paddingBottom: 48,
     },
     subRow:{
         flexDirection:"row",

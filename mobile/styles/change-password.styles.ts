@@ -3,8 +3,11 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    //contenuto di PaginaScorrevole: il margine in alto lo calcola lei dalla barra di stato
+    content: {
         padding: 24,
-        paddingTop: 60,
+        paddingBottom: 48,
     },
     title: {
         marginBottom: 8,

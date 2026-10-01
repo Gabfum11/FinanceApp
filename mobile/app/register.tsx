@@ -9,6 +9,7 @@ import { useGoogleLogin } from "@/utils/useGoogleLogin";
 import { GoogleButton } from "@/components/GoogleButton";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import * as WebBrowser from "expo-web-browser";
+import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 
 export default function RegisterScreen() {
     const[nickname,setnickName]=useState("");
@@ -53,86 +54,89 @@ export default function RegisterScreen() {
     }
     return (
         <View style={styles.container}>
-            <View style={styles.logoContainer}>
-                <Image source={require("../assets/images/logo/trackit-icon-rounded-180.png")} style={styles.logo} />
-                <Text style={styles.logoLabel}>TrackIt</Text>
-            </View>
-            <Text variant="headlineMedium" style={styles.title}>
-                Crea il tuo account
-            </Text>
-            <TextInput
-                label="Name"
-                value={nickname}
-                onChangeText={setnickName}
-                mode="outlined"
-                outlineStyle={styles.inputOutline}
-                style={styles.input}
-            />
-            <TextInput
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none" //evita che la prima lettera sia scelta in maiuscolo
-                mode="outlined"
-                outlineStyle={styles.inputOutline}
-                keyboardType="email-address"
-                style={styles.input}
-            />
-
-            <TextInput
-                label="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword} //nasconde i caratteri(mostra pallini o asteriscghi)
-                mode="outlined"
-                outlineStyle={styles.inputOutline}
-                style={styles.input}
-                right={
-        <TextInput.Icon 
-            icon={showPassword ? "eye-off" : "eye"} 
-            onPress={() => setShowPassword(!showPassword)} 
-        />
-    }
-            />
-            <Button 
-                mode="contained" 
-                onPress={handleRegister} 
-                style={styles.button}
-                labelStyle={styles.buttonLabel}
-                loading={loading}
-                disabled={loading}
-                >
-                Registrati
-            </Button>
-
-            {google.isReady && (
-                <>
-                    <View style={styles.dividerRow}>
-                        <View style={styles.dividerLine} />
-                        <Text style={styles.dividerText}>oppure</Text>
-                        <View style={styles.dividerLine} />
-                    </View>
-                    <GoogleButton
-                        onPress={google.signIn}
-                        disabled={google.isLoading || loading}
-                    />
-                </>
-            )}
-
-            {/* vale per entrambi i pulsanti: anche "Continua con Google" crea l'account */}
-            <Text style={styles.legal}>
-                Registrandoti confermi di aver letto l&apos;
-                <Text style={styles.legalLink} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
-                    informativa sulla privacy
+            <PaginaScorrevole style={styles.content} tastiera>
+                <View style={styles.logoContainer}>
+                    <Image source={require("../assets/images/logo/trackit-icon-rounded-180.png")} style={styles.logo} />
+                    <Text style={styles.logoLabel}>TrackIt</Text>
+                </View>
+                <Text variant="headlineMedium" style={styles.title}>
+                    Crea il tuo account
                 </Text>
-            </Text>
+                <TextInput
+                    label="Name"
+                    value={nickname}
+                    onChangeText={setnickName}
+                    mode="outlined"
+                    outlineStyle={styles.inputOutline}
+                    style={styles.input}
+                />
+                <TextInput
+                    label="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none" //evita che la prima lettera sia scelta in maiuscolo
+                    mode="outlined"
+                    outlineStyle={styles.inputOutline}
+                    keyboardType="email-address"
+                    style={styles.input}
+                />
 
-            <Text style={styles.link}>
-                Hai già un account?{" "}
-            <Link href="/login">
-            <Text style={styles.linkAction}>Accedi</Text>   
-            </Link>
-            </Text>
+                <TextInput
+                    label="Password"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword} //nasconde i caratteri(mostra pallini o asteriscghi)
+                    mode="outlined"
+                    outlineStyle={styles.inputOutline}
+                    style={styles.input}
+                    right={
+            <TextInput.Icon 
+                icon={showPassword ? "eye-off" : "eye"} 
+                onPress={() => setShowPassword(!showPassword)} 
+            />
+        }
+                />
+                <Button 
+                    mode="contained" 
+                    onPress={handleRegister} 
+                    style={styles.button}
+                    labelStyle={styles.buttonLabel}
+                    loading={loading}
+                    disabled={loading}
+                    >
+                    Registrati
+                </Button>
+
+                {google.isReady && (
+                    <>
+                        <View style={styles.dividerRow}>
+                            <View style={styles.dividerLine} />
+                            <Text style={styles.dividerText}>oppure</Text>
+                            <View style={styles.dividerLine} />
+                        </View>
+                        <GoogleButton
+                            onPress={google.signIn}
+                            disabled={google.isLoading || loading}
+                        />
+                    </>
+                )}
+
+                {/* vale per entrambi i pulsanti: anche "Continua con Google" crea l'account */}
+                <Text style={styles.legal}>
+                    Registrandoti confermi di aver letto l&apos;
+                    <Text style={styles.legalLink} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
+                        informativa sulla privacy
+                    </Text>
+                </Text>
+
+                <Text style={styles.link}>
+                    Hai già un account?{" "}
+                <Link href="/login">
+                <Text style={styles.linkAction}>Accedi</Text>   
+                </Link>
+                </Text>
+            </PaginaScorrevole>
+
             <Snackbar
                 visible={snackbarVisible}
                 onDismiss={() => setSnackbarVisible(false)}

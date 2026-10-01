@@ -8,6 +8,7 @@ import { PieChart } from "react-native-gifted-charts";
 import { styles } from "@/styles/stats.styles";
 import { colors } from "@/styles/tokens";
 import { useFocusEffect, useRouter } from "expo-router";
+import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 
 type CategoryStat = {
   category_name: string;
@@ -87,87 +88,90 @@ export default function StatsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.selectorRow}>
-        <IconButton icon="chevron-left" onPress={() => setCycleOffset((prev) => prev - 1)} />
-        <Text variant="titleMedium">
-          {cycleStart && cycleEnd ? formatCycleLabel(cycleStart, cycleEnd) : ""}
-        </Text>
-        <IconButton
-          icon="chevron-right"
-          onPress={() => setCycleOffset((prev) => prev + 1)}
-          disabled={cycleOffset >= 0}
-        />
-      </View>
-      <View style={styles.card}>
-        {loading ? (
-          <ActivityIndicator size="large" />
-        ) : stats.length === 0 ? (
-          //senza spese la ciambella era vuota e non diceva nulla: come in home,
-          //si spiega cosa manca e, nel mese in corso, come rimediare
-          <Pressable
-            style={styles.emptyState}
-            onPress={cycleOffset === 0 ? () => router.push("/add_expense") : undefined}
-            disabled={cycleOffset !== 0}
-          >
-            <MaterialCommunityIcons name="chart-donut" size={40} color={colors.chevron} />
-            <Text style={styles.emptyTitle}>
-              {cycleOffset === 0 ? "Nessuna spesa in questo mese" : "Nessuna spesa in questo periodo"}
-            </Text>
-            {cycleOffset === 0 && (
-              <Text style={styles.emptyHint}>
-                Le statistiche compaiono dopo la prima spesa. Tocca + per aggiungerla.
+      <PaginaScorrevole style={styles.content}>
+        <View style={styles.selectorRow}>
+          <IconButton icon="chevron-left" onPress={() => setCycleOffset((prev) => prev - 1)} />
+          <Text variant="titleMedium">
+            {cycleStart && cycleEnd ? formatCycleLabel(cycleStart, cycleEnd) : ""}
+          </Text>
+          <IconButton
+            icon="chevron-right"
+            onPress={() => setCycleOffset((prev) => prev + 1)}
+            disabled={cycleOffset >= 0}
+          />
+        </View>
+        <View style={styles.card}>
+          {loading ? (
+            <ActivityIndicator size="large" />
+          ) : stats.length === 0 ? (
+            //senza spese la ciambella era vuota e non diceva nulla: come in home,
+            //si spiega cosa manca e, nel mese in corso, come rimediare
+            <Pressable
+              style={styles.emptyState}
+              onPress={cycleOffset === 0 ? () => router.push("/add_expense") : undefined}
+              disabled={cycleOffset !== 0}
+            >
+              <MaterialCommunityIcons name="chart-donut" size={40} color={colors.chevron} />
+              <Text style={styles.emptyTitle}>
+                {cycleOffset === 0 ? "Nessuna spesa in questo mese" : "Nessuna spesa in questo periodo"}
               </Text>
-            )}
-          </Pressable>
-        ) : (
-          <>
-            <View style={styles.legendContainer}>
-              {stats.map((item, index) => {
-                const percentage = total > 0 ? (item.total / total) * 100 : 0;
-                return (
-                  <View key={item.category_name} style={styles.legendRow}>
-                    <View style={styles.legendLeft}>
-                      <View style={[styles.legendDot, { backgroundColor: colori[index % colori.length] }]} />
-                      <Text style={styles.legendLabel}>{item.category_name}</Text>
-                    </View>
-                    <Text style={styles.legendPercentage}>{percentage.toFixed(0)}%</Text>
-                  </View>
-                );
-              })}
-              {remaining > 0 && (
-                <View style={styles.legendRow}>
-                  <View style={styles.legendLeft}>
-                    <View style={[styles.legendDot, { backgroundColor: "#E0E0E0" }]} />
-                    <Text style={styles.legendLabel}>Disponibile</Text>
-                  </View>
-                  <Text style={styles.legendPercentage}>€{remaining.toFixed(2)}</Text>
-                </View>
+              {cycleOffset === 0 && (
+                <Text style={styles.emptyHint}>
+                  Le statistiche compaiono dopo la prima spesa. Tocca + per aggiungerla.
+                </Text>
               )}
-            </View>
-            <View>
-              <PieChart
-                data={pieData}
-                donut
-                radius={75}
-                innerRadius={60}
-                centerLabelComponent={() => (
-                  <View style={{ alignItems: "center" }}>
-                    <Text style={styles.totalLabel}>Speso</Text>
-                    <Text style={styles.totalAmount}>€{total.toFixed(2)}</Text>
+            </Pressable>
+          ) : (
+            <>
+              <View style={styles.legendContainer}>
+                {stats.map((item, index) => {
+                  const percentage = total > 0 ? (item.total / total) * 100 : 0;
+                  return (
+                    <View key={item.category_name} style={styles.legendRow}>
+                      <View style={styles.legendLeft}>
+                        <View style={[styles.legendDot, { backgroundColor: colori[index % colori.length] }]} />
+                        <Text style={styles.legendLabel}>{item.category_name}</Text>
+                      </View>
+                      <Text style={styles.legendPercentage}>{percentage.toFixed(0)}%</Text>
+                    </View>
+                  );
+                })}
+                {remaining > 0 && (
+                  <View style={styles.legendRow}>
+                    <View style={styles.legendLeft}>
+                      <View style={[styles.legendDot, { backgroundColor: "#E0E0E0" }]} />
+                      <Text style={styles.legendLabel}>Disponibile</Text>
+                    </View>
+                    <Text style={styles.legendPercentage}>€{remaining.toFixed(2)}</Text>
                   </View>
                 )}
-              />
-            </View>
-          </>
-        )}
-      </View>
+              </View>
+              <View>
+                <PieChart
+                  data={pieData}
+                  donut
+                  radius={75}
+                  innerRadius={60}
+                  centerLabelComponent={() => (
+                    <View style={{ alignItems: "center" }}>
+                      <Text style={styles.totalLabel}>Speso</Text>
+                      <Text style={styles.totalAmount}>€{total.toFixed(2)}</Text>
+                    </View>
+                  )}
+                />
+              </View>
+            </>
+          )}
+        </View>
 
-      {/* solo nel mese in corso: per i mesi passati il budget di allora non si ricostruisce */}
-      {!loading && cycleOffset === 0 && stats.length > 0 && budgetImpostato === false && (
-        <Text style={styles.budgetHint} onPress={() => router.push("/set_budget")}>
-          Imposta un budget per vedere quanto ti resta
-        </Text>
-      )}
+        {/* solo nel mese in corso: per i mesi passati il budget di allora non si ricostruisce */}
+        {!loading && cycleOffset === 0 && stats.length > 0 && budgetImpostato === false && (
+          <Text style={styles.budgetHint} onPress={() => router.push("/set_budget")}>
+            Imposta un budget per vedere quanto ti resta
+          </Text>
+        )}
+
+      </PaginaScorrevole>
 
       <Snackbar visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} duration={3000}>
         {errorMessage}

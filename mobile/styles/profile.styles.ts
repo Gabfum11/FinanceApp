@@ -4,9 +4,12 @@ import { cardShadow, colors, radius, spacing } from "./tokens";
 export const styles = StyleSheet.create({
     container:{
         flex:1,
-        padding: spacing.xl,
-        paddingTop:60,
         backgroundColor: colors.background,
+    },
+    //contenuto di PaginaScorrevole: il margine in alto lo calcola lei dalla barra di stato
+    content:{
+        padding: spacing.xl,
+        paddingBottom: 48,
     },
     header:{
         flexDirection: "row",
