@@ -385,7 +385,12 @@ export default function HomeScreen() {
         title="Esci dall'app"
         message="Vuoi chiudere l'app?"
         confirmLabel="Esci"
-        onConfirm={() => BackHandler.exitApp()}
+        onConfirm={() => {
+          //da Android 12 l'uscita manda l'app in background senza chiuderla:
+          //senza questo, alla riapertura la finestra sarebbe ancora aperta
+          setShowExitDialog(false);
+          BackHandler.exitApp();
+        }}
         onDismiss={() => setShowExitDialog(false)}
       />
 
