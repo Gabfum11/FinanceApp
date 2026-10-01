@@ -315,7 +315,7 @@ export default function HomeScreen() {
         {/* solo a caricamento finito, se no lampeggerebbe a ogni apertura */}
         {budgetStatus && budgetStatus.budget == null && (
           <Pressable style={styles.emptyState} onPress={() => router.push("/set_budget")}>
-            <MaterialCommunityIcons name="target" size={40} color={colors.chevron} />
+            <MaterialCommunityIcons name="cash" size={40} color={colors.chevron} />
             <Text style={styles.emptyTitle}>Nessun budget impostato</Text>
             <Text style={styles.emptyHint}>
               Tocca + Nuovo per decidere quanto spendere al mese e vedere quanto ti resta
