@@ -57,12 +57,26 @@ function ChatEsempio() {
 }
 
 export default function Welcome() {
-  //dal profilo il budget di solito c'e' gia': "Salva e continua" lo
-  //sovrascriverebbe, riportando anche il giorno di inizio ciclo a 1
   const { rivedi } = useLocalSearchParams<{ rivedi?: string }>();
-  const PASSAGGI: readonly Passaggio[] = rivedi
-    ? TUTTI_I_PASSAGGI.filter((p) => p !== "budget")
-    : TUTTI_I_PASSAGGI;
+  //dal profilo il budget puo' esserci gia': "Salva e continua" lo
+  //sovrascriverebbe, riportando anche il giorno di inizio ciclo a 1.
+  //Dalla home il tutorial parte solo senza budget, quindi non serve chiedere
+  const [haBudget, setHaBudget] = useState<boolean | null>(rivedi ? null : false);
+
+  useEffect(() => {
+    if (!rivedi) return;
+    apiFetch("/budget/status")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => setHaBudget(data ? data.budget != null : true))
+      //senza risposta si resta prudenti: meglio saltarlo che rischiare di sovrascriverlo
+      .catch(() => setHaBudget(true));
+  }, [rivedi]);
+
+  //finche' la risposta non arriva il passaggio resta fuori: se poi serve
+  //si inserisce dopo il primo, che l'utente sta ancora leggendo
+  const PASSAGGI: readonly Passaggio[] = haBudget === false
+    ? TUTTI_I_PASSAGGI
+    : TUTTI_I_PASSAGGI.filter((p) => p !== "budget");
   const [passaggio, setPassaggio] = useState<Passaggio>("spese");
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
