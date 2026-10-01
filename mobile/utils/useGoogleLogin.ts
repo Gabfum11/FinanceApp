@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { salvaSessione } from "@/utils/session";
 import { API_URL } from "@/config";
@@ -8,10 +9,13 @@ import { API_URL } from "@/config";
 // Con require() dentro un try, in Expo Go l'app parte e il pulsante resta
 // nascosto; in una build vera funziona normalmente.
 const IN_EXPO_GO = Constants.appOwnership === "expo";
+//nel browser la libreria funziona solo per chi la sponsorizza: senza modulo
+//il pulsante non compare, e si entra con email e password
+const SUL_WEB = Platform.OS === "web";
 
 let GoogleSignin: any = null;
 let statusCodes: any = {};
-if (!IN_EXPO_GO) {
+if (!IN_EXPO_GO && !SUL_WEB) {
   try {
     const modulo = require("@react-native-google-signin/google-signin");
     GoogleSignin = modulo.GoogleSignin;

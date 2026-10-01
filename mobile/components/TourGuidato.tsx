@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View, Image, Pressable, BackHandler, type LayoutChangeEvent } from "react-native";
+import { View, Image, Pressable, BackHandler, Platform, type LayoutChangeEvent } from "react-native";
 import { Portal, Text, Button } from "react-native-paper";
 import Svg, { Path, Rect } from "react-native-svg";
 import Animated, {
@@ -24,11 +24,16 @@ type Passaggio = {
   colonnaTab?: boolean;
 };
 
+//nel browser non ci sono notifiche push: i testi non devono promettere avvisi
+const SUL_WEB = Platform.OS === "web";
+
 const PASSAGGI: Passaggio[] = [
   {
     bersaglio: "aggiungi",
     titolo: "Aggiungi una spesa",
-    testo: "Tocca + per registrarla.\nSe è un abbonamento, ti avviso il giorno prima di ogni rinnovo.",
+    testo: SUL_WEB
+      ? "Tocca + per registrarla.\nDa qui aggiungi anche gli abbonamenti."
+      : "Tocca + per registrarla.\nSe è un abbonamento, ti avviso il giorno prima di ogni rinnovo.",
     margine: 6,
     raggio: 34,
   },
@@ -74,7 +79,9 @@ const PASSAGGI: Passaggio[] = [
     //accendono qui, e il passaggio 1 li promette
     bersaglio: "profilo",
     titolo: "Il tuo profilo",
-    testo: "Attiva qui i promemoria degli abbonamenti. Puoi anche esportare i tuoi dati e rivedere questo tutorial.",
+    testo: SUL_WEB
+      ? "Qui puoi esportare i tuoi dati e rivedere questo tutorial."
+      : "Attiva qui i promemoria degli abbonamenti. Puoi anche esportare i tuoi dati e rivedere questo tutorial.",
     margine: 4,
     raggio: 14,
     colonnaTab: true,

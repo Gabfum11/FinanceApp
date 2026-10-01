@@ -1,0 +1,82 @@
+import { useState } from "react";
+import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Button, Text } from "react-native-paper";
+import { fromDateString, toDateString } from "@/utils/date";
+import { colors, scrim } from "@/styles/tokens";
+
+//stesse props del DateTimePicker usate nell'app: chi lo usa non cambia nulla.
+//Il campo data del browser su iPhone apre la rotella di Safari, sul computer
+//un piccolo calendario
+type Props = {
+  value: Date;
+  onValueChange: (event: unknown, date: Date) => void;
+  onDismiss: () => void;
+  mode?: "date";
+  display?: string;
+};
+
+export function SelettoreData({ value, onValueChange, onDismiss }: Props) {
+  const [scelta, setScelta] = useState(toDateString(value));
+
+  return (
+    <Modal transparent visible animationType="fade" onRequestClose={onDismiss}>
+      <Pressable style={styles.overlay} onPress={onDismiss}>
+        {/* il tocco sulla card non deve chiudere la finestra */}
+        <Pressable style={styles.card} onPress={() => {}}>
+          <Text variant="titleMedium">Scegli la data</Text>
+          <input
+            type="date"
+            value={scelta}
+            onChange={(e) => setScelta(e.target.value)}
+            style={campo}
+          />
+          <View style={styles.actions}>
+            <Button onPress={onDismiss}>Annulla</Button>
+            {/* il campo si puo' svuotare: senza data non c'e' niente da confermare */}
+            <Button
+              mode="contained"
+              disabled={!scelta}
+              onPress={() => onValueChange({ type: "set" }, fromDateString(scelta))}
+            >
+              OK
+            </Button>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+//stile del tag HTML: non passa da StyleSheet
+const campo = {
+  fontSize: 16,
+  padding: 12,
+  borderRadius: 12,
+  border: `1px solid ${colors.border}`,
+  fontFamily: "inherit",
+  color: colors.text,
+  backgroundColor: colors.surface,
+};
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: scrim,
+    justifyContent: "center",
+    padding: 24,
+  },
+  card: {
+    alignSelf: "center",
+    width: "100%",
+    maxWidth: 360,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 20,
+    gap: 16,
+  },
+  actions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 8,
+  },
+});

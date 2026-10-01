@@ -10,7 +10,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { toDateString, fromDateString } from "@/utils/date"
 import { iconaPerGruppo } from "@/utils/categoryIcons";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { SelettoreData } from "@/components/SelettoreData";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { prendiSalvataggio } from "@/utils/esitoAssistente";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -347,7 +347,7 @@ function handleDatePickerDismiss() {
             <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" style={styles.dateChevron} />
           </Pressable>
           {showPicker && (
-            <DateTimePicker
+            <SelettoreData
               value={fromDateString(pendingExpense.date)}
               mode="date"
               display="default"

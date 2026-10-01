@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, IconButton, ActivityIndicator, Portal, Switch } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { SelettoreData } from "@/components/SelettoreData";
 import { apiFetch } from "@/utils/apiFetch";
 import { fromDateString, toDateString } from "@/utils/date";
 import { styles, colors } from "../styles/add-expense.styles";
@@ -462,7 +462,7 @@ export default function AddExpenseScreen() {
       )}
 
       {showDatePicker && (
-        <DateTimePicker
+        <SelettoreData
           value={date}
           mode="date"
           display="default"

@@ -7,9 +7,11 @@ import { apiFetch } from "@/utils/apiFetch";
 // farebbe fallire il caricamento delle schermate che usano questo file. Con
 // require() dentro un try, in Expo Go l'app parte e i promemoria restano disattivati.
 const IN_EXPO_GO = Constants.appOwnership === "expo";
+//nel browser le push di Expo non esistono: lo switch sparisce come in Expo Go
+const SUL_WEB = Platform.OS === "web";
 
 let Notifications: any = null;
-if (!IN_EXPO_GO) {
+if (!IN_EXPO_GO && !SUL_WEB) {
   try {
     Notifications = require("expo-notifications");
   } catch {

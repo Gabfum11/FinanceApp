@@ -1,4 +1,4 @@
-import * as SecureStore from "expo-secure-store";
+import { leggi, scrivi, cancella } from "@/utils/archivio";
 import { API_URL } from "@/config";
 
 // La sessione è fatta di due token:
@@ -21,26 +21,26 @@ const SECONDI_PRIMA_DEL_RINNOVO = 60;
 export type Sessione = { access_token: string; refresh_token?: string | null };
 
 export function tokenDiAccesso(): Promise<string | null> {
-  return SecureStore.getItemAsync(CHIAVE_ACCESSO);
+  return leggi(CHIAVE_ACCESSO);
 }
 
 /** C'è una sessione da riprendere? Basta uno dei due token. */
 export async function haSessione(): Promise<boolean> {
-  return !!(await tokenDiAccesso()) || !!(await SecureStore.getItemAsync(CHIAVE_RINNOVO));
+  return !!(await tokenDiAccesso()) || !!(await leggi(CHIAVE_RINNOVO));
 }
 
 /** Salva i token ricevuti da login, Google, verifica email o cambio password. */
 export async function salvaSessione(dati: Sessione): Promise<void> {
-  await SecureStore.setItemAsync(CHIAVE_ACCESSO, dati.access_token);
+  await scrivi(CHIAVE_ACCESSO, dati.access_token);
   if (dati.refresh_token) {
-    await SecureStore.setItemAsync(CHIAVE_RINNOVO, dati.refresh_token);
+    await scrivi(CHIAVE_RINNOVO, dati.refresh_token);
   }
 }
 
 /** Butta i token dal telefono, senza avvisare il server. */
 export async function cancellaSessione(): Promise<void> {
-  await SecureStore.deleteItemAsync(CHIAVE_ACCESSO);
-  await SecureStore.deleteItemAsync(CHIAVE_RINNOVO);
+  await cancella(CHIAVE_ACCESSO);
+  await cancella(CHIAVE_RINNOVO);
 }
 
 /**
@@ -50,7 +50,7 @@ export async function cancellaSessione(): Promise<void> {
  * resta valido sul server, ma nessuno sul telefono lo possiede più.
  */
 export async function chiudiSessione(): Promise<void> {
-  const refresh = await SecureStore.getItemAsync(CHIAVE_RINNOVO);
+  const refresh = await leggi(CHIAVE_RINNOVO);
   if (refresh) {
     try {
       await fetch(`${API_URL}/auth/logout`, {
@@ -88,7 +88,7 @@ export function rinnovaSessione(): Promise<EsitoRinnovo> {
 }
 
 async function eseguiRinnovo(): Promise<EsitoRinnovo> {
-  const refresh = await SecureStore.getItemAsync(CHIAVE_RINNOVO);
+  const refresh = await leggi(CHIAVE_RINNOVO);
   //sessione di una versione precedente dell'app: non c'è niente da rinnovare
   if (!refresh) return "rifiutato";
   try {
