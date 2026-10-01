@@ -252,6 +252,12 @@ export default function ProfileScreen() {
 
             <Text style={styles.sectionLabel}>SUPPORTO</Text>
             <View style={styles.sectionCard}>
+                <Pressable style={styles.row} onPress={() => router.push({ pathname: "/welcome", params: { rivedi: "1" } })}>
+                    <MaterialCommunityIcons name="school-outline" size={20} color={colors.primary} />
+                    <Text style={styles.rowLabel}>Rivedi il tutorial</Text>
+                    <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
+                </Pressable>
+                <View style={styles.rowDivider} />
                 <Pressable style={styles.row} onPress={() => setShowSupportDialog(true)}>
                     <MaterialCommunityIcons name="help-circle-outline" size={20} color={colors.primary} />
                     <Text style={styles.rowLabel}>Contattaci</Text>

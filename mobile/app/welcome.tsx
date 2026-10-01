@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { View, Image, ScrollView, KeyboardAvoidingView, Platform, BackHandler } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, TextInput, Button, Snackbar } from "react-native-paper";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInRight, useReducedMotion } from "react-native-reanimated";
 import { apiFetch } from "@/utils/apiFetch";
@@ -11,8 +11,8 @@ import { segnaBenvenutoVisto } from "@/utils/benvenuto";
 import { styles } from "@/styles/welcome.styles";
 import { colors } from "@/styles/tokens";
 
-const PASSAGGI = ["spese", "budget", "assistente", "abbonamenti"] as const;
-type Passaggio = (typeof PASSAGGI)[number];
+const TUTTI_I_PASSAGGI = ["spese", "budget", "assistente", "abbonamenti"] as const;
+type Passaggio = (typeof TUTTI_I_PASSAGGI)[number];
 
 const BOT = require("../assets/images/logo/trackit-bot-1024.png");
 const FRASE_ESEMPIO = "Pizza 15 euro ieri";
@@ -57,6 +57,12 @@ function ChatEsempio() {
 }
 
 export default function Welcome() {
+  //dal profilo il budget di solito c'e' gia': "Salva e continua" lo
+  //sovrascriverebbe, riportando anche il giorno di inizio ciclo a 1
+  const { rivedi } = useLocalSearchParams<{ rivedi?: string }>();
+  const PASSAGGI: readonly Passaggio[] = rivedi
+    ? TUTTI_I_PASSAGGI.filter((p) => p !== "budget")
+    : TUTTI_I_PASSAGGI;
   const [passaggio, setPassaggio] = useState<Passaggio>("spese");
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
