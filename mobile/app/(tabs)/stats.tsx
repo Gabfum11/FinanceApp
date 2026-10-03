@@ -14,6 +14,7 @@ import { colors } from "@/styles/tokens";
 import { useFocusEffect, useRouter } from "expo-router";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
+import { useSchermoStretto } from "@/utils/layout";
 
 type CategoryStat = {
   category_name: string;
@@ -32,6 +33,9 @@ export default function StatsScreen() {
   const { t } = useTranslation();
   //i messaggi in basso compaiono sopra la barra delle schede, non sotto
   const spazioBarra = useSpazioBarra();
+  //su uno schermo stretto ciambella e legenda affiancate non ci stanno:
+  //la ciambella va sopra e la legenda sotto, a tutta larghezza
+  const stretto = useSchermoStretto();
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -95,6 +99,24 @@ export default function StatsScreen() {
     ...(remaining > 0 ? [{ value: remaining, color: "#E0E0E0" }] : []),
   ];
 
+  //la ciambella con il totale: sopra la legenda sugli schermi stretti, accanto sugli altri
+  const ciambella = (
+    <View style={styles.ciambella}>
+      <PieChart
+        data={pieData}
+        donut
+        radius={75}
+        innerRadius={60}
+        centerLabelComponent={() => (
+          <View style={{ alignItems: "center" }}>
+            <Text style={styles.totalLabel}>{t("statistiche.speso")}</Text>
+            <Text style={styles.totalAmount}>{importo(total)}</Text>
+          </View>
+        )}
+      />
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <PaginaScorrevole style={styles.content} sopraBarra>
@@ -109,7 +131,7 @@ export default function StatsScreen() {
             disabled={cycleOffset >= 0}
           />
         </View>
-        <View style={styles.card}>
+        <View style={[styles.card, stretto && styles.cardColonna]}>
           {loading ? (
             <ActivityIndicator size="large" />
           ) : stats.length === 0 ? (
@@ -132,14 +154,15 @@ export default function StatsScreen() {
             </Pressable>
           ) : (
             <>
-              <View style={styles.legendContainer}>
+              {stretto && ciambella}
+              <View style={[styles.legendContainer, stretto && styles.legendaColonna]}>
                 {stats.map((item, index) => {
                   const percentage = total > 0 ? (item.total / total) * 100 : 0;
                   return (
                     <View key={item.category_name} style={styles.legendRow}>
                       <View style={styles.legendLeft}>
                         <View style={[styles.legendDot, { backgroundColor: colori[index % colori.length] }]} />
-                        <Text style={styles.legendLabel}>{nomeCategoria(item.category_name)}</Text>
+                        <Text style={styles.legendLabel} numberOfLines={1}>{nomeCategoria(item.category_name)}</Text>
                       </View>
                       <Text style={styles.legendPercentage}>{percentage.toFixed(0)}%</Text>
                     </View>
@@ -149,26 +172,13 @@ export default function StatsScreen() {
                   <View style={styles.legendRow}>
                     <View style={styles.legendLeft}>
                       <View style={[styles.legendDot, { backgroundColor: "#E0E0E0" }]} />
-                      <Text style={styles.legendLabel}>{t("statistiche.disponibile")}</Text>
+                      <Text style={styles.legendLabel} numberOfLines={1}>{t("statistiche.disponibile")}</Text>
                     </View>
                     <Text style={styles.legendPercentage}>{importo(remaining)}</Text>
                   </View>
                 )}
               </View>
-              <View>
-                <PieChart
-                  data={pieData}
-                  donut
-                  radius={75}
-                  innerRadius={60}
-                  centerLabelComponent={() => (
-                    <View style={{ alignItems: "center" }}>
-                      <Text style={styles.totalLabel}>{t("statistiche.speso")}</Text>
-                      <Text style={styles.totalAmount}>{importo(total)}</Text>
-                    </View>
-                  )}
-                />
-              </View>
+              {!stretto && ciambella}
             </>
           )}
         </View>

@@ -15,9 +15,11 @@ export const styles = StyleSheet.create({
         fontSize: 26,
         marginBottom: 16,
     },
+    //frecce ai lati e date al centro, tutte sulla stessa linea
     selectorRow: {
         flexDirection: "row",
-        gap: 12,
+        alignItems: "center",
+        justifyContent: "space-between",
         marginBottom: 16,
     },
     card: {
@@ -27,6 +29,19 @@ export const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 20,
         gap: 16,
+    },
+    //schermo stretto: ciambella sopra e legenda sotto, a tutta larghezza
+    cardColonna: {
+        flexDirection: "column",
+        alignItems: "stretch",
+        gap: 20,
+    },
+    ciambella: {
+        alignSelf: "center",
+    },
+    //in colonna flex: 1 la schiaccerebbe a zero: prende l'altezza del suo contenuto
+    legendaColonna: {
+        flex: 0,
     },
     legendContainer: {
         flex: 1,
@@ -53,9 +68,11 @@ export const styles = StyleSheet.create({
         fontSize: 14,
         flexShrink: 1, // permette di ridurre la dimensione del testo se necessario
     },
+    //staccato dal nome: con un nome lungo i due non si attaccano piu'
     legendPercentage: {
         fontWeight: "bold",
         fontSize: 14,
+        marginLeft: 12,
     },
     totalLabel: {
         opacity: 0.6,
