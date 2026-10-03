@@ -5,6 +5,9 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { usePreferenze } from "@/utils/preferenze";
 import { messaggioErrore } from "@/utils/messaggioErrore";
+import { useTranslation } from "react-i18next";
+import { nomeCategoria } from "@/utils/categorie";
+import { localeAttuale } from "@/utils/date";
 import { PieChart } from "react-native-gifted-charts";
 import { styles } from "@/styles/stats.styles";
 import { colors } from "@/styles/tokens";
@@ -20,11 +23,12 @@ function formatCycleLabel(cycleStart: string, cycleEnd: string): string {
   const start = new Date(cycleStart);
   const end = new Date(cycleEnd);
   const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
-  return `${start.toLocaleDateString("it-IT", opts)} - ${end.toLocaleDateString("it-IT", opts)}`;
+  return `${start.toLocaleDateString(localeAttuale(), opts)} - ${end.toLocaleDateString(localeAttuale(), opts)}`;
 }
 
 export default function StatsScreen() {
   const { importo } = usePreferenze();
+  const { t } = useTranslation();
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -48,7 +52,7 @@ export default function StatsScreen() {
         setCycleStart(data.cycle_start);
         setCycleEnd(data.cycle_end);
       } else {
-        setErrorMessage(await messaggioErrore(response, "Errore nel caricamento delle statistiche"));
+        setErrorMessage(await messaggioErrore(response, t("statistiche.errore")));
         setSnackbarVisible(true);
       }
     } catch (error) {
@@ -115,11 +119,11 @@ export default function StatsScreen() {
             >
               <MaterialCommunityIcons name="chart-donut" size={40} color={colors.chevron} />
               <Text style={styles.emptyTitle}>
-                {cycleOffset === 0 ? "Nessuna spesa in questo mese" : "Nessuna spesa in questo periodo"}
+                {cycleOffset === 0 ? t("statistiche.nessunaMese") : t("statistiche.nessunaPeriodo")}
               </Text>
               {cycleOffset === 0 && (
                 <Text style={styles.emptyHint}>
-                  Le statistiche compaiono dopo la prima spesa. Tocca + per aggiungerla.
+                  {t("statistiche.compaiono")}
                 </Text>
               )}
             </Pressable>
@@ -132,7 +136,7 @@ export default function StatsScreen() {
                     <View key={item.category_name} style={styles.legendRow}>
                       <View style={styles.legendLeft}>
                         <View style={[styles.legendDot, { backgroundColor: colori[index % colori.length] }]} />
-                        <Text style={styles.legendLabel}>{item.category_name}</Text>
+                        <Text style={styles.legendLabel}>{nomeCategoria(item.category_name)}</Text>
                       </View>
                       <Text style={styles.legendPercentage}>{percentage.toFixed(0)}%</Text>
                     </View>
@@ -142,7 +146,7 @@ export default function StatsScreen() {
                   <View style={styles.legendRow}>
                     <View style={styles.legendLeft}>
                       <View style={[styles.legendDot, { backgroundColor: "#E0E0E0" }]} />
-                      <Text style={styles.legendLabel}>Disponibile</Text>
+                      <Text style={styles.legendLabel}>{t("statistiche.disponibile")}</Text>
                     </View>
                     <Text style={styles.legendPercentage}>{importo(remaining)}</Text>
                   </View>
@@ -156,7 +160,7 @@ export default function StatsScreen() {
                   innerRadius={60}
                   centerLabelComponent={() => (
                     <View style={{ alignItems: "center" }}>
-                      <Text style={styles.totalLabel}>Speso</Text>
+                      <Text style={styles.totalLabel}>{t("statistiche.speso")}</Text>
                       <Text style={styles.totalAmount}>{importo(total)}</Text>
                     </View>
                   )}
@@ -169,7 +173,7 @@ export default function StatsScreen() {
         {/* solo nel mese in corso: per i mesi passati il budget di allora non si ricostruisce */}
         {!loading && cycleOffset === 0 && stats.length > 0 && budgetImpostato === false && (
           <Text style={styles.budgetHint} onPress={() => router.push("/set_budget")}>
-            Imposta un budget per vedere quanto ti resta
+            {t("statistiche.impostaBudget")}
           </Text>
         )}
 

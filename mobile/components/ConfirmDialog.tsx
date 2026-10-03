@@ -1,4 +1,5 @@
 import { Button, Dialog, Portal, Text } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import { StyleSheet } from "react-native";
 import { colors, radius } from "@/styles/tokens";
 
@@ -26,13 +27,14 @@ export function ConfirmDialog({
   visible,
   title,
   message,
-  confirmLabel = "Conferma",
-  cancelLabel = "Annulla",
+  confirmLabel,
+  cancelLabel,
   destructive = false,
   loading = false,
   onConfirm,
   onDismiss,
 }: Props) {
+  const { t } = useTranslation();
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={onDismiss} style={styles.dialog}>
@@ -42,7 +44,7 @@ export function ConfirmDialog({
         </Dialog.Content>
         <Dialog.Actions>
           <Button onPress={onDismiss} disabled={loading} textColor={colors.textMuted}>
-            {cancelLabel}
+            {cancelLabel ?? t("comune.annulla")}
           </Button>
           <Button
             onPress={onConfirm}
@@ -50,7 +52,7 @@ export function ConfirmDialog({
             disabled={loading}
             textColor={destructive ? colors.dangerDark : colors.primary}
           >
-            {confirmLabel}
+            {confirmLabel ?? t("comune.conferma")}
           </Button>
         </Dialog.Actions>
       </Dialog>

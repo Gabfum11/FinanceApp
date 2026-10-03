@@ -1,3 +1,4 @@
+import i18n from "@/utils/i18n";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -67,7 +68,8 @@ async function preparaCanaleAndroid() {
   //senza un canale esplicito Android usa quello predefinito, che l'utente
   //non può regolare separatamente dalle altre notifiche dell'app
   await Notifications.setNotificationChannelAsync(CANALE, {
-    name: "Promemoria abbonamenti",
+    //il nome che l'utente vede nelle impostazioni di Android
+    name: i18n.t("notifiche.canale"),
     importance: Notifications.AndroidImportance.DEFAULT,
     sound: null,
   });

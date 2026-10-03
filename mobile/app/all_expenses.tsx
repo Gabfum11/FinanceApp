@@ -11,6 +11,8 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { iconaPerGruppo } from "@/utils/categoryIcons";
 import { usePreferenze } from "@/utils/preferenze";
+import { useTranslation } from "react-i18next";
+import { nomeCategoria } from "@/utils/categorie";
 
 type Expense = {
   id: number;
@@ -36,9 +38,9 @@ type CategoryGroup = Gruppo & { children: { id: number; name: string }[] };
 type Period = "all" | "month" | "quarter";
 
 const PERIODS: { value: Period; label: string }[] = [
-    { value: "all", label: "Tutto" },
-    { value: "month", label: "Questo mese" },
-    { value: "quarter", label: "3 mesi" },
+    { value: "all", label: "spese.tutto" },
+    { value: "month", label: "spese.questoMese" },
+    { value: "quarter", label: "spese.treMesi" },
 ];
 
 function periodStart(period: Period): Date | null {
@@ -50,6 +52,7 @@ function periodStart(period: Period): Date | null {
 
 export default function ExpenseList() {
   const { importo, importoIn } = usePreferenze();
+  const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const [expenses, setExpenses]=useState<Expense[]>([]);
     const [expensesLoaded, setExpensesLoaded] = useState(false);
@@ -92,6 +95,8 @@ export default function ExpenseList() {
             return (
                 normalize(e.description).includes(q) ||
                 normalize(e.category_name ?? "").includes(q) ||
+                //si cerca anche nella lingua dell'utente: "Gym" deve trovare Palestra
+                normalize(nomeCategoria(e.category_name)).includes(q) ||
                 normalize(gruppo?.name ?? "").includes(q)
             );
         });
@@ -170,14 +175,14 @@ export default function ExpenseList() {
        <View style={styles.container}>
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
             <IconButton icon="chevron-left" onPress={()=>router.back()} />
-            <Text variant="titleMedium">Transazioni</Text>
+            <Text variant="titleMedium">{t("spese.titolo")}</Text>
             {hasFilters
                 ? <IconButton icon="filter-remove-outline" onPress={resetFilters} />
                 : <View style={styles.headerSpacer} />}
         </View>
 
         <Searchbar
-            placeholder="Cerca per descrizione o categoria"
+            placeholder={t("spese.cerca")}
             value={query}
             onChangeText={setQuery}
             style={styles.searchbar}
@@ -219,7 +224,7 @@ export default function ExpenseList() {
                     accessibilityState={{ selected: categoryId === null }}
                 >
                     <Text style={[styles.chipLabel, categoryId === null && styles.chipLabelSelected]}>
-                        Tutte
+                        {t("spese.tutte")}
                     </Text>
                 </Pressable>
                 {categories.map(([id, name]) => (
@@ -231,7 +236,7 @@ export default function ExpenseList() {
                         accessibilityState={{ selected: categoryId === id }}
                     >
                         <Text style={[styles.chipLabel, categoryId === id && styles.chipLabelSelected]}>
-                            {name}
+                            {nomeCategoria(name)}
                         </Text>
                     </Pressable>
                 ))}
@@ -244,7 +249,7 @@ export default function ExpenseList() {
             {filtered.length > 0 && (
                 <>
                     <Text style={styles.summaryCount}>
-                        {filtered.length} {filtered.length === 1 ? "spesa" : "spese"}
+                        {t("spese.conteggio", { count: filtered.length })}
                     </Text>
                     <Text style={styles.summaryTotal}>{importo(total)}</Text>
                 </>
@@ -272,7 +277,7 @@ export default function ExpenseList() {
                 <View style={styles.expenseInfo}>
                     <Text style={styles.expenseDescription}>{item.description}</Text>
                     <Text style={styles.expenseMeta}>
-                        {item.category_name ?? "Non assegnata"} · {formatDataSpesa(item.date)}
+                        {nomeCategoria(item.category_name)} · {formatDataSpesa(item.date)}
                     </Text>
                 </View>
                 <View style={styles.amountColumn}>
@@ -288,12 +293,12 @@ export default function ExpenseList() {
         ListEmptyComponent={
             !expensesLoaded ? null : hasFilters ? (
                 <View style={styles.emptyState}>
-                    <Text style={styles.emptyTitle}>Nessun risultato</Text>
-                    <Text style={styles.emptyHint}>Prova a cambiare ricerca o filtri</Text>
+                    <Text style={styles.emptyTitle}>{t("spese.nessunRisultato")}</Text>
+                    <Text style={styles.emptyHint}>{t("spese.cambiaFiltri")}</Text>
                 </View>
             ) : (
                 <View style={styles.emptyState}>
-                    <Text style={styles.emptyTitle}>Nessuna spesa registrata</Text>
+                    <Text style={styles.emptyTitle}>{t("spese.nessunaSpesa")}</Text>
                 </View>
             )
         }
@@ -301,9 +306,9 @@ export default function ExpenseList() {
 
         <ConfirmDialog
             visible={daEliminare !== null}
-            title="Elimina spesa"
-            message="Sei sicuro di voler eliminare questa spesa?"
-            confirmLabel="Elimina"
+            title={t("spese.eliminaTitolo")}
+            message={t("spese.eliminaTesto")}
+            confirmLabel={t("comune.elimina")}
             destructive
             onConfirm={() => daEliminare !== null && handleDelete(daEliminare)}
             onDismiss={() => setDaEliminare(null)}

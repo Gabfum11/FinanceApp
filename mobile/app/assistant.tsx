@@ -14,10 +14,16 @@ import { usePreferenze } from "@/utils/preferenze";
 import { SelettoreData } from "@/components/SelettoreData";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { prendiSalvataggio } from "@/utils/esitoAssistente";
+import { useTranslation } from "react-i18next";
+import { nomeCategoria } from "@/utils/categorie";
+import { localeAttuale } from "@/utils/date";
+import { traduciErrore } from "@/utils/messaggioErrore";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function AssistantScreen() {
   const { importoIn } = usePreferenze();
+  const { t } = useTranslation();
+  const frequenza = (f: string | null) => t(`frequenze.${f ?? "monthly"}`);
   type ExpenseConfirmation = {
     id: number;
     description: string;
@@ -49,13 +55,13 @@ export default function AssistantScreen() {
     {
       id: "benvenuto",
       sender: "system",
-      text: "Ciao! Sono l'assistente di TrackIt. Dimmi cosa hai comprato, quanto hai speso e, se vuoi, anche quando. Se è una spesa che si ripete, la salvo come abbonamento.",
+      text: t("assistente.benvenuto"),
       //coprono i casi che l'assistente sa riconoscere: base, con data, ricorrente
       examples: [
-        "Pizza 15 euro",
-        "Spesa 40 euro ieri",
-        "Benzina 60 euro il 3 settembre",
-        "Palestra 50 euro al mese",
+        t("assistente.esempio1"),
+        t("assistente.esempio2"),
+        t("assistente.esempio3"),
+        t("assistente.esempio4"),
       ],
     },
   ]);
@@ -121,8 +127,8 @@ export default function AssistantScreen() {
             id: Date.now().toString(),
             sender: "system",
             text: occupato
-              ? detail ?? "Troppe richieste in questo momento. Riprova tra qualche istante."
-              : 'Non sono riuscito a capire. Prova a dirmi cosa hai comprato e quanto hai speso, per esempio "Pizza 15 euro".',
+              ? traduciErrore(detail, t("errori.troppeRichieste"))
+              : t("assistente.nonCapito"),
           },
         ]);
         return;
@@ -134,7 +140,7 @@ export default function AssistantScreen() {
     } catch (error) {
       setMessages((prev) => [
         ...prev,
-        { id: Date.now().toString(), sender: "system", text: "Errore di rete, riprova." },
+        { id: Date.now().toString(), sender: "system", text: t("errori.rete") },
       ]);
     } finally {
       setIsLoading(false);
@@ -189,7 +195,7 @@ function handleDatePickerDismiss() {
         {
           id: Date.now().toString(),
           sender: "system",
-          text: detail ?? "Non sono riuscito a salvare, riprova.",
+          text: traduciErrore(detail, t("assistente.nonSalvato")),
         },
       ]);
       return;
@@ -231,7 +237,7 @@ function handleDatePickerDismiss() {
   function handleCancel() {
     setMessages((prev) => [
       ...prev,
-      { id: Date.now().toString(), sender: "system", text: "Spesa annullata." },
+      { id: Date.now().toString(), sender: "system", text: t("assistente.annullata") },
     ]);
     setPendingExpense(null);
   }
@@ -252,10 +258,10 @@ function handleDatePickerDismiss() {
           style={styles.headerAvatar}
         />
         <View style={styles.headerText}>
-          <Text variant="titleMedium" style={styles.headerTitle}>Assistente</Text>
-          <Text variant="bodySmall" style={styles.headerSubtitle}>Registra spese scrivendo a parole</Text>
+          <Text variant="titleMedium" style={styles.headerTitle}>{t("assistente.titolo")}</Text>
+          <Text variant="bodySmall" style={styles.headerSubtitle}>{t("assistente.sottotitolo")}</Text>
         </View>
-        <IconButton icon="close" onPress={() => router.back()} accessibilityLabel="Chiudi l'assistente" />
+        <IconButton icon="close" onPress={() => router.back()} accessibilityLabel={t("assistente.chiudiAssistente")} />
       </View>
 
       <FlatList
@@ -269,7 +275,7 @@ function handleDatePickerDismiss() {
               <View style={styles.savedHeader}>
                 <MaterialCommunityIcons name="check-circle" size={20} color={colors.primary} />
                 <Text style={styles.savedTitle}>
-                  {item.expenseData.recurring ? "Abbonamento aggiunto" : "Spesa aggiunta"}
+                  {item.expenseData.recurring ? t("assistente.abbonamentoAggiunto") : t("assistente.spesaAggiunta")}
                 </Text>
               </View>
               <View style={styles.savedBody}>
@@ -285,11 +291,11 @@ function handleDatePickerDismiss() {
                     {item.expenseData.description}
                   </Text>
                   <Text style={styles.savedMeta}>
-                    {item.expenseData.category_name ?? "Non assegnata"}
+                    {nomeCategoria(item.expenseData.category_name)}
                     {" · "}
                     {item.expenseData.recurring
-                      ? item.expenseData.frequency === "monthly" ? "Mensile" : item.expenseData.frequency === "weekly" ? "Settimanale" : "Annuale"
-                      : fromDateString(item.expenseData.date).toLocaleDateString("it-IT")}
+                      ? frequenza(item.expenseData.frequency)
+                      : fromDateString(item.expenseData.date).toLocaleDateString(localeAttuale())}
                   </Text>
                 </View>
                 <Text style={styles.savedAmount}>{importoIn(item.expenseData.amount, item.expenseData.currency)}</Text>
@@ -307,7 +313,7 @@ function handleDatePickerDismiss() {
               </Text>
               {item.examples && (
                 <View style={styles.examples}>
-                  <Text style={styles.examplesLabel}>Per esempio:</Text>
+                  <Text style={styles.examplesLabel}>{t("assistente.perEsempio")}</Text>
                   {item.examples.map((esempio) => (
                     <Text key={esempio} style={styles.example}>“{esempio}”</Text>
                   ))}
@@ -319,7 +325,7 @@ function handleDatePickerDismiss() {
         ListFooterComponent={
           isLoading ? (
             <View style={[styles.messageBubble, styles.systemBubble]}>
-              <Text style={styles.systemText}>Sto analizzando...</Text>
+              <Text style={styles.systemText}>{t("assistente.analizzo")}</Text>
             </View>
           ) : null
         }
@@ -327,12 +333,12 @@ function handleDatePickerDismiss() {
 
       {pendingExpense && (
         <View style={styles.expenseCard}>
-          <Text variant="labelSmall" style={styles.cardLabel}>IMPORTO</Text>
+          <Text variant="labelSmall" style={styles.cardLabel}>{t("assistente.importo")}</Text>
           <Text variant="headlineMedium" style={styles.cardAmount}>
             {importoIn(pendingExpense.amount, pendingExpense.currency)}
           </Text>
           <Text style={styles.confirmationDetail}>
-            Descrizione: {pendingExpense.description}
+            {t("assistente.descrizione", { testo: pendingExpense.description })}
           </Text>
           <View style={styles.categoryRow}>
             <MaterialCommunityIcons
@@ -341,14 +347,14 @@ function handleDatePickerDismiss() {
               color="#2ECC71"
             />
             <Text style={styles.confirmationDetail}>
-              {" "}{pendingExpense.category_name ?? "Non assegnata"}
+              {" "}{nomeCategoria(pendingExpense.category_name)}
             </Text>
           </View>
           <Pressable onPress={() => setShowPicker(true)} style={styles.dateRow}>
             <MaterialCommunityIcons name="calendar-outline" size={18} color="#666" />
             <Text style={styles.confirmationDetail}>
-              {" "}{pendingExpense.recurring ? "Primo addebito" : "Data"}:{" "}
-              {fromDateString(pendingExpense.date).toLocaleDateString("it-IT")}
+              {" "}{pendingExpense.recurring ? t("assistente.primoAddebito") : t("assistente.data")}:{" "}
+              {fromDateString(pendingExpense.date).toLocaleDateString(localeAttuale())}
             </Text>
             <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" style={styles.dateChevron} />
           </Pressable>
@@ -364,10 +370,10 @@ function handleDatePickerDismiss() {
           {pendingExpense.recurring && (
             <>
             <Text style={styles.confirmationDetail}>
-              Ricorrenza: {pendingExpense.frequency === "monthly" ? "Mensile" : pendingExpense.frequency === "weekly" ? "Settimanale" : "Annuale"}
+              {t("assistente.ricorrenza", { frequenza: frequenza(pendingExpense.frequency) })}
             </Text>
             <View style={styles.switchRow}>
-            <Text> Rinnovo automatico</Text>
+            <Text> {t("assistente.rinnovoAutomatico")}</Text>
             <Switch
               value={autoRenew}
               onValueChange={setAutoRenew}
@@ -376,9 +382,9 @@ function handleDatePickerDismiss() {
             </>
           )}
           <View style={styles.cardActions}>
-            <Button mode="text" onPress={handleCancel}>Annulla</Button>
-            <Button mode="outlined" icon="pencil-outline" onPress={handleEdit}>Modifica</Button>
-            <Button mode="contained" onPress={handleConfirm}>Conferma</Button>
+            <Button mode="text" onPress={handleCancel}>{t("comune.annulla")}</Button>
+            <Button mode="outlined" icon="pencil-outline" onPress={handleEdit}>{t("comune.modifica")}</Button>
+            <Button mode="contained" onPress={handleConfirm}>{t("comune.conferma")}</Button>
           </View>
         </View>
       )}
@@ -387,7 +393,7 @@ function handleDatePickerDismiss() {
         <TextInput
           value={expenseText}
           onChangeText={setExpenseText}
-          placeholder='Es. "Spesa 40 euro ieri"'
+          placeholder={t("assistente.segnaposto")}
           mode="outlined"
           style={styles.textInput}
           disabled={isLoading || pendingExpense !== null}
@@ -395,6 +401,7 @@ function handleDatePickerDismiss() {
         <IconButton
           icon="send"
           iconColor="#2ECC71"
+          accessibilityLabel={t("assistente.invia")}
           onPress={handleSend}
           disabled={isLoading || pendingExpense !== null}
           size={38}
@@ -403,12 +410,10 @@ function handleDatePickerDismiss() {
     </KeyboardAvoidingView>
     <ConfirmDialog
       {...dialogo}
-      title="Chiudere l'assistente?"
-      message={pendingExpense
-        ? "La spesa proposta non è ancora stata salvata e andrà persa."
-        : "Il messaggio che stavi scrivendo andrà perso."}
-      confirmLabel="Chiudi"
-      cancelLabel="Resta"
+      title={t("assistente.chiudiTitolo")}
+      message={pendingExpense ? t("assistente.chiudiProposta") : t("assistente.chiudiMessaggio")}
+      confirmLabel={t("comune.chiudi")}
+      cancelLabel={t("assistente.resta")}
     />
     </SafeAreaView>
     </Portal.Host>

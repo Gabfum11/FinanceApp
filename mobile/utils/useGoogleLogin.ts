@@ -3,6 +3,8 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { salvaSessione } from "@/utils/session";
 import { API_URL } from "@/config";
+import i18n from "@/utils/i18n";
+import { traduciErrore } from "@/utils/messaggioErrore";
 
 // Il modulo nativo non esiste in Expo Go: importarlo in cima farebbe fallire
 // il caricamento della schermata di login, non solo del pulsante Google.
@@ -62,7 +64,7 @@ export function useGoogleLogin({ onSuccess, onError }: Options) {
 
   async function signIn() {
     if (!GoogleSignin) {
-      onError("Accesso con Google non disponibile in questa versione dell'app.");
+      onError(i18n.t("google.nonDisponibile"));
       return;
     }
     setIsLoading(true);
@@ -76,7 +78,7 @@ export function useGoogleLogin({ onSuccess, onError }: Options) {
       const idToken =
         (risposta as any)?.data?.idToken ?? (risposta as any)?.idToken;
       if (!idToken) {
-        onError("Risposta di Google incompleta. Riprova.");
+        onError(i18n.t("google.incompleta"));
         return;
       }
       await exchangeToken(idToken);
@@ -84,13 +86,13 @@ export function useGoogleLogin({ onSuccess, onError }: Options) {
       //l'utente che chiude la finestra non è un errore da mostrare
       if (errore?.code === statusCodes.SIGN_IN_CANCELLED) return;
       if (errore?.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        onError("Google Play Services non disponibile su questo dispositivo.");
+        onError(i18n.t("google.playServices"));
         return;
       }
       //il messaggio a schermo resta generico, ma senza la causa nei log
       //ogni fallimento diverso sembra lo stesso
       console.error("[google] signIn fallito:", errore?.code, errore?.message, errore);
-      onError("Accesso con Google non riuscito. Riprova.");
+      onError(i18n.t("google.nonRiuscito"));
     } finally {
       setIsLoading(false);
     }
@@ -108,11 +110,7 @@ export function useGoogleLogin({ onSuccess, onError }: Options) {
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         console.error("[google] scambio token rifiutato:", res.status, body);
-        onError(
-          typeof body?.detail === "string"
-            ? body.detail
-            : "Accesso con Google non riuscito. Riprova."
-        );
+        onError(traduciErrore(typeof body?.detail === "string" ? body.detail : null, i18n.t("google.nonRiuscito")));
         return;
       }
 
@@ -121,7 +119,7 @@ export function useGoogleLogin({ onSuccess, onError }: Options) {
       onSuccess();
     } catch (errore) {
       console.error("[google] rete non raggiungibile:", API_URL, errore);
-      onError("Errore di rete. Riprova.");
+      onError(i18n.t("errori.rete"));
     }
   }
 

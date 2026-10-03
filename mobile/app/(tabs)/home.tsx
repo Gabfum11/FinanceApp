@@ -17,6 +17,9 @@ import { TourGuidato } from "@/components/TourGuidato";
 import { segnaBenvenutoVisto } from "@/utils/benvenuto";
 import { bersaglio } from "@/utils/tour";
 import { usePreferenze } from "@/utils/preferenze";
+import { useTranslation } from "react-i18next";
+import { nomeCategoria } from "@/utils/categorie";
+import { localeAttuale } from "@/utils/date";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -44,7 +47,6 @@ type DayStat = {
   total: number;
 };
 
-const GIORNI_SETTIMANA = ["L", "M", "M", "G", "V", "S", "D"];
 
 //date string ->data della spesa (anno,mese,giorno)
 //created at -> timestamp completo
@@ -52,7 +54,7 @@ function formatCycleRange(cycleStart: string, cycleEnd: string): string {
   const start = new Date(cycleStart);
   const end = new Date(cycleEnd);
   const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
-  return `${start.toLocaleDateString("it-IT", opts)} - ${end.toLocaleDateString("it-IT", opts)}`;
+  return `${start.toLocaleDateString(localeAttuale(), opts)} - ${end.toLocaleDateString(localeAttuale(), opts)}`;
 }
 
 //scelta dell'utente sull'occhio: resta valida anche dopo aver chiuso l'app
@@ -83,6 +85,8 @@ export default function HomeScreen() {
   //chi usa l'app in pubblico può nascondere le cifre, come nelle app bancarie
   const [saldoVisibile, setSaldoVisibile] = useState(true);
   const { importo: formatta, importoIn, nascosto, sincronizza } = usePreferenze();
+  const { t } = useTranslation();
+  const GIORNI_SETTIMANA = t("comune.giorniBrevi").split(",");
   const rotazioneBot = useSharedValue(0);
 
   useEffect(() => {
@@ -263,14 +267,14 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}>
       <View style={styles.titleRow}>
         <Text variant="headlineMedium" style={styles.title}>
-          Ciao {nickname}!
+          {t("home.ciao", { nome: nickname })}
         </Text>
         <Pressable
           ref={bersaglio("assistente")}
           onPress={() => router.push("/assistant")}
           accessibilityRole="button"
-          accessibilityLabel="Apri l'assistente"
-          accessibilityHint="Registra una spesa scrivendola a parole"
+          accessibilityLabel={t("home.apriAssistente")}
+          accessibilityHint={t("home.suggerimentoAssistente")}
           hitSlop={8}
           style={({ pressed }) => [
             styles.assistantButton,
@@ -281,12 +285,12 @@ export default function HomeScreen() {
             source={require("../../assets/images/logo/trackit-bot-1024.png")}
             style={[styles.assistantIcon, salutoStyle]}
           />
-          <Text style={styles.assistantButtonLabel}>Assistente</Text>
+          <Text style={styles.assistantButtonLabel}>{t("home.assistente")}</Text>
         </Pressable>
       </View>
       <View>
         <View style={styles.headerRow}>
-          <Text variant="titleMedium">Budget</Text>
+          <Text variant="titleMedium">{t("home.budget")}</Text>
           <View style={styles.headerActions}>
             {/* nella riga del titolo e non nella card: la card compare solo
                 con un budget impostato, le transazioni invece sempre */}
@@ -294,7 +298,7 @@ export default function HomeScreen() {
             <View ref={bersaglio("nuovo-budget")} collapsable={false}>
               <Link href="/set_budget" asChild>
                 <Button mode="contained" style={styles.budgButt} labelStyle={styles.buttonLabel}>
-                  + Nuovo
+                  {t("home.nuovo")}
                 </Button>
               </Link>
             </View>
@@ -308,7 +312,7 @@ export default function HomeScreen() {
               iconColor={colors.textSecondary}
               onPress={cambiaVisibilita}
               style={styles.eyeButton}
-              accessibilityLabel={saldoVisibile ? "Nascondi importi" : "Mostra importi"}
+              accessibilityLabel={saldoVisibile ? t("home.nascondi") : t("home.mostra")}
             />
             </View>
           </View>
@@ -317,9 +321,9 @@ export default function HomeScreen() {
         {budgetStatus && budgetStatus.budget == null && (
           <Pressable style={styles.emptyState} onPress={() => router.push("/set_budget")}>
             <MaterialCommunityIcons name="cash" size={40} color={colors.chevron} />
-            <Text style={styles.emptyTitle}>Nessun budget impostato</Text>
+            <Text style={styles.emptyTitle}>{t("home.nessunBudget")}</Text>
             <Text style={styles.emptyHint}>
-              Tocca + Nuovo per decidere quanto spendere al mese e vedere quanto ti resta
+              {t("home.nessunBudgetTesto")}
             </Text>
           </Pressable>
         )}
@@ -327,14 +331,14 @@ export default function HomeScreen() {
           <View style={styles.budgetCard}>
             <View style={styles.budgetDecorCircle} />
             <View style={styles.budgetLabelRow}>
-              <Text style={styles.budgetLabel}>LIBERO QUESTO MESE</Text>
+              <Text style={styles.budgetLabel}>{t("home.libero")}</Text>
               <Text style={styles.budgetCycleRange}>
                 {formatCycleRange(budgetStatus.cycle_start, budgetStatus.cycle_end)}
               </Text>
             </View>
             <View style={styles.budgetAmountRow}>
               <Text style={styles.budgetRemaining}>{importo(budgetStatus.remaining ?? 0)}</Text>
-              <Text style={styles.budgetOf}>di {importo(budgetStatus.budget)}</Text>
+              <Text style={styles.budgetOf}>{t("home.di", { totale: importo(budgetStatus.budget) })}</Text>
             </View>
             <View style={styles.progressBarBackground}>
               <View style={[styles.progressBarFill, { width: `${percentage}%` }]} />
@@ -342,7 +346,7 @@ export default function HomeScreen() {
             <View style={styles.budgetLegendRow}>
               <View style={styles.budgetLegendItem}>
                 <View style={[styles.budgetLegendDot, { backgroundColor: colors.primary }]} />
-                <Text style={styles.budgetLegendText}>Speso {importo(budgetStatus.spent)}</Text>
+                <Text style={styles.budgetLegendText}>{t("home.speso", { importo: importo(budgetStatus.spent) })}</Text>
               </View>
             </View>
           </View>
@@ -351,7 +355,7 @@ export default function HomeScreen() {
 
       {weeklyChartData.length > 0 && (
         <View style={styles.weeklyCard}>
-          <Text style={styles.weeklyTitle}>Spese settimanali</Text>
+          <Text style={styles.weeklyTitle}>{t("home.settimana")}</Text>
           <View style={styles.weeklyChartWrapper}>
             <BarChart
               data={weeklyChartData}
@@ -377,11 +381,11 @@ export default function HomeScreen() {
       )}
 
         <Text variant="titleMedium" style={styles.sectionTitle}>
-          Ultime transazioni
+          {t("home.ultime")}
         </Text>
         {expenses.length > 0 && (
           <Link href="/all_expenses" asChild>
-            <Text style={styles.linkExpenses}>Vedi tutte</Text>
+            <Text style={styles.linkExpenses}>{t("home.vediTutte")}</Text>
           </Link>
         )}
       {/* due righe al massimo: un semplice elenco, perche' una FlatList
@@ -390,7 +394,7 @@ export default function HomeScreen() {
         <View key={item.id} style={styles.expenseRow}>
           <View style={styles.expenseInfo}>
             <Text style={styles.expenseDescription}>{item.description}</Text>
-            <Text style={styles.expenseMeta}>{item.category_name ?? "Non assegnata"}{" · "}{formatDataSpesa(item.date)}</Text>
+            <Text style={styles.expenseMeta}>{nomeCategoria(item.category_name)}{" · "}{formatDataSpesa(item.date)}</Text>
           </View>
           <View style={styles.amountColumn}>
             <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
@@ -403,9 +407,9 @@ export default function HomeScreen() {
       {expensesLoaded && expenses.length === 0 && (
         <Pressable style={styles.emptyState} onPress={() => router.push("/add_expense")}>
           <MaterialCommunityIcons name="receipt-text-outline" size={40} color="#C7C7CC" />
-          <Text style={styles.emptyTitle}>Nessuna spesa registrata</Text>
+          <Text style={styles.emptyTitle}>{t("home.nessunaSpesa")}</Text>
           <Text style={styles.emptyHint}>
-            Tocca il pulsante + in basso per aggiungere la tua prima spesa
+            {t("home.nessunaSpesaTesto")}
           </Text>
         </Pressable>
       )}
@@ -415,9 +419,9 @@ export default function HomeScreen() {
 
       <ConfirmDialog
         visible={showExitDialog}
-        title="Esci dall'app"
-        message="Vuoi chiudere l'app?"
-        confirmLabel="Esci"
+        title={t("home.esciTitolo")}
+        message={t("home.esciTesto")}
+        confirmLabel={t("comune.esci")}
         onConfirm={() => {
           //da Android 12 l'uscita manda l'app in background senza chiuderla:
           //senza questo, alla riapertura la finestra sarebbe ancora aperta
@@ -430,9 +434,9 @@ export default function HomeScreen() {
       <Snackbar
         visible={loadError}
         onDismiss={() => setLoadError(false)}
-        action={{ label: "Riprova", onPress: loadAll }}
+        action={{ label: t("comune.riprova"), onPress: loadAll }}
       >
-        Impossibile caricare i dati. Controlla la connessione.
+        {t("home.erroreCaricamento")}
       </Snackbar>
     </View>
   );

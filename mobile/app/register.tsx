@@ -10,8 +10,10 @@ import { GoogleButton } from "@/components/GoogleButton";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import * as WebBrowser from "expo-web-browser";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
+import { useTranslation } from "react-i18next";
 
 export default function RegisterScreen() {
+    const { t } = useTranslation();
     const[nickname,setnickName]=useState("");
     const[email,setEmail]=useState("");
     const[password,setPassword]=useState("")
@@ -35,7 +37,7 @@ export default function RegisterScreen() {
                 body:JSON.stringify({nickname,email,password}),
             });
             if(!response.ok) {
-                const messaggio = await messaggioErrore(response, "Controlla i dati: la password deve avere almeno 8 caratteri");
+                const messaggio = await messaggioErrore(response, t("registrazione.datiErrati"));
                 setErrorMessage(messaggio)
                 setSnackbarVisible(true)
                 console.log("Registrazione fallita:", messaggio);
@@ -48,6 +50,8 @@ export default function RegisterScreen() {
             });
         } catch(error) {
             console.log("Errore di rete", error);
+            setErrorMessage(t("errori.rete"));
+            setSnackbarVisible(true);
         } finally{
             setLoading(false)
         }
@@ -60,10 +64,10 @@ export default function RegisterScreen() {
                     <Text style={styles.logoLabel}>TrackIt</Text>
                 </View>
                 <Text variant="headlineMedium" style={styles.title}>
-                    Crea il tuo account
+                    {t("registrazione.titolo")}
                 </Text>
                 <TextInput
-                    label="Name"
+                    label={t("registrazione.nome")}
                     value={nickname}
                     onChangeText={setnickName}
                     mode="outlined"
@@ -71,7 +75,7 @@ export default function RegisterScreen() {
                     style={styles.input}
                 />
                 <TextInput
-                    label="Email"
+                    label={t("comune.email")}
                     value={email}
                     onChangeText={setEmail}
                     autoCapitalize="none" //evita che la prima lettera sia scelta in maiuscolo
@@ -82,7 +86,7 @@ export default function RegisterScreen() {
                 />
 
                 <TextInput
-                    label="Password"
+                    label={t("comune.password")}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword} //nasconde i caratteri(mostra pallini o asteriscghi)
@@ -104,14 +108,14 @@ export default function RegisterScreen() {
                     loading={loading}
                     disabled={loading}
                     >
-                    Registrati
+                    {t("accesso.registrati")}
                 </Button>
 
                 {google.isReady && (
                     <>
                         <View style={styles.dividerRow}>
                             <View style={styles.dividerLine} />
-                            <Text style={styles.dividerText}>oppure</Text>
+                            <Text style={styles.dividerText}>{t("comune.oppure")}</Text>
                             <View style={styles.dividerLine} />
                         </View>
                         <GoogleButton
@@ -123,16 +127,16 @@ export default function RegisterScreen() {
 
                 {/* vale per entrambi i pulsanti: anche "Continua con Google" crea l'account */}
                 <Text style={styles.legal}>
-                    Registrandoti confermi di aver letto l&apos;
+                    {t("accesso.legaleRegistrazione")}
                     <Text style={styles.legalLink} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
-                        informativa sulla privacy
+                        {t("accesso.informativa")}
                     </Text>
                 </Text>
 
                 <Text style={styles.link}>
-                    Hai già un account?{" "}
+                    {t("accesso.haiAccount")}{" "}
                 <Link href="/login">
-                <Text style={styles.linkAction}>Accedi</Text>   
+                <Text style={styles.linkAction}>{t("accesso.accedi")}</Text>   
                 </Link>
                 </Text>
             </PaginaScorrevole>

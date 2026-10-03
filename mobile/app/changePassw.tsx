@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { messaggioErrore } from "@/utils/messaggioErrore";
@@ -10,7 +11,8 @@ import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 
-export default function changePassw() {
+export default function ChangePassword() {
+    const { t } = useTranslation();
     const [pass, setPass] = useState("");
     const [newPass, setNewPass] = useState("");
     const [loading, setLoading] = useState(false);
@@ -35,11 +37,11 @@ export default function changePassw() {
                 lasciaUscire();
                 router.back();
             } else {
-                setErrorMessage(await messaggioErrore(response, "La nuova password deve avere almeno 8 caratteri"));
+                setErrorMessage(await messaggioErrore(response, t("cambiaPassword.troppoCorta")));
                 setSnackbarVisible(true);
             }
         } catch (error) {
-            setErrorMessage("Errore di rete");
+            setErrorMessage(t("errori.rete"));
             setSnackbarVisible(true);
         } finally {
             setLoading(false);
@@ -50,13 +52,13 @@ export default function changePassw() {
         <View style={styles.container}>
             <PaginaScorrevole style={styles.content} tastiera>
                 <IconButton icon="chevron-left" onPress={() => router.back()} />
-                <Text variant="headlineMedium" style={styles.title}>Cambia password</Text>
+                <Text variant="headlineMedium" style={styles.title}>{t("cambiaPassword.titolo")}</Text>
                 <Text variant="bodyMedium" style={styles.subtitle}>
-                    Inserisci la password attuale e quella nuova
+                    {t("cambiaPassword.sottotitolo")}
                 </Text>
 
                 <View style={styles.formSection}>
-                    <Text style={styles.label}>Password attuale</Text>
+                    <Text style={styles.label}>{t("cambiaPassword.attuale")}</Text>
                     <TextInput
                         value={pass}
                         onChangeText={setPass}
@@ -71,7 +73,7 @@ export default function changePassw() {
                             />
                         }
                     />
-                    <Text style={styles.label}>Nuova password</Text>
+                    <Text style={styles.label}>{t("cambiaPassword.nuova")}</Text>
                     <TextInput
                         value={newPass}
                         onChangeText={setNewPass}
@@ -96,7 +98,7 @@ export default function changePassw() {
                     loading={loading}
                     disabled={loading}
                 >
-                    Aggiorna Password
+                    {t("cambiaPassword.aggiorna")}
                 </Button>
 
             </PaginaScorrevole>

@@ -16,6 +16,11 @@ export type Lingua = (typeof LINGUE)[number];
 
 const SIMBOLI: Record<Valuta, string> = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF" };
 
+//per toLocaleDateString: inglese britannico, con il giorno prima del mese come in italiano
+export function localeDi(lingua: Lingua): string {
+  return lingua === "en" ? "en-GB" : "it-IT";
+}
+
 export function eValuta(valore: unknown): valore is Valuta {
   return typeof valore === "string" && (VALUTE as readonly string[]).includes(valore);
 }

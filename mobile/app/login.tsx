@@ -12,6 +12,7 @@ import { messaggioErrore } from "@/utils/messaggioErrore";
 import * as WebBrowser from "expo-web-browser";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { SelettoreLingua } from "@/components/SelettoreLingua";
+import { useTranslation } from "react-i18next";
 
 
 export default function LoginScreen() {
@@ -22,6 +23,7 @@ export default function LoginScreen() {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [showPassword, setShowPassword]=useState(false)
   const router=useRouter();
+  const { t } = useTranslation();
   const google = useGoogleLogin({
     onSuccess: () => router.replace("/(tabs)/home"),
     onError: (message) => {
@@ -39,7 +41,7 @@ export default function LoginScreen() {
     });
 
     if (!response.ok) {
-      const messaggio = await messaggioErrore(response, "Accesso non riuscito");
+      const messaggio = await messaggioErrore(response, t("login.nonRiuscito"));
       setErrorMessage(messaggio)
       setSnackbarVisible(true)
       console.log("errore", messaggio);
@@ -52,6 +54,8 @@ export default function LoginScreen() {
     router.replace("/(tabs)/home")
   } catch (error) {
     console.log("Errore di rete:", error);
+    setErrorMessage(t("errori.rete"));
+    setSnackbarVisible(true);
   } finally {
     setLoading(false)
   }
@@ -67,11 +71,11 @@ export default function LoginScreen() {
           <Text style={styles.logoLabel}>TrackIt</Text>
         </View>
         <Text variant="headlineMedium" style={styles.title}>
-          Bentornato
+          {t("login.titolo")}
         </Text>
 
         <TextInput
-          label="Email"
+          label={t("comune.email")}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none" //evita che la prima lettera sia scelta in maiuscolo
@@ -80,9 +84,9 @@ export default function LoginScreen() {
           keyboardType="email-address"
           style={styles.input}
         />
-        <Text style={styles.linkAction} onPress={()=>router.push('/resetPassword')}>Password dimenticata?</Text>
+        <Text style={styles.linkAction} onPress={()=>router.push('/resetPassword')}>{t("login.dimenticata")}</Text>
         <TextInput
-          label="Password"
+          label={t("comune.password")}
           value={password}
           onChangeText={setPassword}
            secureTextEntry={!showPassword} //nasconde i caratteri(mostra pallini o asteriscghi)
@@ -104,14 +108,14 @@ export default function LoginScreen() {
           loading={loading}
           disabled={loading}
           >
-          Accedi
+          {t("accesso.accedi")}
         </Button>
 
         {google.isReady && (
           <>
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>oppure</Text>
+              <Text style={styles.dividerText}>{t("comune.oppure")}</Text>
               <View style={styles.dividerLine} />
             </View>
             <GoogleButton
@@ -121,18 +125,18 @@ export default function LoginScreen() {
             {/* dal login, Google crea l'account a chi non ce l'ha: senza avviso
                 l'utente si registrerebbe senza aver visto l'informativa */}
             <Text style={styles.legal}>
-              Continuando con Google confermi di aver letto l&apos;
+              {t("accesso.legaleGoogle")}
               <Text style={styles.legalLink} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
-                informativa sulla privacy
+                {t("accesso.informativa")}
               </Text>
             </Text>
           </>
         )}
 
         <Text style={styles.link}>
-          Non hai un account?{" "}
+          {t("accesso.nonHaiAccount")}{" "}
           <Link href="/register"> 
-           <Text style={styles.linkAction}> Registrati </Text>
+           <Text style={styles.linkAction}> {t("accesso.registrati")} </Text>
           </Link>
         </Text>
       </PaginaScorrevole>

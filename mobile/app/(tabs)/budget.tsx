@@ -8,6 +8,10 @@ import { router, useFocusEffect } from "expo-router";
 import { styles } from "@/styles/budget.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
+import { useTranslation } from "react-i18next";
+import i18n from "@/utils/i18n";
+import { nomeCategoria } from "@/utils/categorie";
+import { localeAttuale } from "@/utils/date";
 function getRenewal(next_date:string){
   const today= new Date();
   today.setHours(0, 0, 0, 0);
@@ -15,9 +19,9 @@ function getRenewal(next_date:string){
   target.setHours(0, 0, 0, 0);
   const diffMs = target.getTime() - today.getTime();
   const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays <= 0) return "Scade oggi";
-  if (diffDays === 1) return "Scade domani";
-  return `Scade tra ${diffDays} giorni`
+  if (diffDays <= 0) return i18n.t("abbonamenti.scadeOggi");
+  if (diffDays === 1) return i18n.t("abbonamenti.scadeDomani");
+  return i18n.t("abbonamenti.scadeTra", { count: diffDays });
 }
 type Subscription = {
   id: number;
@@ -32,13 +36,13 @@ type Subscription = {
   auto_renew:boolean;
   currency?: string | null; //prezzo in un'altra valuta; vuota = quella dell'utente
 };
-const mesi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
 //conferma in attesa: il tipo dice quale azione parte alla conferma
 type ConfermaInAttesa =
   | { tipo: "pausa" | "riattiva" | "elimina"; subId: number };
 
 export default function BudgetScreen() {
   const { importoIn } = usePreferenze();
+  const { t } = useTranslation();
   const [subscriptions, setSubscriptions]=useState<Subscription[]>([]);
   const [conferma, setConferma] = useState<ConfermaInAttesa | null>(null);
   //ogni conferma registra una spesa: un doppio tocco ne creerebbe due
@@ -75,9 +79,9 @@ export default function BudgetScreen() {
     const target = new Date(nextDate);
     target.setHours(0, 0, 0, 0);
     const diffDays = Math.round((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return "scaduto oggi";
-    if (diffDays === 1) return "scaduto ieri";
-    return `scaduto ${diffDays} giorni fa`;
+    if (diffDays === 0) return i18n.t("abbonamenti.scadutoOggi");
+    if (diffDays === 1) return i18n.t("abbonamenti.scadutoIeri");
+    return i18n.t("abbonamenti.scadutoDa", { count: diffDays });
 }
     function openEdit(sub: Subscription) {
       router.push({
@@ -104,21 +108,21 @@ export default function BudgetScreen() {
     //testi e azione del dialogo, ricavati dalla conferma in attesa
     const testiConferma = {
       pausa: {
-        title: "Abbonamento in pausa",
-        message: "Sei sicuro di voler mettere in pausa questo abbonamento?",
-        confirmLabel: "Conferma",
+        title: t("abbonamenti.pausaTitolo"),
+        message: t("abbonamenti.pausaTesto"),
+        confirmLabel: t("comune.conferma"),
         destructive: false,
       },
       riattiva: {
-        title: "Riattiva abbonamento",
-        message: "Sei sicuro di voler riattivare questo abbonamento?",
-        confirmLabel: "Conferma",
+        title: t("abbonamenti.riattivaTitolo"),
+        message: t("abbonamenti.riattivaTesto"),
+        confirmLabel: t("comune.conferma"),
         destructive: false,
       },
       elimina: {
-        title: "Elimina abbonamento",
-        message: "Sei sicuro di voler eliminare questo abbonamento?",
-        confirmLabel: "Elimina",
+        title: t("abbonamenti.eliminaTitolo"),
+        message: t("abbonamenti.eliminaTesto"),
+        confirmLabel: t("comune.elimina"),
         destructive: true,
       },
     } as const;
@@ -161,7 +165,7 @@ export default function BudgetScreen() {
   return (
     <View style={styles.container}>
       <PaginaScorrevole style={styles.content}>
-        <Text variant="headlineMedium">Abbonamenti attivi</Text>
+        <Text variant="headlineMedium">{t("abbonamenti.attivi")}</Text>
         {activeSubscriptions.map((item) => (
           <View key={item.id} style={styles.subRow}>
             <View style={styles.subIconContainer}>
@@ -170,13 +174,13 @@ export default function BudgetScreen() {
             <View style={styles.subInfo}>
               <Text style={styles.subDesc}>{item.description}</Text>
               <Text style={styles.subMeta}>
-                {item.category_name ?? "Non assegnata" }{" · "}{getRenewal(item.next_date)}
-                {!item.auto_renew && " · Manuale"}
+                {nomeCategoria(item.category_name)}{" · "}{getRenewal(item.next_date)}
+                {!item.auto_renew && ` · ${t("abbonamenti.manuale")}`}
               </Text>
             </View>
             <Text style={styles.subAmount}>{importoIn(item.amount, item.currency)}</Text>
-            <IconButton icon="pencil-outline" size={18} onPress={()=>openEdit(item)} />
-            <IconButton icon="pause" size={18} onPress={()=>confirmToggle(item.id, true)} />
+            <IconButton icon="pencil-outline" size={18} onPress={()=>openEdit(item)} accessibilityLabel={t("abbonamenti.modifica")} />
+            <IconButton icon="pause" size={18} onPress={()=>confirmToggle(item.id, true)} accessibilityLabel={t("abbonamenti.mettiInPausa")} />
           </View>
         ))}
         {activeSubscriptions.length === 0 && (
@@ -186,11 +190,11 @@ export default function BudgetScreen() {
             <View style={styles.emptyState}>
               <MaterialCommunityIcons name="autorenew" size={40} color="#C7C7CC" />
               <Text style={styles.emptyTitle}>
-                {subscriptions.length === 0 ? "Nessun abbonamento" : "Nessun abbonamento attivo"}
+                {subscriptions.length === 0 ? t("abbonamenti.nessuno") : t("abbonamenti.nessunoAttivo")}
               </Text>
               {subscriptions.length === 0 && (
                 <Text style={styles.emptyHint}>
-                  Tocca il pulsante + in basso e scegli “Abbonamento” per aggiungerne uno
+                  {t("abbonamenti.nessunoTesto")}
                 </Text>
               )}
             </View>
@@ -198,7 +202,7 @@ export default function BudgetScreen() {
         )}
         {pausedSubscriptions.length > 0 && (
           <>
-            <Text variant="headlineMedium">Abbonamenti in pausa</Text>
+            <Text variant="headlineMedium">{t("abbonamenti.inPausa")}</Text>
             {pausedSubscriptions.map((item) => (
               <View key={item.id} style={styles.pausedRow}>
                 <View style={styles.pausedIconContainer}>
@@ -206,10 +210,10 @@ export default function BudgetScreen() {
                 </View>
                 <View style={styles.subInfo}>
                   <Text style={styles.subDesc}>{item.description}</Text>
-                  <Text style={styles.pausedMeta}>In pausa</Text>
+                  <Text style={styles.pausedMeta}>{t("abbonamenti.pausa")}</Text>
                 </View>
-                <Text style={styles.reactivateLink} onPress={()=>confirmToggle(item.id, false)}>Riattiva</Text>
-                <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} />
+                <Text style={styles.reactivateLink} onPress={()=>confirmToggle(item.id, false)}>{t("abbonamenti.riattiva")}</Text>
+                <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} accessibilityLabel={t("abbonamenti.eliminaTitolo")} />
               </View>
             ))}
           </>
@@ -217,21 +221,21 @@ export default function BudgetScreen() {
 
         {dueForRenewal.length > 0 && (
           <>
-            <Text variant="headlineMedium">Da rinnovare</Text>
+            <Text variant="headlineMedium">{t("abbonamenti.daRinnovare")}</Text>
             {dueForRenewal.map((item) => (
               <View key={item.id} style={styles.dueCard}>
                 <View style={styles.dueHeader}>
                   <View style={styles.subInfo}>
                     <Text style={styles.subDesc}>{item.description}</Text>
                     <View style={styles.dueBadgeRow}>
-                      <Text style={styles.dueBadge}>IN ATTESA</Text>
+                      <Text style={styles.dueBadge}>{t("abbonamenti.inAttesa")}</Text>
                       <Text style={styles.dueOverdue}>{getOverdueText(item.next_date)}</Text>
                     </View>
                   </View>
                   <Text style={styles.subAmount}>{importoIn(item.amount, item.currency)}</Text>
                 </View>
                 <Text style={styles.dueQuestion}>
-                  Il pagamento non è automatico: hai rinnovato per {mesi[new Date().getMonth()]}?
+                  {t("abbonamenti.domanda", { mese: new Date().toLocaleDateString(localeAttuale(), { month: "long" }) })}
                 </Text>
                 <View style={styles.dueActions}>
                   <Button
@@ -240,9 +244,9 @@ export default function BudgetScreen() {
                     loading={inPagamento === item.id}
                     disabled={inPagamento !== null}
                   >
-                    Ho rinnovato
+                    {t("abbonamenti.hoRinnovato")}
                   </Button>
-                  <Button mode="outlined" onPress={() => confirmToggle(item.id, true)}>Non rinnovo</Button>
+                  <Button mode="outlined" onPress={() => confirmToggle(item.id, true)}>{t("abbonamenti.nonRinnovo")}</Button>
                 </View>
               </View>
             ))}
@@ -254,7 +258,7 @@ export default function BudgetScreen() {
         visible={conferma !== null}
         title={conferma ? testiConferma[conferma.tipo].title : ""}
         message={conferma ? testiConferma[conferma.tipo].message : ""}
-        confirmLabel={conferma ? testiConferma[conferma.tipo].confirmLabel : "Conferma"}
+        confirmLabel={conferma ? testiConferma[conferma.tipo].confirmLabel : t("comune.conferma")}
         destructive={conferma ? testiConferma[conferma.tipo].destructive : false}
         onConfirm={eseguiConferma}
         onDismiss={() => setConferma(null)}
@@ -263,9 +267,9 @@ export default function BudgetScreen() {
       <Snackbar
         visible={loadError}
         onDismiss={() => setLoadError(false)}
-        action={{ label: "Riprova", onPress: loadSubscriptions }}
+        action={{ label: t("comune.riprova"), onPress: loadSubscriptions }}
       >
-        Impossibile caricare gli abbonamenti. Controlla la connessione.
+        {t("abbonamenti.erroreCaricamento")}
       </Snackbar>
     </View>
   );

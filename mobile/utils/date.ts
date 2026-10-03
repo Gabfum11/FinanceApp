@@ -1,3 +1,6 @@
+import i18n from "@/utils/i18n";
+import { localeDi, eLingua } from "@/utils/formato";
+
 // Date -> "YYYY-MM-DD", leggendo i componenti in locale
 export function toDateString(d: Date): string {
   const year = d.getFullYear();
@@ -18,12 +21,17 @@ export function formatDataSpesa(dateString: string): string {
   const oggi = new Date();
   const ieri = new Date();
   ieri.setDate(oggi.getDate() - 1);
-  if (data.toDateString() === oggi.toDateString()) return "Oggi";
-  if (data.toDateString() === ieri.toDateString()) return "Ieri";
-  return data.toLocaleDateString("it-IT", {
+  if (data.toDateString() === oggi.toDateString()) return i18n.t("comune.oggi");
+  if (data.toDateString() === ieri.toDateString()) return i18n.t("comune.ieri");
+  return data.toLocaleDateString(localeAttuale(), {
     day: "numeric",
     month: "short",
     //una spesa di un altro anno non deve sembrare di quest'anno
     ...(data.getFullYear() !== oggi.getFullYear() && { year: "numeric" }),
   });
+}
+
+//la lingua scelta dall'utente, per le date scritte per esteso
+export function localeAttuale(): string {
+  return localeDi(eLingua(i18n.language) ? i18n.language : "it");
 }

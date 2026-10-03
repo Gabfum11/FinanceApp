@@ -22,12 +22,6 @@ import { useTranslation } from "react-i18next";
 //il dispositivo non cambia mentre si usa l'app: non c'e' niente da ascoltare
 const nessunaIscrizione = () => () => {};
 
-const NOMI_VALUTE: Record<Valuta, string> = {
-    EUR: "Euro",
-    USD: "Dollaro statunitense",
-    GBP: "Sterlina britannica",
-    CHF: "Franco svizzero",
-};
 
 export default function ProfileScreen() {
     const router = useRouter();
@@ -57,6 +51,7 @@ export default function ProfileScreen() {
     const [showHomeDialog, setShowHomeDialog] = useState(false);
     const { valuta, impostaValuta, lingua, impostaLingua } = usePreferenze();
     const { t } = useTranslation();
+    const nomeValuta = (v: Valuta) => t(`valute.${v}`);
     const [showLinguaDialog, setShowLinguaDialog] = useState(false);
     const [showValutaDialog, setShowValutaDialog] = useState(false);
     const [valutaInCorso, setValutaInCorso] = useState(false);
@@ -76,15 +71,15 @@ export default function ProfileScreen() {
         setValutaInCorso(true);
         const esito = await impostaValuta(valutaNuova, convertiPassate);
         setValutaInCorso(false);
-        const nome = NOMI_VALUTE[valutaNuova];
+        const nome = nomeValuta(valutaNuova);
         setValutaNuova(null);
         if (esito === "ok") {
-            setMessaggio(convertiPassate ? `Valuta cambiata in ${nome}: spese e budget convertiti` : `Valuta cambiata in ${nome}`);
+            setMessaggio(convertiPassate ? t("profilo.valutaConvertita", { nome }) : t("profilo.valutaCambiata", { nome }));
         } else if (esito === "cambio") {
             //il server non ha cambiato niente: si puo' riprovare o scegliere l'altra opzione
-            setMessaggio("Tassi di cambio non disponibili ora: niente è stato modificato. Riprova tra poco.");
+            setMessaggio(t("profilo.valutaSenzaTassi"));
         } else {
-            setMessaggio("Impossibile cambiare la valuta. Controlla la connessione.");
+            setMessaggio(t("profilo.valutaErrore"));
         }
     }
 
@@ -92,9 +87,9 @@ export default function ProfileScreen() {
         setShowSupportDialog(false);
         const esito = await contattaSupporto();
         if (esito === "copiato") {
-            setMessaggio(`Nessuna app email trovata. Indirizzo copiato: ${SUPPORT_EMAIL}`);
+            setMessaggio(t("profilo.nessunaEmail", { email: SUPPORT_EMAIL }));
         } else if (esito === "errore") {
-            setMessaggio(`Scrivici a ${SUPPORT_EMAIL}`);
+            setMessaggio(t("profilo.scrivici", { email: SUPPORT_EMAIL }));
         }
     }
 
@@ -108,12 +103,12 @@ export default function ProfileScreen() {
         else if (esito === "spenti") setPromemoria(false);
         else if (esito === "permesso_negato") {
             setPromemoria(false);
-            setMessaggio("Per i promemoria servono le notifiche: attivale dalle impostazioni del telefono.");
+            setMessaggio(t("profilo.promemoriaPermesso"));
         } else {
             //errore: lo switch resta com'era, perché il server ha ancora lo stato precedente
             setMessaggio(attivi
-                ? "Non è stato possibile attivare i promemoria. Riprova."
-                : "Non è stato possibile disattivare i promemoria. Riprova.");
+                ? t("profilo.promemoriaErroreOn")
+                : t("profilo.promemoriaErroreOff"));
         }
     }
 
@@ -123,8 +118,8 @@ export default function ProfileScreen() {
         setEsportazione(null);
         if (risultato.esito === "vuoto") {
             setMessaggio(tipo === "expenses"
-                ? "Non ci sono spese da esportare."
-                : "Non ci sono abbonamenti da esportare.");
+                ? t("profilo.nienteSpese")
+                : t("profilo.nienteAbbonamenti"));
         } else if (risultato.esito === "errore") {
             setMessaggio(risultato.messaggio);
         }
@@ -170,8 +165,8 @@ export default function ProfileScreen() {
             if (!response.ok) {
                 setDeleteError(
                     response.status === 401
-                        ? "Password non corretta."
-                        : "Non è stato possibile eliminare l'account. Riprova."
+                        ? t("profilo.passwordErrata")
+                        : t("profilo.eliminaErrore")
                 );
                 return;
             }
@@ -180,7 +175,7 @@ export default function ProfileScreen() {
             await cancellaSessione();
             router.replace("/login");
         } catch {
-            setDeleteError("Errore di rete. Riprova.");
+            setDeleteError(t("errori.rete"));
         } finally {
             setIsDeleting(false);
         }
@@ -227,13 +222,14 @@ export default function ProfileScreen() {
         <View style={styles.container}>
             <PaginaScorrevole style={styles.content}>
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Profilo</Text>
+                    <Text style={styles.headerTitle}>{t("profilo.titolo")}</Text>
                     <IconButton
                         icon="logout"
                         mode="outlined"
                         iconColor={colors.danger}
                         onPress={() => setShowLogoutDialog(true)}
                         style={styles.logoutButton}
+                        accessibilityLabel={t("profilo.esci")}
                     />
                 </View>
 
@@ -246,12 +242,12 @@ export default function ProfileScreen() {
                         <Text style={styles.profileEmail}>{email}</Text>
                     </View>
                     <Button mode="outlined" onPress={() => router.push("/modify_profile")} style={styles.button}>
-                        Modifica
+                        {t("comune.modifica")}
                     </Button>
                     <View></View>
                 </View>
 
-                <Text style={styles.sectionLabel}>APP</Text>
+                <Text style={styles.sectionLabel}>{t("profilo.sezioneApp")}</Text>
                 <View style={styles.sectionCard}>
                     {/* in Expo Go il modulo delle notifiche non esiste: uno switch
                         che non puo' funzionare e' peggio di una voce assente */}
@@ -260,9 +256,9 @@ export default function ProfileScreen() {
                     <View style={styles.row}>
                         <MaterialCommunityIcons name="bell-outline" size={20} color={colors.accent} />
                         <View style={styles.rowTextGroup}>
-                            <Text style={styles.rowLabelInGroup}>Promemoria abbonamenti</Text>
+                            <Text style={styles.rowLabelInGroup}>{t("profilo.promemoria")}</Text>
                             <Text style={styles.rowHint}>
-                                {promemoria ? "Il giorno prima del rinnovo, alle 9:00" : "Disattivati"}
+                                {promemoria ? t("profilo.promemoriaSi") : t("profilo.promemoriaNo")}
                             </Text>
                         </View>
                         <Switch
@@ -277,8 +273,8 @@ export default function ProfileScreen() {
                     <Pressable style={styles.row} onPress={() => setShowValutaDialog(true)}>
                         <MaterialCommunityIcons name="cash-multiple" size={20} color={colors.primary} />
                         <View style={styles.rowTextGroup}>
-                            <Text style={styles.rowLabelInGroup}>Valuta</Text>
-                            <Text style={styles.rowHint}>{NOMI_VALUTE[valuta]} ({simbolo(valuta)})</Text>
+                            <Text style={styles.rowLabelInGroup}>{t("profilo.valuta")}</Text>
+                            <Text style={styles.rowHint}>{nomeValuta(valuta)} ({simbolo(valuta)})</Text>
                         </View>
                         <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
                     </Pressable>
@@ -293,7 +289,7 @@ export default function ProfileScreen() {
                     </Pressable>
                 </View>
 
-                <Text style={styles.sectionLabel}>DATI</Text>
+                <Text style={styles.sectionLabel}>{t("profilo.sezioneDati")}</Text>
                 <View style={styles.sectionCard}>
                     <Pressable
                         style={styles.row}
@@ -301,7 +297,7 @@ export default function ProfileScreen() {
                         disabled={esportazione !== null}
                     >
                         <MaterialCommunityIcons name="file-download-outline" size={20} color={colors.primary} />
-                        <Text style={styles.rowLabel}>Esporta spese</Text>
+                        <Text style={styles.rowLabel}>{t("profilo.esportaSpese")}</Text>
                         {esportazione === "expenses"
                             ? <ActivityIndicator size={18} />
                             : <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />}
@@ -313,20 +309,20 @@ export default function ProfileScreen() {
                         disabled={esportazione !== null}
                     >
                         <MaterialCommunityIcons name="file-download-outline" size={20} color={colors.primary} />
-                        <Text style={styles.rowLabel}>Esporta abbonamenti</Text>
+                        <Text style={styles.rowLabel}>{t("profilo.esportaAbbonamenti")}</Text>
                         {esportazione === "subscriptions"
                             ? <ActivityIndicator size={18} />
                             : <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />}
                     </Pressable>
                 </View>
 
-                <Text style={styles.sectionLabel}>SUPPORTO</Text>
+                <Text style={styles.sectionLabel}>{t("profilo.sezioneSupporto")}</Text>
                 <View style={styles.sectionCard}>
                     {aggiungibile && (
                         <>
                             <Pressable style={styles.row} onPress={() => setShowHomeDialog(true)}>
                                 <MaterialCommunityIcons name="cellphone-arrow-down" size={20} color={colors.primary} />
-                                <Text style={styles.rowLabel}>Aggiungi alla Home</Text>
+                                <Text style={styles.rowLabel}>{t("profilo.aggiungiHome")}</Text>
                                 <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
                             </Pressable>
                             <View style={styles.rowDivider} />
@@ -334,19 +330,19 @@ export default function ProfileScreen() {
                     )}
                     <Pressable style={styles.row} onPress={() => router.navigate({ pathname: "/(tabs)/home", params: { tour: "1" } })}>
                         <MaterialCommunityIcons name="school-outline" size={20} color={colors.primary} />
-                        <Text style={styles.rowLabel}>Rivedi il tutorial</Text>
+                        <Text style={styles.rowLabel}>{t("profilo.rivediTutorial")}</Text>
                         <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
                     </Pressable>
                     <View style={styles.rowDivider} />
                     <Pressable style={styles.row} onPress={() => setShowSupportDialog(true)}>
                         <MaterialCommunityIcons name="help-circle-outline" size={20} color={colors.primary} />
-                        <Text style={styles.rowLabel}>Contattaci</Text>
+                        <Text style={styles.rowLabel}>{t("profilo.contattaci")}</Text>
                         <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
                     </Pressable>
                     <View style={styles.rowDivider} />
                     <Pressable style={styles.row} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
                         <MaterialCommunityIcons name="shield-lock-outline" size={20} color={colors.primary} />
-                        <Text style={styles.rowLabel}>Privacy policy</Text>
+                        <Text style={styles.rowLabel}>{t("profilo.privacy")}</Text>
                         <MaterialCommunityIcons name="open-in-new" size={20} color={colors.chevron} />
                     </Pressable>
                 </View>
@@ -360,7 +356,7 @@ export default function ProfileScreen() {
                     disabled={isLoggingOutAll}
                     style={styles.logoutAllButton}
                 >
-                    Disconnetti tutti i dispositivi
+                    {t("profilo.disconnettiTutti")}
                 </Button>
 
                 <Button
@@ -369,21 +365,21 @@ export default function ProfileScreen() {
                     onPress={() => setShowDeleteDialog(true)}
                     style={styles.deleteButton}
                 >
-                    Elimina account
+                    {t("profilo.eliminaAccount")}
                 </Button>
 
             </PaginaScorrevole>
 
             <Portal>
                 <Dialog visible={showValutaDialog} onDismiss={() => setShowValutaDialog(false)}>
-                    <Dialog.Title>Valuta</Dialog.Title>
+                    <Dialog.Title>{t("profilo.valuta")}</Dialog.Title>
                     <Dialog.Content>
                         <RadioButton.Group onValueChange={scegliValuta} value={valuta}>
                             {VALUTE.map((v) => (
                                 <RadioButton.Item
                                     key={v}
                                     value={v}
-                                    label={`${NOMI_VALUTE[v]} (${simbolo(v)})`}
+                                    label={`${nomeValuta(v)} (${simbolo(v)})`}
                                 />
                             ))}
                         </RadioButton.Group>
@@ -415,7 +411,7 @@ export default function ProfileScreen() {
             <Portal>
                 <Dialog visible={valutaNuova !== null} onDismiss={() => !valutaInCorso && setValutaNuova(null)}>
                     <Dialog.Title>
-                        Passare a {valutaNuova ? `${NOMI_VALUTE[valutaNuova]} (${simbolo(valutaNuova)})` : ""}?
+                        {valutaNuova ? t("profilo.passareA", { valuta: `${nomeValuta(valutaNuova)} (${simbolo(valutaNuova)})` }) : ""}
                     </Dialog.Title>
                     <Dialog.Content>
                         <RadioButton.Group
@@ -424,26 +420,26 @@ export default function ProfileScreen() {
                         >
                             <RadioButton.Item
                                 value="converti"
-                                label="Converti anche le spese passate"
+                                label={t("profilo.converti")}
                                 disabled={valutaInCorso}
                             />
                             <Text style={{ marginLeft: 16, marginBottom: 8, color: colors.textMuted }}>
-                                Ogni spesa con il cambio del suo giorno, il budget con quello di oggi. Le cifre originali restano salvate.
+                                {t("profilo.convertiTesto")}
                             </Text>
                             <RadioButton.Item
                                 value="mantieni"
-                                label="Solo da adesso in poi"
+                                label={t("profilo.mantieni")}
                                 disabled={valutaInCorso}
                             />
                             <Text style={{ marginLeft: 16, color: colors.textMuted }}>
-                                Gli importi registrati restano gli stessi numeri, con il nuovo simbolo.
+                                {t("profilo.mantieniTesto")}
                             </Text>
                         </RadioButton.Group>
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <Button onPress={() => setValutaNuova(null)} disabled={valutaInCorso}>Annulla</Button>
+                        <Button onPress={() => setValutaNuova(null)} disabled={valutaInCorso}>{t("comune.annulla")}</Button>
                         <Button mode="contained" onPress={confermaValuta} loading={valutaInCorso} disabled={valutaInCorso}>
-                            Cambia valuta
+                            {t("profilo.cambiaValuta")}
                         </Button>
                     </Dialog.Actions>
                 </Dialog>
@@ -452,26 +448,26 @@ export default function ProfileScreen() {
             {/* un solo pulsante: non c'e' niente da confermare, solo istruzioni */}
             <Portal>
                 <Dialog visible={showHomeDialog} onDismiss={() => setShowHomeDialog(false)}>
-                    <Dialog.Title>Aggiungi TrackIt alla Home</Dialog.Title>
+                    <Dialog.Title>{t("profilo.homeTitolo")}</Dialog.Title>
                     <Dialog.Content>
-                        <Text>1. Tocca Condividi nella barra di Safari.</Text>
-                        <Text>2. Scegli «Aggiungi alla schermata Home».</Text>
+                        <Text>{t("profilo.homePasso1")}</Text>
+                        <Text>{t("profilo.homePasso2")}</Text>
                         {/* l'icona ha dati suoi, separati da Safari: la sessione non passa */}
                         <Text style={{ marginTop: 12, color: colors.textMuted }}>
-                            Dall&apos;icona dovrai accedere di nuovo: per iPhone è un&apos;app separata da Safari.
+                            {t("profilo.homeNota")}
                         </Text>
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <Button onPress={() => setShowHomeDialog(false)}>Ho capito</Button>
+                        <Button onPress={() => setShowHomeDialog(false)}>{t("invitoHome.hoCapito")}</Button>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
 
             <ConfirmDialog
                 visible={showLogoutDialog}
-                title="Esci"
-                message="Vuoi uscire dal tuo account su questo dispositivo?"
-                confirmLabel="Esci"
+                title={t("profilo.esciTitolo")}
+                message={t("profilo.esciTesto")}
+                confirmLabel={t("profilo.esciTitolo")}
                 destructive
                 onConfirm={handleLogout}
                 onDismiss={() => setShowLogoutDialog(false)}
@@ -479,9 +475,9 @@ export default function ProfileScreen() {
 
             <ConfirmDialog
                 visible={showLogoutAllDialog}
-                title="Disconnetti tutti i dispositivi"
-                message="Dovrai accedere di nuovo su ogni dispositivo, questo compreso. Usalo se hai perso il telefono."
-                confirmLabel="Disconnetti"
+                title={t("profilo.disconnettiTutti")}
+                message={t("profilo.disconnettiTesto")}
+                confirmLabel={t("profilo.disconnetti")}
                 destructive
                 onConfirm={handleLogoutAll}
                 onDismiss={() => setShowLogoutAllDialog(false)}
@@ -489,15 +485,14 @@ export default function ProfileScreen() {
 
             <Portal>
                 <Dialog visible={showDeleteDialog} onDismiss={closeDeleteDialog} style={styles.dialog}>
-                    <Dialog.Title style={styles.dialogTitle}>Elimina account</Dialog.Title>
+                    <Dialog.Title style={styles.dialogTitle}>{t("profilo.eliminaAccount")}</Dialog.Title>
                     <Dialog.Content>
                         <Text style={styles.deleteWarning}>
-                            Verranno eliminati definitivamente il tuo profilo, le tue spese e i tuoi
-                            abbonamenti. L'operazione non è reversibile.
+                            {t("profilo.eliminaTesto")}
                         </Text>
                         {hasPassword ? (
                             <TextInput
-                                label="Conferma la password"
+                                label={t("profilo.confermaPassword")}
                                 value={password}
                                 onChangeText={setPassword}
                                 secureTextEntry
@@ -506,14 +501,14 @@ export default function ProfileScreen() {
                             />
                         ) : (
                             <Text style={styles.deleteWarning}>
-                                Il tuo account è collegato a Google.
+                                {t("profilo.collegatoGoogle")}
                             </Text>
                         )}
                         {deleteError && <Text style={styles.deleteError}>{deleteError}</Text>}
                     </Dialog.Content>
                     <Dialog.Actions>
                         <Button onPress={closeDeleteDialog} disabled={isDeleting}>
-                            Annulla
+                            {t("comune.annulla")}
                         </Button>
                         <Button
                             onPress={handleDeleteAccount}
@@ -521,7 +516,7 @@ export default function ProfileScreen() {
                             disabled={isDeleting || (hasPassword && password.length === 0)}
                             loading={isDeleting}
                         >
-                            Elimina
+                            {t("comune.elimina")}
                         </Button>
                     </Dialog.Actions>
                 </Dialog>
@@ -531,19 +526,19 @@ export default function ProfileScreen() {
                     onDismiss={() => setShowSupportDialog(false)}
                     style={styles.dialog}
                 >
-                    <Dialog.Title style={styles.dialogTitle}>Feedback e supporto</Dialog.Title>
+                    <Dialog.Title style={styles.dialogTitle}>{t("profilo.supportoTitolo")}</Dialog.Title>
                     <Dialog.Content>
                         <Text style={styles.dialogText}>
-                            Contattaci per qualsiasi domanda all'indirizzo
+                            {t("profilo.supportoTesto")}
                         </Text>
                         <Text style={styles.supportEmail}>{SUPPORT_EMAIL}</Text>
                     </Dialog.Content>
                     <Dialog.Actions>
                         <Button onPress={() => setShowSupportDialog(false)} textColor={colors.textMuted}>
-                            Annulla
+                            {t("comune.annulla")}
                         </Button>
                         <Button onPress={handleContatta} textColor={colors.primary}>
-                            Manda email
+                            {t("profilo.mandaEmail")}
                         </Button>
                     </Dialog.Actions>
                 </Dialog>

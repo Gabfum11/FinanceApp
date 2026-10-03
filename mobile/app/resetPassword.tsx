@@ -6,13 +6,15 @@ import { router, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { styles } from "@/styles/reset-password.styles";
 import { messaggioErrore } from "@/utils/messaggioErrore";
+import { useTranslation } from "react-i18next";
 const num=[0,1,2,3,4,5]
 const formatTime =(totseconds:number)=>{
     const minutes=Math.floor(totseconds/60);
     const seconds=totseconds%60;
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
-export default function reset_password(){
+export default function ResetPassword(){
+   const { t } = useTranslation();
    const [email,setEmail]=useState("");
    const [step, setStep]=useState<"email" | "typing" | "invalid" | "correct" | "saved">("email");
    const [code,setCode]=useState("")
@@ -47,7 +49,7 @@ export default function reset_password(){
             })
             if(!response.ok)
             {
-               setErrorMessage(await messaggioErrore(response, "Codice non valido"))
+               setErrorMessage(await messaggioErrore(response, t("codice.nonValido")))
                console.log("Codice errato");
                setSnackbarVisible(true)
                setStep("invalid")
@@ -72,7 +74,7 @@ export default function reset_password(){
                 body: JSON.stringify({email, purpose:"password_reset"})
             })
             if(!response.ok) {
-                setErrorMessage(await messaggioErrore(response, "Errore nell'invio del codice"))
+                setErrorMessage(await messaggioErrore(response, t("codice.erroreInvio")))
                 setSnackbarVisible(true)
                 console.log("errore nell'invio del nuovo codice")
                 return;
@@ -97,7 +99,7 @@ export default function reset_password(){
                  body: JSON.stringify({email, purpose:"password_reset"})
           })
           if(!response.ok) {
-            setErrorMessage(await messaggioErrore(response, "Errore nell'invio del codice"))
+            setErrorMessage(await messaggioErrore(response, t("codice.erroreInvio")))
             setSnackbarVisible(true)
                  console.log("errore nell'invio del nuovo codice")
                  return;
@@ -112,7 +114,7 @@ export default function reset_password(){
    }
    async function handleSavePassword() {
         if (new_password.length < 8) {
-            setErrorMessage("La password deve avere almeno 8 caratteri")
+            setErrorMessage(t("reset.troppoCorta"))
             setSnackbarVisible(true)
             return;
         }
@@ -128,7 +130,7 @@ export default function reset_password(){
                 body: JSON.stringify({new_password, purpose:"password_reset"})
             })
             if(!response.ok) {
-                setErrorMessage(await messaggioErrore(response, "Errore nel salvataggio della password"))
+                setErrorMessage(await messaggioErrore(response, t("reset.erroreSalvataggio")))
                 setSnackbarVisible(true)
                  console.log("errore nel salvataggio della password")
                  return;
@@ -156,10 +158,10 @@ export default function reset_password(){
             <View style={styles.iconContainer}>
                  <MaterialCommunityIcons name="lock-outline" size={32} color="#F5A623"/>
             </View>
-          <Text style={styles.title} variant="titleMedium">Password dimenticata?</Text>
-          <Text style={styles.subtitle} variant="bodyMedium">Inserisci l'email dell'account: ti mando un codice da inserire per impostarne una nuova</Text>
+          <Text style={styles.title} variant="titleMedium">{t("reset.titolo")}</Text>
+          <Text style={styles.subtitle} variant="bodyMedium">{t("reset.spiegazione")}</Text>
           <TextInput
-             label="Email"
+             label={t("comune.email")}
              value={email}
              onChangeText={setEmail}
              autoCapitalize="none"
@@ -175,15 +177,15 @@ export default function reset_password(){
           labelStyle={styles.buttonLabel}
           loading={loading}
           disabled={loading}
-          >Invia codice</Button>
+          >{t("reset.inviaCodice")}</Button>
       </>
       ): step==="typing" ? (
       <>
             <View style={styles.iconContainer}>
                 <MaterialCommunityIcons name="email-outline" size={32} color="#2ECC71"/>
             </View>
-            <Text style={styles.title} variant="titleMedium">Controlla la posta</Text>
-            <Text style={styles.subtitle} variant="bodyMedium">Ho inviato un codice a 6 cifre a {email}</Text>
+            <Text style={styles.title} variant="titleMedium">{t("codice.controllaPosta")}</Text>
+            <Text style={styles.subtitle} variant="bodyMedium">{t("codice.inviato", { email })}</Text>
             <View style={styles.codeRow}>
                 {num.map((index)=>(
                     <View
@@ -203,11 +205,11 @@ export default function reset_password(){
                 autoFocus
                 style={styles.hiddenInput}
             />
-            <Text>Non l'hai ricevuto?</Text>
+            <Text>{t("codice.nonRicevuto")}</Text>
                 {secondsleft>0  ?(
-                    <Text style={styles.remainingTime}>Riprova tra {formatTime(secondsleft)}</Text>
+                    <Text style={styles.remainingTime}>{t("codice.riprovaTra", { tempo: formatTime(secondsleft) })}</Text>
                     ):(
-                        <Text style={styles.resendCodeText} onPress={loading ? undefined :handleResendCode}>{loading ? "Invio in corso..." : "Invia nuovo codice"}</Text>
+                        <Text style={styles.resendCodeText} onPress={loading ? undefined :handleResendCode}>{loading ? t("codice.invioInCorso") : t("codice.inviaNuovo")}</Text>
                     )}
             <Button
                 style={styles.button}
@@ -215,7 +217,7 @@ export default function reset_password(){
                     loading={loading}
                     disabled={loading}
                     onPress={handleVerify}>
-                Verifica
+                {t("codice.verifica")}
             </Button>
       </>
       ):step=="invalid" ?(
@@ -223,18 +225,18 @@ export default function reset_password(){
             <View style={styles.erroriconContainer}>
                 <MaterialCommunityIcons name="alert-circle-outline" size={32} color="#E74C3C" />
             </View>
-            <Text style={styles.title} variant="titleMedium">Codice non valido</Text>
-            <Text style={styles.subtitle} variant="bodyMedium">Controlla le cifre che hai inserito</Text>
-            <Button style={styles.button} onPress={()=>setStep("typing")}>Riprova</Button>
+            <Text style={styles.title} variant="titleMedium">{t("codice.nonValido")}</Text>
+            <Text style={styles.subtitle} variant="bodyMedium">{t("codice.controllaCifre")}</Text>
+            <Button style={styles.button} onPress={()=>setStep("typing")}>{t("comune.riprova")}</Button>
         </>
 
       ): step=="correct" ?(
         <>
             <View>
-                <Text style={styles.title} variant="titleMedium">Scegline una nuova</Text>
-                <Text style={styles.subtitle} variant="bodyMedium">Almeno 8 caratteri</Text>
+                <Text style={styles.title} variant="titleMedium">{t("reset.nuova")}</Text>
+                <Text style={styles.subtitle} variant="bodyMedium">{t("reset.minimo")}</Text>
                 <TextInput
-                    label="Password"
+                    label={t("comune.password")}
                     value={new_password}
                     onChangeText={setnew_password}
                     secureTextEntry={!showPassword} //nasconde i caratteri(mostra pallini o asteriscghi)
@@ -256,7 +258,7 @@ export default function reset_password(){
                     loading={loading}
                     disabled={loading}
                 >
-                    Salva password
+                    {t("reset.salva")}
                 </Button>
             </View>
         </>
@@ -266,15 +268,15 @@ export default function reset_password(){
             <View style={styles.successIconContainer}>
                 <MaterialCommunityIcons name="check-bold" size={32} color="white"/>
             </View>
-            <Text style={styles.title} variant="titleMedium">Password Aggiornata</Text>
-            <Text style={styles.subtitle} variant="bodyMedium">Puoi accedere subito con la nuova password</Text>
+            <Text style={styles.title} variant="titleMedium">{t("reset.aggiornata")}</Text>
+            <Text style={styles.subtitle} variant="bodyMedium">{t("reset.accediSubito")}</Text>
             <Button
                 mode="contained"
                 style={styles.button}
                 onPress={()=>router.replace("/login")}
                 labelStyle={styles.buttonLabel}
             >
-                Vai all'accesso
+                {t("reset.vaiAccesso")}
             </Button>
          </View>
         </>

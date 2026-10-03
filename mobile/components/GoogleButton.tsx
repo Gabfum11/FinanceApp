@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { styles } from "@/styles/google-button.styles";
@@ -34,13 +35,15 @@ type Props = {
   label?: string;
 };
 
-export function GoogleButton({ onPress, disabled = false, label = "Continua con Google" }: Props) {
+export function GoogleButton({ onPress, disabled = false, label }: Props) {
+  const { t } = useTranslation();
+  const testo = label ?? t("google.continua");
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={testo}
       accessibilityState={{ disabled }}
       style={({ pressed }) => [
         styles.button,
@@ -50,7 +53,7 @@ export function GoogleButton({ onPress, disabled = false, label = "Continua con 
     >
       <GoogleLogo />
       {/* il testo resta centrato nel pulsante, con il logo ancorato a sinistra */}
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label}>{testo}</Text>
       <View style={styles.spacer} />
     </Pressable>
   );

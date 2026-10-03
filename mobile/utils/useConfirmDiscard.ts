@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import { useNavigation } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
@@ -15,6 +16,7 @@ type AzioneBloccata = Parameters<Parameters<typeof usePreventRemove>[1]>[0]["dat
  */
 export function useConfirmDiscard(modificato: boolean) {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const [azioneInAttesa, setAzioneInAttesa] = useState<AzioneBloccata | null>(null);
   //un ref e non uno stato: dopo il salvataggio si esce subito, senza aspettare un nuovo render
   const uscitaConsentita = useRef(false);
@@ -30,10 +32,10 @@ export function useConfirmDiscard(modificato: boolean) {
     },
     //da passare cosi' com'e' a ConfirmDialog: <ConfirmDialog {...dialogo} />
     dialogo: {
-      title: "Scartare le modifiche?",
-      message: "Le modifiche che hai fatto non sono state salvate e andranno perse.",
-      confirmLabel: "Scarta",
-      cancelLabel: "Continua a modificare",
+      title: t("scarta.titolo"),
+      message: t("scarta.testo"),
+      confirmLabel: t("scarta.conferma"),
+      cancelLabel: t("scarta.annulla"),
       destructive: true,
       visible: azioneInAttesa !== null,
       onConfirm: () => {

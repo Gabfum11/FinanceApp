@@ -21,6 +21,8 @@ import { GoogleButton } from "@/components/GoogleButton";
 import { useGoogleLogin } from "@/utils/useGoogleLogin";
 import { segnaPresentazioneVista } from "@/utils/presentazione";
 import { usePreferenze } from "@/utils/preferenze";
+import { localeDi, type Lingua } from "@/utils/formato";
+import { useTranslation } from "react-i18next";
 import { SelettoreLingua } from "@/components/SelettoreLingua";
 import { colors } from "@/styles/tokens";
 import { styles } from "@/styles/presentazione.styles";
@@ -29,33 +31,33 @@ const LOGO = require("../assets/images/logo/trackit-icon-rounded-180.png");
 const PAGINE = [0, 1, 2, 3, 4];
 //nel browser non ci sono notifiche push: i testi non devono promettere avvisi
 const SUL_WEB = Platform.OS === "web";
-const GIORNI = ["L", "M", "M", "G", "V", "S", "D"];
 //importi di esempio della settimana: servono solo a far vedere il grafico
 const SPESE_SETTIMANA = [12, 0, 25, 8, 34, 18, 0];
 
 //date vere invece di scritte fisse: "1 mar - 28 mar" letto a ottobre
 //farebbe sembrare l'illustrazione vecchia
-function ieri(): string {
+function ieri(lingua: Lingua): string {
   const d = new Date();
   d.setDate(d.getDate() - 1);
-  return d.toLocaleDateString("it-IT");
+  return d.toLocaleDateString(localeDi(lingua));
 }
 
-function periodoBudget(): string {
+function periodoBudget(lingua: Lingua): string {
   //esempio con il mese che riparte il 27, come per chi prende lo stipendio
   const oggi = new Date();
   const inizio = new Date(oggi.getFullYear(), oggi.getMonth() - (oggi.getDate() < 27 ? 1 : 0), 27);
   const fine = new Date(inizio.getFullYear(), inizio.getMonth() + 1, 26);
   const opzioni: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
-  return `${inizio.toLocaleDateString("it-IT", opzioni)} - ${fine.toLocaleDateString("it-IT", opzioni)}`;
+  return `${inizio.toLocaleDateString(localeDi(lingua), opzioni)} - ${fine.toLocaleDateString(localeDi(lingua), opzioni)}`;
 }
 
 function Punti({ attivo, scuri = false, centrati = false }: { attivo: number; scuri?: boolean; centrati?: boolean }) {
+  const { t } = useTranslation();
   return (
     <View
       style={[styles.punti, centrati && styles.puntiCentrati]}
       accessible
-      accessibilityLabel={`Pagina ${attivo + 1} di ${PAGINE.length}`}
+      accessibilityLabel={t("presentazione.pagina", { n: attivo + 1, totale: PAGINE.length })}
     >
       {PAGINE.map((i) => (
         <View key={i} style={[styles.punto, scuri && styles.puntoScuro, i === attivo && styles.puntoAttivo]} />
@@ -65,24 +67,25 @@ function Punti({ attivo, scuri = false, centrati = false }: { attivo: number; sc
 }
 
 function IllustrazioneSpese() {
-  const { importo } = usePreferenze();
+  const { importo, lingua } = usePreferenze();
+  const { t } = useTranslation();
   return (
     <>
       <View style={styles.fumetto}>
-        <Text style={styles.fumettoTesto}>40 euro supermercato ieri</Text>
+        <Text style={styles.fumettoTesto}>{t("presentazione.p2.esempio")}</Text>
       </View>
       <View style={styles.esito}>
         <View style={styles.esitoTesta}>
           <MaterialCommunityIcons name="check-circle" size={20} color={colors.primary} />
-          <Text style={styles.esitoTitolo}>Spesa aggiunta</Text>
+          <Text style={styles.esitoTitolo}>{t("presentazione.p2.aggiunta")}</Text>
         </View>
         <View style={styles.esitoCorpo}>
           <View style={styles.esitoIcona}>
             <MaterialCommunityIcons name="silverware-fork-knife" size={20} color={colors.primaryDark} />
           </View>
           <View style={styles.esitoInfo}>
-            <Text style={styles.esitoDescrizione}>Supermercato</Text>
-            <Text style={styles.esitoMeta}>Spesa alimentare · {ieri()}</Text>
+            <Text style={styles.esitoDescrizione}>{t("presentazione.p2.descrizione")}</Text>
+            <Text style={styles.esitoMeta}>{t("presentazione.p2.categoria")} · {ieri(lingua)}</Text>
           </View>
           <Text style={styles.esitoImporto}>{importo(40)}</Text>
         </View>
@@ -92,7 +95,8 @@ function IllustrazioneSpese() {
 }
 
 function IllustrazioneBudget() {
-  const { importo } = usePreferenze();
+  const { importo, lingua } = usePreferenze();
+  const { t } = useTranslation();
   const oggi = (new Date().getDay() + 6) % 7; //lunedi' = 0, come le etichette
   const scala = Math.max(...SPESE_SETTIMANA) * 1.3;
   return (
@@ -100,23 +104,23 @@ function IllustrazioneBudget() {
       <View style={styles.budgetCard}>
         <View style={styles.budgetCerchio} />
         <View style={styles.budgetRiga}>
-          <Text style={styles.budgetEtichetta}>LIBERO QUESTO MESE</Text>
-          <Text style={styles.budgetPeriodo}>{periodoBudget()}</Text>
+          <Text style={styles.budgetEtichetta}>{t("presentazione.p3.libero")}</Text>
+          <Text style={styles.budgetPeriodo}>{periodoBudget(lingua)}</Text>
         </View>
         <View style={styles.budgetImporti}>
           <Text style={styles.budgetResto}>{importo(412.5)}</Text>
-          <Text style={styles.budgetTotale}>di {importo(800)}</Text>
+          <Text style={styles.budgetTotale}>{t("presentazione.p3.di", { totale: importo(800) })}</Text>
         </View>
         <View style={styles.barra}>
           <View style={styles.barraPiena} />
         </View>
         <View style={styles.legenda}>
           <View style={styles.legendaPunto} />
-          <Text style={styles.legendaTesto}>Speso {importo(387.5)}</Text>
+          <Text style={styles.legendaTesto}>{t("presentazione.p3.speso", { importo: importo(387.5) })}</Text>
         </View>
       </View>
       <View style={styles.settimana}>
-        <Text style={styles.settimanaTitolo}>Spese settimanali</Text>
+        <Text style={styles.settimanaTitolo}>{t("presentazione.p3.settimana")}</Text>
         <View style={styles.colonne}>
           {SPESE_SETTIMANA.map((valore, i) => (
             <View key={i} style={styles.colonna}>
@@ -134,7 +138,7 @@ function IllustrazioneBudget() {
           ))}
         </View>
         <View style={styles.giorni}>
-          {GIORNI.map((g, i) => (
+          {t("comune.giorniBrevi").split(",").map((g, i) => (
             <Text key={i} style={styles.giorno}>{g}</Text>
           ))}
         </View>
@@ -160,6 +164,7 @@ function Abbonamento({ nome, meta, importo }: { nome: string; meta: string; impo
 
 function IllustrazioneAbbonamenti() {
   const { importo } = usePreferenze();
+  const { t } = useTranslation();
   return (
     <>
       {!SUL_WEB && (
@@ -167,14 +172,14 @@ function IllustrazioneAbbonamenti() {
           <Image source={LOGO} style={styles.notificaIcona} />
           <View style={{ flex: 1 }}>
             <Text style={styles.notificaApp}>TrackIt</Text>
-            <Text style={styles.notificaTitolo}>Palestra si rinnova domani</Text>
-            <Text style={styles.notificaTesto}>{importo(39.9)} · mensile</Text>
+            <Text style={styles.notificaTitolo}>{t("presentazione.p4.notifica")}</Text>
+            <Text style={styles.notificaTesto}>{importo(39.9)} · {t("comune.mensile")}</Text>
           </View>
         </View>
       )}
-      <Text style={styles.sezione}>Abbonamenti attivi</Text>
-      <Abbonamento nome="Palestra" meta="Palestra · Scade domani" importo={importo(39.9)} />
-      <Abbonamento nome="Netflix" meta="Abbonamenti digitali · Scade tra 9 giorni" importo={importo(13.99)} />
+      <Text style={styles.sezione}>{t("presentazione.p4.attivi")}</Text>
+      <Abbonamento nome={t("presentazione.p4.palestra")} meta={t("presentazione.p4.palestraMeta")} importo={importo(39.9)} />
+      <Abbonamento nome="Netflix" meta={t("presentazione.p4.netflixMeta")} importo={importo(13.99)} />
     </>
   );
 }
@@ -189,6 +194,9 @@ export default function Presentazione() {
   const lista = useRef<FlatList<number>>(null);
   const [pagina, setPagina] = useState(0);
   const [errore, setErrore] = useState("");
+  const { t } = useTranslation();
+  //le pagine sono elementi di una lista: senza, cambiando lingua resterebbero com'erano
+  const { lingua } = usePreferenze();
 
   //da qui in poi l'utente ha scelto: la presentazione non ricompare
   const esci = useCallback(
@@ -238,10 +246,10 @@ export default function Presentazione() {
           <IconButton
             icon="arrow-left"
             onPress={() => vaiA(indice - 1)}
-            accessibilityLabel="Indietro"
+            accessibilityLabel={t("comune.indietro")}
             style={styles.indietro}
           />
-          {indice < PAGINE.length - 1 && <Button onPress={() => vaiA(PAGINE.length - 1)}>Salta</Button>}
+          {indice < PAGINE.length - 1 && <Button onPress={() => vaiA(PAGINE.length - 1)}>{t("comune.salta")}</Button>}
         </View>
         {children}
         {piede}
@@ -252,7 +260,7 @@ export default function Presentazione() {
   function avanti(indice: number) {
     return (
       <Button mode="contained" onPress={() => vaiA(indice + 1)} labelStyle={styles.buttonLabel}>
-        Avanti
+        {t("comune.avanti")}
       </Button>
     );
   }
@@ -284,14 +292,14 @@ export default function Presentazione() {
               </View>
               <Text style={styles.nomeApp}>TrackIt</Text>
             </View>
-            <Text style={styles.titoloScuro}>Sai dove finiscono i tuoi soldi?</Text>
-            <Text style={styles.testoScuro}>TrackIt te lo dice, senza fogli Excel né fatica.</Text>
+            <Text style={styles.titoloScuro}>{t("presentazione.p1.titolo")}</Text>
+            <Text style={styles.testoScuro}>{t("presentazione.p1.testo")}</Text>
             <Punti attivo={0} scuri />
             <Button mode="contained" onPress={() => vaiA(1)} labelStyle={styles.buttonLabel}>
-              Inizia
+              {t("presentazione.p1.inizia")}
             </Button>
             <Button textColor={colors.textOnPrimary} onPress={() => esci("/login")} style={{ marginTop: 8 }}>
-              Ho già un account
+              {t("presentazione.p1.hoAccount")}
             </Button>
           </ScrollView>
         );
@@ -303,7 +311,7 @@ export default function Presentazione() {
             <View style={styles.illustrazione}>
               <IllustrazioneSpese />
             </View>
-            {testi("Scrivi la spesa come la diresti", "Al resto pensa TrackIt: importo, data e categoria.")}
+            {testi(t("presentazione.p2.titolo"), t("presentazione.p2.testo"))}
             </>,
             <><Punti attivo={1} />{avanti(1)}</>
           )
@@ -316,7 +324,7 @@ export default function Presentazione() {
             <View style={styles.illustrazione}>
               <IllustrazioneBudget />
             </View>
-            {testi("Sai sempre quanto ti resta", "Ogni spesa aggiorna il budget del mese in tempo reale.")}
+            {testi(t("presentazione.p3.titolo"), t("presentazione.p3.testo"))}
             </>,
             <><Punti attivo={2} />{avanti(2)}</>
           )
@@ -329,12 +337,7 @@ export default function Presentazione() {
             <View style={styles.illustrazione}>
               <IllustrazioneAbbonamenti />
             </View>
-            {testi(
-              "Niente rinnovi a sorpresa",
-              SUL_WEB
-                ? "Ogni rinnovo si registra da solo. Disdici in tempo ciò che non usi più."
-                : "Ti avvisiamo il giorno prima. Disdici in tempo ciò che non usi più."
-            )}
+            {testi(t("presentazione.p4.titolo"), t(SUL_WEB ? "presentazione.p4.testoWeb" : "presentazione.p4.testo"))}
             </>,
             <><Punti attivo={3} />{avanti(3)}</>
           )
@@ -345,37 +348,35 @@ export default function Presentazione() {
           <View style={styles.finale}>
             <Image source={LOGO} style={styles.logo} />
             <Text style={styles.logoNome}>TrackIt</Text>
-            <Text style={[styles.titolo, styles.centrato]}>Salva le tue spese</Text>
-            <Text style={[styles.testo, styles.centrato]}>
-              Account gratuito. I dati restano tuoi: esportali o cancellali quando vuoi.
-            </Text>
+            <Text style={[styles.titolo, styles.centrato]}>{t("presentazione.p5.titolo")}</Text>
+            <Text style={[styles.testo, styles.centrato]}>{t("presentazione.p5.testo")}</Text>
           </View>,
               <>
                 <Punti attivo={4} centrati />
                 <Button mode="contained" onPress={() => esci("/register")} labelStyle={styles.buttonLabel}>
-                  Crea un account
+                  {t("presentazione.p5.crea")}
                 </Button>
                 {google.isReady && (
                   <>
                     <View style={styles.separatore}>
                       <View style={styles.separatoreLinea} />
-                      <Text style={styles.separatoreTesto}>oppure</Text>
+                      <Text style={styles.separatoreTesto}>{t("comune.oppure")}</Text>
                       <View style={styles.separatoreLinea} />
                     </View>
                     <GoogleButton onPress={google.signIn} disabled={google.isLoading} />
                     {/* Google crea l'account a chi non ce l'ha: l'informativa va mostrata prima */}
                     <Text style={styles.legale}>
-                      Continuando con Google confermi di aver letto l&apos;
+                      {t("accesso.legaleGoogle")}
                       <Text style={styles.legaleLink} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
-                        informativa sulla privacy
+                        {t("accesso.informativa")}
                       </Text>
                     </Text>
                   </>
                 )}
                 <Text style={styles.accedi}>
-                  Hai già un account?{" "}
+                  {t("accesso.haiAccount")}{" "}
                   <Text style={styles.accediLink} onPress={() => esci("/login")}>
-                    Accedi
+                    {t("accesso.accedi")}
                   </Text>
                 </Text>
               </>
@@ -400,7 +401,7 @@ export default function Presentazione() {
           onScroll={scorrimento}
           scrollEventThrottle={16}
           getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
-          extraData={[width, altezza, insets.top, google.isReady, google.isLoading]}
+          extraData={[width, altezza, insets.top, google.isReady, google.isLoading, lingua]}
         />
       )}
       <Snackbar visible={errore !== ""} onDismiss={() => setErrore("")}>

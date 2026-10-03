@@ -23,6 +23,10 @@ import { simbolo, eValuta, VALUTE, type Valuta } from "@/utils/formato";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { segnalaSalvataggio } from "@/utils/esitoAssistente";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useTranslation } from "react-i18next";
+import { nomeCategoria } from "@/utils/categorie";
+import { localeAttuale } from "@/utils/date";
+import { traduciErrore } from "@/utils/messaggioErrore";
 
 type Category = {
   id: number;
@@ -42,9 +46,9 @@ type CategoryGroup = {
 type Frequency = "monthly" | "weekly" | "yearly";
 
 const FREQUENCIES: { value: Frequency; label: string }[] = [
-  { value: "monthly", label: "Mensile" },
-  { value: "weekly", label: "Settimanale" },
-  { value: "yearly", label: "Annuale" },
+  { value: "monthly", label: "frequenze.monthly" },
+  { value: "weekly", label: "frequenze.weekly" },
+  { value: "yearly", label: "frequenze.yearly" },
 ];
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "backspace"];
@@ -54,6 +58,7 @@ const MAX_DECIMALS = 2;
 
 export default function AddExpenseScreen() {
   const { valuta, importo: formatta } = usePreferenze();
+  const { t } = useTranslation();
   const router = useRouter();
   // I parametri di rotta arrivano sempre come stringhe: li usa "Modifica"
   // dell'assistente per precompilare il form con i dati estratti.
@@ -232,8 +237,8 @@ export default function AddExpenseScreen() {
 
   function formatDate(d: Date) {
     const isToday = toDateString(d) === toDateString(new Date());
-    const formatted = d.toLocaleDateString("it-IT", { day: "numeric", month: "long" });
-    return isToday ? `Oggi, ${formatted}` : formatted;
+    const formatted = d.toLocaleDateString(localeAttuale(), { day: "numeric", month: "long" });
+    return isToday ? t("spesa.oggiData", { data: formatted }) : formatted;
   }
 
   async function handleSave() {
@@ -249,7 +254,7 @@ export default function AddExpenseScreen() {
       giorno !== iniziali.date ||
       valutaScelta !== iniziali.valutaScelta;
     const common = {
-      description: description.trim() || category!.name,
+      description: description.trim() || nomeCategoria(category!.name),
       category_id: category!.id,
       ...(importoCambiato && { amount, currency: valutaSpesa }),
       ...(importoCambiato && senzaCambio && !isSubscription && { converted_amount: convertito }),
@@ -282,16 +287,13 @@ export default function AddExpenseScreen() {
           setCambioMancante(chiaveCambio);
           setError(
             isSubscription
-              ? "Cambio non disponibile in questo momento. Riprova tra poco."
-              : `Cambio non disponibile in questo momento: scrivi quanto ti è stato addebitato in ${simbolo(valuta)}.`
+              ? t("spesa.cambioAbbonamento")
+              : t("spesa.cambioSpesa", { simbolo: simbolo(valuta) })
           );
           return;
         }
         setError(
-          detail ??
-            (isSubscription
-              ? "Non è stato possibile salvare l'abbonamento. Riprova."
-              : "Non è stato possibile salvare la spesa. Riprova.")
+          traduciErrore(detail, isSubscription ? t("spesa.erroreAbbonamento") : t("spesa.erroreSpesa"))
         );
         return;
       }
@@ -314,15 +316,15 @@ export default function AddExpenseScreen() {
       lasciaUscire();
       router.back();
     } catch {
-      setError("Errore di rete. Riprova.");
+      setError(t("errori.rete"));
     } finally {
       setIsSaving(false);
     }
   }
 
   function screenTitle() {
-    if (isEditing) return isSubscription ? "Modifica abbonamento" : "Modifica spesa";
-    return isSubscription ? "Nuovo abbonamento" : "Nuova spesa";
+    if (isEditing) return isSubscription ? t("spesa.titoloModificaAbbonamento") : t("spesa.titoloModificaSpesa");
+    return isSubscription ? t("spesa.titoloNuovo") : t("spesa.titoloNuova");
   }
 
   return (
@@ -346,8 +348,8 @@ export default function AddExpenseScreen() {
         {!isEditing && (
         <View style={styles.segmented}>
           {[
-            { value: false, label: "Spesa" },
-            { value: true, label: "Abbonamento" },
+            { value: false, label: t("spesa.tipoSpesa") },
+            { value: true, label: t("spesa.tipoAbbonamento") },
           ].map((option) => {
             const selected = isSubscription === option.value;
             return (
@@ -373,7 +375,7 @@ export default function AddExpenseScreen() {
 
         <Pressable style={styles.amountSection} onPress={focusAmount}>
           <Text variant="labelSmall" style={styles.amountLabel}>
-            IMPORTO
+            {t("spesa.importo")}
           </Text>
           <View style={styles.amountRow}>
             <Menu
@@ -387,7 +389,7 @@ export default function AddExpenseScreen() {
                     setMenuValuta(true);
                   }}
                   accessibilityRole="button"
-                  accessibilityLabel={`Valuta ${valutaSpesa}: tocca per cambiarla`}
+                  accessibilityLabel={t("spesa.valuta", { valuta: valutaSpesa })}
                 >
                   <Text style={styles.currency}>{simbolo(valutaSpesa)}</Text>
                   <MaterialCommunityIcons name="chevron-down" size={18} color={colors.green} />
@@ -413,16 +415,18 @@ export default function AddExpenseScreen() {
           <View style={[styles.amountUnderline, !isAmountFocused && styles.amountUnderlineBlurred]} />
           {cambioAttuale && amount > 0 && (
             <Text style={styles.anteprima}>
-              ≈ {formatta(amount * cambioAttuale.rate)} · cambio del{" "}
-              {fromDateString(cambioAttuale.date).toLocaleDateString("it-IT", { day: "numeric", month: "short" })}
-              {isSubscription && " (ricalcolato a ogni rinnovo)"}
+              {t("spesa.anteprima", {
+                importo: formatta(amount * cambioAttuale.rate),
+                data: fromDateString(cambioAttuale.date).toLocaleDateString(localeAttuale(), { day: "numeric", month: "short" }),
+              })}
+              {isSubscription && t("spesa.ricalcolato")}
             </Text>
           )}
           {senzaCambio && (
             <Text style={styles.anteprimaErrore}>
               {isSubscription
-                ? "Cambio non disponibile ora: verrà calcolato a ogni rinnovo."
-                : "Cambio non disponibile ora: scrivi qui sotto quanto ti è stato addebitato."}
+                ? t("spesa.senzaCambioAbbonamento")
+                : t("spesa.senzaCambioSpesa")}
             </Text>
           )}
         </Pressable>
@@ -431,7 +435,7 @@ export default function AddExpenseScreen() {
           {senzaCambio && !isSubscription && (
             <View>
               <Text variant="bodySmall" style={styles.fieldLabel}>
-                Importo addebitato in {simbolo(valuta)}
+                {t("spesa.addebitato", { simbolo: simbolo(valuta) })}
               </Text>
               <View style={styles.field}>
                 <MaterialCommunityIcons name="bank-outline" size={20} color={colors.label} />
@@ -440,7 +444,7 @@ export default function AddExpenseScreen() {
                   onChangeText={setConvertitoRaw}
                   onFocus={() => setIsAmountFocused(false)}
                   keyboardType="decimal-pad"
-                  placeholder="Dall'estratto conto"
+                  placeholder={t("spesa.estrattoConto")}
                   placeholderTextColor={colors.placeholder}
                   style={styles.convertitoInput}
                 />
@@ -450,7 +454,7 @@ export default function AddExpenseScreen() {
 
           <View>
             <Text variant="bodySmall" style={styles.fieldLabel}>
-              Categoria
+              {t("spesa.categoria")}
             </Text>
             <Pressable
               style={styles.field}
@@ -461,7 +465,7 @@ export default function AddExpenseScreen() {
             >
               <MaterialCommunityIcons name="format-list-bulleted" size={20} color={colors.label} />
               <Text style={category ? styles.fieldText : styles.fieldPlaceholder}>
-                {category ? category.name : "Seleziona categoria"}
+                {category ? nomeCategoria(category.name) : t("spesa.selezionaCategoria")}
               </Text>
               <MaterialCommunityIcons name="chevron-down" size={20} color={colors.label} />
             </Pressable>
@@ -470,7 +474,7 @@ export default function AddExpenseScreen() {
           {isSubscription && (
             <View>
               <Text variant="bodySmall" style={styles.fieldLabel}>
-                Frequenza
+                {t("spesa.frequenza")}
               </Text>
               <View style={styles.frequencyRow}>
                 {FREQUENCIES.map((option) => {
@@ -492,7 +496,7 @@ export default function AddExpenseScreen() {
                           selected && styles.frequencyLabelSelected,
                         ]}
                       >
-                        {option.label}
+                        {t(option.label)}
                       </Text>
                     </Pressable>
                   );
@@ -504,11 +508,11 @@ export default function AddExpenseScreen() {
           {isSubscription && (
             <View style={styles.autoRenewRow}>
               <View style={styles.autoRenewText}>
-                <Text style={styles.autoRenewLabel}>Rinnovo automatico</Text>
+                <Text style={styles.autoRenewLabel}>{t("spesa.rinnovoAutomatico")}</Text>
                 <Text style={styles.autoRenewHint}>
                   {autoRenew
-                    ? "La spesa viene registrata da sola a ogni rinnovo"
-                    : "A ogni scadenza ti chiediamo se hai rinnovato"}
+                    ? t("spesa.rinnovoAutomaticoSi")
+                    : t("spesa.rinnovoAutomaticoNo")}
                 </Text>
               </View>
               <Switch
@@ -524,7 +528,7 @@ export default function AddExpenseScreen() {
           {/* la data di partenza di un abbonamento ha gia' generato le spese arretrate */}
           <View>
             <Text variant="bodySmall" style={styles.fieldLabel}>
-              {!isSubscription ? "Data" : isEditing ? "Prossimo addebito" : "Primo addebito"}
+              {!isSubscription ? t("spesa.data") : isEditing ? t("spesa.prossimoAddebito") : t("spesa.primoAddebito")}
             </Text>
               <Pressable
                 style={styles.field}
@@ -541,7 +545,7 @@ export default function AddExpenseScreen() {
 
           <View>
             <Text variant="bodySmall" style={styles.fieldLabel}>
-              Descrizione
+              {t("spesa.descrizione")}
             </Text>
             <View style={styles.field}>
               <MaterialCommunityIcons name="text-short" size={20} color={colors.label} />
@@ -549,7 +553,7 @@ export default function AddExpenseScreen() {
                 value={description}
                 onChangeText={setDescription}
                 onFocus={() => setIsAmountFocused(false)}
-                placeholder="Es. Esselunga"
+                placeholder={t("spesa.esempioDescrizione")}
                 placeholderTextColor={colors.placeholder}
                 style={styles.descriptionInput}
                 maxLength={200}
@@ -569,10 +573,10 @@ export default function AddExpenseScreen() {
           ) : (
             <Text style={[styles.saveButtonText, !canSave && styles.saveButtonTextDisabled]}>
               {isEditing
-                ? "Salva modifiche"
+                ? t("spesa.salvaModifiche")
                 : isSubscription
-                  ? "Salva abbonamento"
-                  : "Salva spesa"}
+                  ? t("spesa.salvaAbbonamento")
+                  : t("spesa.salvaSpesa")}
             </Text>
           )}
         </Pressable>
@@ -618,7 +622,7 @@ export default function AddExpenseScreen() {
           {/* il Pressable interno intercetta il tap così non chiude il foglio */}
           <Pressable style={styles.modalSheet} onPress={() => {}}>
             <Text variant="titleMedium" style={styles.modalTitle}>
-              Seleziona categoria
+              {t("spesa.selezionaCategoria")}
             </Text>
             <SectionList
               sections={categories.map((gruppo) => ({
@@ -637,7 +641,7 @@ export default function AddExpenseScreen() {
                     size={16}
                     color={colors.label}
                   />
-                  <Text style={styles.categoryGroupTitle}>{section.title}</Text>
+                  <Text style={styles.categoryGroupTitle}>{nomeCategoria(section.title)}</Text>
                 </View>
               )}
               renderItem={({ item }) => (
@@ -654,12 +658,12 @@ export default function AddExpenseScreen() {
                       category?.id === item.id && styles.categoryRowSelected,
                     ]}
                   >
-                    {item.name}
+                    {nomeCategoria(item.name)}
                   </Text>
                 </Pressable>
               )}
               ListEmptyComponent={
-                <Text style={styles.categoryRow}>Nessuna categoria disponibile.</Text>
+                <Text style={styles.categoryRow}>{t("spesa.nessunaCategoria")}</Text>
               }
             />
           </Pressable>

@@ -12,9 +12,11 @@ import Animated, {
 } from "react-native-reanimated";
 import { misuraBersaglio, type Rettangolo } from "@/utils/tour";
 import { styles, VELO } from "@/styles/tour.styles";
+import { useTranslation } from "react-i18next";
 
 type Passaggio = {
   bersaglio: string;
+  //chiavi delle traduzioni: il testo si sceglie al momento, nella lingua dell'utente
   titolo: string;
   testo: string;
   margine: number;
@@ -33,29 +35,29 @@ const SUL_WEB = Platform.OS === "web";
 const PASSAGGI: Passaggio[] = [
   {
     bersaglio: "assistente",
-    titolo: "Ecco l'assistente",
-    testo: "Prova subito: scrivi la tua prima spesa a parole.",
+    titolo: "tour.assistente.titolo",
+    testo: "tour.assistente.testo",
     margine: 6,
     raggio: 24,
   },
   {
     bersaglio: "aggiungi",
-    titolo: "Aggiungi una spesa",
-    testo: "Tocca + per inserirla a mano, anche gli abbonamenti.",
+    titolo: "tour.aggiungi.titolo",
+    testo: "tour.aggiungi.testo",
     margine: 6,
     raggio: 34,
   },
   {
     bersaglio: "nuovo-budget",
-    titolo: "Imposta il budget",
-    testo: "Decidi quanto spendere e da che giorno riparte il mese.",
+    titolo: "tour.budget.titolo",
+    testo: "tour.budget.testo",
     margine: 6,
     raggio: 24,
   },
   {
     bersaglio: "abbonamenti",
-    titolo: "I tuoi abbonamenti",
-    testo: "Mettili in pausa, modificali e conferma quelli da rinnovare.",
+    titolo: "tour.abbonamenti.titolo",
+    testo: "tour.abbonamenti.testo",
     margine: 4,
     raggio: 14,
     colonnaTab: true,
@@ -64,26 +66,24 @@ const PASSAGGI: Passaggio[] = [
     //subito dopo gli abbonamenti: i promemoria sono spenti finche' non si
     //accendono qui, e la presentazione li promette
     bersaglio: "profilo",
-    titolo: SUL_WEB ? "Il tuo profilo" : "Attiva i promemoria",
-    testo: SUL_WEB
-      ? "Qui puoi esportare i tuoi dati e rivedere questo tutorial."
-      : "Accendili qui: ti avvisiamo il giorno prima di ogni rinnovo.",
+    titolo: SUL_WEB ? "tour.profiloWeb.titolo" : "tour.promemoria.titolo",
+    testo: SUL_WEB ? "tour.profiloWeb.testo" : "tour.promemoria.testo",
     margine: 4,
     raggio: 14,
     colonnaTab: true,
   },
   {
     bersaglio: "statistiche",
-    titolo: "Le tue statistiche",
-    testo: "Guarda come hai speso il budget, mese per mese.",
+    titolo: "tour.statistiche.titolo",
+    testo: "tour.statistiche.testo",
     margine: 4,
     raggio: 14,
     colonnaTab: true,
   },
   {
     bersaglio: "occhio",
-    titolo: "Nascondi gli importi",
-    testo: "Utile in pubblico. La scelta resta anche quando riapri l'app.",
+    titolo: "tour.occhio.titolo",
+    testo: "tour.occhio.testo",
     margine: 4,
     raggio: 26,
   },
@@ -114,6 +114,7 @@ type Props = {
 
 //va montato solo quando serve: ogni apertura riparte dalla card di benvenuto
 export function TourGuidato({ onFine, dalProfilo = false }: Props) {
+  const { t } = useTranslation();
   //-1 = card di benvenuto, poi gli indici di PASSAGGI
   const [indice, setIndice] = useState(-1);
   const [schermo, setSchermo] = useState<Rettangolo | null>(null);
@@ -221,7 +222,7 @@ export function TourGuidato({ onFine, dalProfilo = false }: Props) {
             {/* toccare il pulsante evidenziato vale come "Avanti" */}
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Avanti"
+              accessibilityLabel={t("comune.avanti")}
               onPress={avanti}
               style={{ position: "absolute", left: buco.x, top: buco.y, width: buco.w, height: buco.h }}
             />
@@ -236,10 +237,10 @@ export function TourGuidato({ onFine, dalProfilo = false }: Props) {
             >
               <View style={[styles.arrow, { left: frecciaX }, sotto ? { top: -6 } : { bottom: -6 }]} />
               <Text style={styles.count}>
-                {indice + 1} DI {PASSAGGI.length}
+                {t("tour.conteggio", { n: indice + 1, totale: PASSAGGI.length })}
               </Text>
-              <Text style={styles.tipTitle}>{passaggio.titolo}</Text>
-              <Text style={styles.tipText}>{passaggio.testo}</Text>
+              <Text style={styles.tipTitle}>{t(passaggio.titolo)}</Text>
+              <Text style={styles.tipText}>{t(passaggio.testo)}</Text>
               <View style={styles.tipFooter}>
                 <View style={styles.pips}>
                   {PASSAGGI.map((p, i) => (
@@ -249,11 +250,11 @@ export function TourGuidato({ onFine, dalProfilo = false }: Props) {
                 <View style={styles.tipButtons}>
                   {!ultimo && (
                     <Button onPress={() => onFine("saltato")} labelStyle={styles.skipLabel}>
-                      Salta
+                      {t("comune.salta")}
                     </Button>
                   )}
                   <Button mode="contained" onPress={avanti}>
-                    {ultimo ? "Fine" : "Avanti"}
+                    {ultimo ? t("tour.fine") : t("comune.avanti")}
                   </Button>
                 </View>
               </View>
@@ -267,10 +268,10 @@ export function TourGuidato({ onFine, dalProfilo = false }: Props) {
           >
             <Image source={ICONA_APP} style={styles.introLogo} />
             <Text variant="titleLarge" style={styles.introTitle}>
-              {dalProfilo ? "Il tour di TrackIt" : "Account creato!"}
+              {dalProfilo ? t("tour.introProfilo") : t("tour.introNuovo")}
             </Text>
             <Text variant="bodyMedium" style={styles.introText}>
-              Ti mostro in pochi secondi dove trovi tutto.
+              {t("tour.introTesto")}
             </Text>
             <Button
               mode="contained"
@@ -278,10 +279,10 @@ export function TourGuidato({ onFine, dalProfilo = false }: Props) {
               style={styles.introButton}
               labelStyle={styles.introButtonLabel}
             >
-              Iniziamo
+              {t("tour.iniziamo")}
             </Button>
             <Button onPress={() => onFine("saltato")} labelStyle={styles.skipLabel}>
-              Salta
+              {t("comune.salta")}
             </Button>
           </Animated.View>
         ) : null}

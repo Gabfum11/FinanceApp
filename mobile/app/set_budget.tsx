@@ -1,6 +1,9 @@
 import { View } from "react-native";
 import { Text, TextInput, Button, Snackbar, IconButton } from "react-native-paper";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { usePreferenze } from "@/utils/preferenze";
+import { simbolo } from "@/utils/formato";
 import { router } from "expo-router";
 import { apiFetch } from "@/utils/apiFetch";
 import { messaggioErrore } from "@/utils/messaggioErrore";
@@ -9,6 +12,8 @@ import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function SetBudgetScreen() {
+    const { t } = useTranslation();
+    const { valuta } = usePreferenze();
     const [amount, setAmount] = useState("");
     const [startDay, setStartDay] = useState("1");
     const [loading, setLoading] = useState(false);
@@ -21,12 +26,12 @@ export default function SetBudgetScreen() {
         const parsedStartDay = parseInt(startDay, 10);
 
         if (!parsedAmount || parsedAmount <= 0) {
-            setErrorMessage("Inserisci un importo valido");
+            setErrorMessage(t("budgetNuovo.importoNonValido"));
             setSnackbarVisible(true);
             return;
         }
         if (!parsedStartDay || parsedStartDay < 1 || parsedStartDay > 31) {
-            setErrorMessage("Il giorno deve essere tra 1 e 31");
+            setErrorMessage(t("budgetNuovo.giornoNonValido"));
             setSnackbarVisible(true);
             return;
         }
@@ -46,11 +51,11 @@ export default function SetBudgetScreen() {
                 lasciaUscire();
                 router.back();
             } else {
-                setErrorMessage(await messaggioErrore(response, "Errore nel salvataggio"));
+                setErrorMessage(await messaggioErrore(response, t("budgetNuovo.erroreSalvataggio")));
                 setSnackbarVisible(true);
             }
         } catch (error) {
-            setErrorMessage("Errore di rete");
+            setErrorMessage(t("errori.rete"));
             setSnackbarVisible(true);
         } finally {
             setLoading(false);
@@ -60,35 +65,35 @@ export default function SetBudgetScreen() {
     return (
         <View style={styles.container}>
             <IconButton icon="chevron-left" onPress={() => router.back()} />
-            <Text variant="headlineMedium" style={styles.title}>Nuovo budget</Text>
+            <Text variant="headlineMedium" style={styles.title}>{t("budgetNuovo.titolo")}</Text>
             <Text variant="bodyMedium" style={styles.subtitle}>
-                Imposta quanto vuoi spendere ogni mese e da quale giorno far partire il ciclo
+                {t("budgetNuovo.sottotitolo")}
             </Text>
 
-            <Text style={styles.label}>Budget mensile</Text>
+            <Text style={styles.label}>{t("budgetNuovo.mensile")}</Text>
             <TextInput
                 value={amount}
                 onChangeText={setAmount}
-                placeholder="Es. 1200"
+                placeholder={t("budgetNuovo.esempioImporto")}
                 keyboardType="numeric"
                 mode="outlined"
                 outlineStyle={styles.inputOutline}
                 style={styles.input}
-                left={<TextInput.Icon icon="currency-eur" />}
+                left={<TextInput.Affix text={simbolo(valuta)} />}
             />
 
-            <Text style={styles.label}>Giorno di inizio ciclo</Text>
+            <Text style={styles.label}>{t("budgetNuovo.giorno")}</Text>
             <TextInput
                 value={startDay}
                 onChangeText={(text) => setStartDay(text.replace(/[^0-9]/g, "").slice(0, 2))}
-                placeholder="Es. 1"
+                placeholder={t("budgetNuovo.esempioGiorno")}
                 keyboardType="number-pad"
                 mode="outlined"
                 outlineStyle={styles.inputOutline}
                 style={styles.input}
             />
             <Text style={styles.helperText}>
-                Il ciclo del budget riparte ogni mese da questo giorno (es. imposta 27 se ricevi lo stipendio il 27 di ogni mese). Se lasci 1, il budget segue il mese solare.
+                {t("budgetNuovo.spiegazione")}
             </Text>
 
             <Button
@@ -99,7 +104,7 @@ export default function SetBudgetScreen() {
                 loading={loading}
                 disabled={loading}
             >
-                Salva budget
+                {t("budgetNuovo.salva")}
             </Button>
 
             <Snackbar visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} duration={3000}>

@@ -5,9 +5,11 @@ import { useEffect } from "react";
 import { rinnovaSeInScadenza } from "@/utils/session";
 import { bersaglio } from "@/utils/tour";
 import { sincronizzaDispositivo } from "@/utils/notifications";
+import { useTranslation } from "react-i18next";
 
 export default function TabsLayout() {
   const router=useRouter()
+  const { t } = useTranslation();
 
   //un'app lasciata in background non passa da index.tsx: al rientro in primo
   //piano il token di accesso è quasi sempre scaduto, e conviene rinnovarlo
@@ -29,7 +31,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: t("schede.home"),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="home" color={color} size={size} />
           ),
@@ -38,7 +40,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="stats"
         options={{
-          title: "Statistiche",
+          title: t("schede.statistiche"),
           tabBarIcon: ({ color, size }) => (
             <View ref={bersaglio("statistiche")} collapsable={false}>
               <MaterialCommunityIcons name="chart-donut" color={color} size={size} />
@@ -55,6 +57,8 @@ export default function TabsLayout() {
             <TouchableOpacity
               ref={bersaglio("aggiungi")}
               onPress={() => router.push("/add_expense")}
+              accessibilityRole="button"
+              accessibilityLabel={t("schede.aggiungi")}
               style={{
                 top: -20, //sposta il pulsante verso l'alto
                 justifyContent: "center",
@@ -80,7 +84,7 @@ export default function TabsLayout() {
       <Tabs.Screen
       name="budget"
       options={{
-        title: "Abbonamenti",
+        title: t("schede.abbonamenti"),
       tabBarIcon: ({ color, size }) => (
         //il tour misura l'icona e allarga il riquadro a tutta la colonna
         <View ref={bersaglio("abbonamenti")} collapsable={false}>
@@ -92,7 +96,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profilo",
+          title: t("schede.profilo"),
           tabBarIcon: ({ color, size }) => (
             <View ref={bersaglio("profilo")} collapsable={false}>
               <MaterialCommunityIcons name="account" color={color} size={size} />

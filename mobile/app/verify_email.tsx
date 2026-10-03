@@ -7,6 +7,7 @@ import { salvaSessione } from "@/utils/session"
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { styles } from "@/styles/verify-email.styles";
 import { messaggioErrore } from "@/utils/messaggioErrore";
+import { useTranslation } from "react-i18next";
 const num=[0,1,2,3,4,5]
 const formatTime =(totseconds:number)=>{
     const minutes=Math.floor(totseconds/60);
@@ -14,7 +15,8 @@ const formatTime =(totseconds:number)=>{
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 
 }
-export default function verify_email(){
+export default function VerifyEmail(){
+    const { t } = useTranslation();
     const [code,setCode]=useState("")
     const[step,setStep]=useState<"typing" | "invalid" | "correct">("typing")
     const {email}=useLocalSearchParams();
@@ -45,7 +47,7 @@ export default function verify_email(){
                 body: JSON.stringify({email, purpose:"email_verification"})
             })
             if(!response.ok) {
-                setErrorMessage(await messaggioErrore(response, "Errore nell'invio del codice"))
+                setErrorMessage(await messaggioErrore(response, t("codice.erroreInvio")))
                 setSnackbarVisible(true)
                 console.log("errore nell'invio del nuovo codice")
                 return;
@@ -71,7 +73,7 @@ export default function verify_email(){
             })
             if(!response.ok)
             {
-                setErrorMessage(await messaggioErrore(response, "Codice non valido"))
+                setErrorMessage(await messaggioErrore(response, t("codice.nonValido")))
                 setSnackbarVisible(true)
                console.log("Codice errato");
                setStep("invalid")
@@ -95,8 +97,8 @@ export default function verify_email(){
             <View style={styles.iconContainer}>
                 <MaterialCommunityIcons name="email-outline" size={32} color="#2ECC71"/>
             </View>
-            <Text style={styles.title} variant="titleMedium">Controlla la posta</Text>
-            <Text style={styles.subtitle} variant="bodyMedium">Ho inviato un codice a 6 cifre a {email}</Text>
+            <Text style={styles.title} variant="titleMedium">{t("codice.controllaPosta")}</Text>
+            <Text style={styles.subtitle} variant="bodyMedium">{t("codice.inviato", { email })}</Text>
             <View style={styles.codeRow}>
                 {num.map((index)=>(
                     <View
@@ -116,11 +118,11 @@ export default function verify_email(){
             autoFocus
             style={styles.hiddenInput}
             />
-            <Text>Non l'hai ricevuto?</Text>
+            <Text>{t("codice.nonRicevuto")}</Text>
             {secondsleft>0  ?(
-                <Text style={styles.remainingTime}>Riprova tra {formatTime(secondsleft)}</Text>
+                <Text style={styles.remainingTime}>{t("codice.riprovaTra", { tempo: formatTime(secondsleft) })}</Text>
             ):(
-               <Text style={styles.resendCodeText} onPress={ loading ? undefined:handleResendCode}>{loading ? "Invio in corso...": "Invia nuovo codice"}</Text>
+               <Text style={styles.resendCodeText} onPress={ loading ? undefined:handleResendCode}>{loading ? t("codice.invioInCorso") : t("codice.inviaNuovo")}</Text>
             )}
                 <Button
                     style={styles.button}
@@ -128,7 +130,7 @@ export default function verify_email(){
                     loading={loading}
                     disabled={loading}
                     onPress={handleVerify}>
-                Verifica
+                {t("codice.verifica")}
                 </Button>
             </>
             ) : step==="invalid" ? (
@@ -136,18 +138,18 @@ export default function verify_email(){
                 <View style={styles.erroriconContainer}>
                     <MaterialCommunityIcons name="alert-circle-outline" size={32} color="#E74C3C" />
                 </View>
-                <Text style={styles.title} variant="titleMedium">Codice non valido</Text>
-                <Text style={styles.subtitle} variant="bodyMedium">Controlla le cifre che hai inserito</Text>
-                <Button style={styles.button} onPress={()=>setStep("typing")}>Riprova</Button>
+                <Text style={styles.title} variant="titleMedium">{t("codice.nonValido")}</Text>
+                <Text style={styles.subtitle} variant="bodyMedium">{t("codice.controllaCifre")}</Text>
+                <Button style={styles.button} onPress={()=>setStep("typing")}>{t("comune.riprova")}</Button>
             </>
             ):(
             <>
                 <View style={styles.iconContainer}>
                 <MaterialCommunityIcons name="check-circle-outline" size={32} color="#2ECC71"></MaterialCommunityIcons>
                 </View>
-                <Text style={styles.title} variant="titleMedium">Email verificata</Text>
-                <Text style={styles.subtitle} variant="bodyMedium">Il tuo account è pronto</Text>
-                <Button style={styles.button} onPress={()=> router.replace("/(tabs)/home")}>Inizia</Button>
+                <Text style={styles.title} variant="titleMedium">{t("verificaEmail.verificata")}</Text>
+                <Text style={styles.subtitle} variant="bodyMedium">{t("verificaEmail.pronto")}</Text>
+                <Button style={styles.button} onPress={()=> router.replace("/(tabs)/home")}>{t("verificaEmail.inizia")}</Button>
             </>
 
             )}

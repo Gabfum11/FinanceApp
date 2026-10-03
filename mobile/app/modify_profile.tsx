@@ -8,8 +8,11 @@ import { styles } from "@/styles/modify-profile.styles";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
+import { useTranslation } from "react-i18next";
+import { traduciErrore } from "@/utils/messaggioErrore";
 
-export default function modify_profile() {
+export default function ModifyProfile() {
+    const { t } = useTranslation();
     const [nickname, setNickname] = useState("");
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
@@ -34,12 +37,12 @@ export default function modify_profile() {
 
     async function handleSave() {
         if (nickname.trim() === "") {
-            setErrorMessage("Il nome non può essere vuoto");
+            setErrorMessage(t("modificaProfilo.nomeVuoto"));
             setSnackbarVisible(true);
             return;
         }
         if (nickname.length > 50) {
-            setErrorMessage("Il nome può avere al massimo 50 caratteri");
+            setErrorMessage(t("modificaProfilo.nomeLungo"));
             setSnackbarVisible(true);
             return;
         }
@@ -58,11 +61,11 @@ export default function modify_profile() {
                     .json()
                     .then((body) => (typeof body?.detail === "string" ? body.detail : null))
                     .catch(() => null);
-                setErrorMessage(detail ?? "Errore nel salvataggio");
+                setErrorMessage(traduciErrore(detail, t("modificaProfilo.erroreSalvataggio")));
                 setSnackbarVisible(true);
             }
         } catch (error) {
-            setErrorMessage("Errore di rete");
+            setErrorMessage(t("errori.rete"));
             setSnackbarVisible(true);
         } finally {
             setLoading(false);
@@ -73,16 +76,16 @@ export default function modify_profile() {
         <View style={styles.container}>
             <PaginaScorrevole style={styles.content} tastiera>
                 <View style={styles.header}>
-                    <Text onPress={() => router.back()} style={styles.headerAction}>Annulla</Text>
-                    <Text variant="titleMedium">Modifica profilo</Text>
+                    <Text onPress={() => router.back()} style={styles.headerAction}>{t("comune.annulla")}</Text>
+                    <Text variant="titleMedium">{t("modificaProfilo.titolo")}</Text>
                     <Text onPress={loading ? undefined : handleSave} style={styles.headerActionPrimary}>
-                        {loading ? "Salvo..." : "Salva"}
+                        {loading ? t("comune.salvataggio") : t("comune.salva")}
                     </Text>
                 </View>
                 <View style={styles.formSection}>
-                    <Text style={styles.label}>Nome</Text>
+                    <Text style={styles.label}>{t("modificaProfilo.nome")}</Text>
                     <TextInput value={nickname} onChangeText={setNickname} mode="outlined" style={styles.input} />
-                    <Text style={styles.label}>Email</Text>
+                    <Text style={styles.label}>{t("comune.email")}</Text>
                     <TextInput
                         value={email}
                         editable={false}
@@ -91,13 +94,13 @@ export default function modify_profile() {
                         textColor="#888"
                         left={<TextInput.Icon icon="lock-outline" color="#aaa" />}
                     />
-                    <Text style={styles.helperText}>L'email non può essere modificata</Text>
+                    <Text style={styles.helperText}>{t("modificaProfilo.emailFissa")}</Text>
                 </View>
                 <View>
                     <Pressable style={styles.settingsItem} onPress={() => router.push("/changePassw")}>
                         <MaterialCommunityIcons name="lock-outline" size={20} color="#666" />
                         <View style={styles.settingsInfo}>
-                            <Text style={styles.settingsLabel}>Cambia password</Text>
+                            <Text style={styles.settingsLabel}>{t("modificaProfilo.cambiaPassword")}</Text>
                         </View>
                         <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
                     </Pressable>

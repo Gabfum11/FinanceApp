@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { puoAggiungereAllaHome } from "@/utils/aggiuntaHome";
 import { colors } from "@/styles/tokens";
 import { styles } from "@/styles/invito-home.styles";
+import { useTranslation } from "react-i18next";
 
 const CHIAVE = "invito_home_rimandato";
 const PAUSA_GIORNI = 14;
@@ -27,6 +28,7 @@ function rimandato(): boolean {
 // e chi si registra prima di aggiungerla dovrebbe poi accedere di nuovo.
 export function InvitoHome() {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   //il terzo argomento vale durante la build del sito, dove non c'e' un browser
   //da interrogare: li' l'invito non c'e', e compare appena la pagina si apre
   const disponibile = useSyncExternalStore(
@@ -47,27 +49,27 @@ export function InvitoHome() {
 
   return (
     <View style={[styles.card, { bottom: insets.bottom + 16 }]} accessibilityRole="alert">
-      <Text style={styles.titolo}>Aggiungi TrackIt alla Home</Text>
-      <Text style={styles.testo}>Si apre come un&apos;app, a schermo intero.</Text>
+      <Text style={styles.titolo}>{t("invitoHome.titolo")}</Text>
+      <Text style={styles.testo}>{t("invitoHome.testo")}</Text>
 
       <View style={styles.passi}>
         <View style={styles.passo}>
           <Text style={styles.numero}>1</Text>
-          <Text style={styles.testo}>Tocca </Text>
+          <Text style={styles.testo}>{t("invitoHome.tocca")}</Text>
           <MaterialCommunityIcons name="export-variant" size={20} color={colors.link} />
-          <Text style={styles.testo}> Condividi</Text>
+          <Text style={styles.testo}>{t("invitoHome.condividi")}</Text>
         </View>
         <View style={styles.passo}>
           <Text style={styles.numero}>2</Text>
-          <Text style={styles.testo}>Scegli </Text>
-          <Text style={styles.evidenza}>Aggiungi alla schermata Home</Text>
+          <Text style={styles.testo}>{t("invitoHome.scegli")}</Text>
+          <Text style={styles.evidenza}>{t("invitoHome.voce")}</Text>
         </View>
       </View>
 
       <View style={styles.azioni}>
-        <Button onPress={chiudi}>Non ora</Button>
+        <Button onPress={chiudi}>{t("invitoHome.nonOra")}</Button>
         <Button mode="contained" onPress={chiudi}>
-          Ho capito
+          {t("invitoHome.hoCapito")}
         </Button>
       </View>
       {/* la punta indica il pulsante Condividi, al centro della barra di Safari */}

@@ -1,3 +1,4 @@
+import i18n from "@/utils/i18n";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { apiFetch } from "@/utils/apiFetch";
@@ -16,15 +17,16 @@ export type RisultatoEsportazione =
 
 type Tipo = "expenses" | "subscriptions";
 
+//nome del file e titolo nella lingua dell'utente
 const NOMI: Record<Tipo, string> = {
-  expenses: "spese",
-  subscriptions: "abbonamenti",
+  expenses: "esportazione.spese",
+  subscriptions: "esportazione.abbonamenti",
 };
 
 export async function esportaCsv(tipo: Tipo): Promise<RisultatoEsportazione> {
   try {
     if (!(await Sharing.isAvailableAsync())) {
-      return { esito: "errore", messaggio: "Condivisione non disponibile su questo dispositivo." };
+      return { esito: "errore", messaggio: i18n.t("esportazione.nonDisponibile") };
     }
 
     //apiFetch e non fetch: il token di accesso dura pochi minuti, e senza il
@@ -34,7 +36,7 @@ export async function esportaCsv(tipo: Tipo): Promise<RisultatoEsportazione> {
       //401 = sessione scaduta, 404 = rotta assente, 500 = errore del server:
       //a schermo il messaggio resta uno solo, nei log si distinguono
       console.error("[export] risposta del server:", response.status);
-      return { esito: "errore", messaggio: "Non è stato possibile esportare i dati. Riprova." };
+      return { esito: "errore", messaggio: i18n.t("esportazione.errore") };
     }
 
     const contenuto = await response.text();
@@ -45,7 +47,7 @@ export async function esportaCsv(tipo: Tipo): Promise<RisultatoEsportazione> {
     }
 
     const oggi = new Date().toISOString().slice(0, 10);
-    const file = new File(Paths.cache, `trackit-${NOMI[tipo]}-${oggi}.csv`);
+    const file = new File(Paths.cache, `trackit-${i18n.t(NOMI[tipo])}-${oggi}.csv`);
     //la cache si svuota da sola: il file non resta a occupare spazio
     if (file.exists) file.delete();
     file.create();
@@ -53,7 +55,7 @@ export async function esportaCsv(tipo: Tipo): Promise<RisultatoEsportazione> {
 
     await Sharing.shareAsync(file.uri, {
       mimeType: "text/csv",
-      dialogTitle: `Esporta ${NOMI[tipo]}`,
+      dialogTitle: i18n.t("esportazione.titolo", { cosa: i18n.t(NOMI[tipo]) }),
       UTI: "public.comma-separated-values-text", //serve su iOS
     });
 
@@ -62,6 +64,6 @@ export async function esportaCsv(tipo: Tipo): Promise<RisultatoEsportazione> {
     //il messaggio a schermo resta generico, ma la causa va lasciata nei log:
     //senza, ogni problema diverso sembra lo stesso all'utente e a chi sviluppa
     console.error("[export] esportazione fallita:", errore);
-    return { esito: "errore", messaggio: "Errore durante l'esportazione. Riprova." };
+    return { esito: "errore", messaggio: i18n.t("esportazione.erroreGenerico") };
   }
 }

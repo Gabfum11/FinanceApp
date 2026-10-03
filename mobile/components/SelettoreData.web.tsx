@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function SelettoreData({ value, onValueChange, onDismiss }: Props) {
+  const { t } = useTranslation();
   const [scelta, setScelta] = useState(toDateString(value));
 
   return (
@@ -23,7 +25,7 @@ export function SelettoreData({ value, onValueChange, onDismiss }: Props) {
       <Pressable style={styles.overlay} onPress={onDismiss}>
         {/* il tocco sulla card non deve chiudere la finestra */}
         <Pressable style={styles.card} onPress={() => {}}>
-          <Text variant="titleMedium">Scegli la data</Text>
+          <Text variant="titleMedium">{t("data.scegli")}</Text>
           <input
             type="date"
             value={scelta}
@@ -31,14 +33,14 @@ export function SelettoreData({ value, onValueChange, onDismiss }: Props) {
             style={campo}
           />
           <View style={styles.actions}>
-            <Button onPress={onDismiss}>Annulla</Button>
+            <Button onPress={onDismiss}>{t("comune.annulla")}</Button>
             {/* il campo si puo' svuotare: senza data non c'e' niente da confermare */}
             <Button
               mode="contained"
               disabled={!scelta}
               onPress={() => onValueChange({ type: "set" }, fromDateString(scelta))}
             >
-              OK
+              {t("comune.ok")}
             </Button>
           </View>
         </Pressable>
