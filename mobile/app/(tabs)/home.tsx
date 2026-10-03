@@ -16,6 +16,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TourGuidato } from "@/components/TourGuidato";
 import { segnaBenvenutoVisto } from "@/utils/benvenuto";
 import { bersaglio } from "@/utils/tour";
+import { usePreferenze } from "@/utils/preferenze";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -78,6 +79,7 @@ export default function HomeScreen() {
   const [loadError, setLoadError] = useState(false);
   //chi usa l'app in pubblico può nascondere le cifre, come nelle app bancarie
   const [saldoVisibile, setSaldoVisibile] = useState(true);
+  const { importo: formatta, nascosto, sincronizza } = usePreferenze();
   const rotazioneBot = useSharedValue(0);
 
   useEffect(() => {
@@ -96,7 +98,7 @@ export default function HomeScreen() {
 
   //un solo punto decide come mostrare una cifra: in chiaro o coperta
   function importo(valore: number) {
-    return saldoVisibile ? `€${valore.toFixed(2)}` : "€ ••••";
+    return saldoVisibile ? formatta(valore) : nascosto;
   }
   const riduciMovimento = useReducedMotion();
 
@@ -176,6 +178,8 @@ export default function HomeScreen() {
       // console.log("Dati utente ricevuti:", data); // dati sensibili, non loggare in produzione
       setNickname(data.nickname);
       setTutorialVisto(data.tutorial_visto);
+      //valuta e lingua seguono l'account, anche se cambiate da un altro telefono
+      sincronizza(data);
       }
       // else {
       //   console.log("Errore /auth/me:", await response.text())
@@ -224,7 +228,7 @@ export default function HomeScreen() {
       frontColor: isToday ? colors.primary : colors.overlayMuted,
       topLabelComponent: () => (
         <Text style={styles.weeklyBarLabel}>
-          {saldoVisibile ? `€${day.total.toFixed(0)}` : "••"}
+          {saldoVisibile ? formatta(day.total, 0) : "••"}
         </Text>
       ),
     };

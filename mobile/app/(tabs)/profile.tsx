@@ -1,5 +1,5 @@
 import { View, Pressable } from "react-native";
-import { Text, IconButton, Button, Dialog, Portal, TextInput, ActivityIndicator, Snackbar, Switch } from "react-native-paper";
+import { Text, IconButton, Button, Dialog, Portal, TextInput, ActivityIndicator, Snackbar, Switch, RadioButton } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { esportaCsv } from "@/utils/exportData";
 import { impostaPromemoria, promemoriaAttivi, dimenticaDispositivo, NOTIFICHE_DISPONIBILI } from "@/utils/notifications";
@@ -15,9 +15,18 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { puoAggiungereAllaHome } from "@/utils/aggiuntaHome";
+import { usePreferenze } from "@/utils/preferenze";
+import { VALUTE, simbolo, type Valuta } from "@/utils/formato";
 
 //il dispositivo non cambia mentre si usa l'app: non c'e' niente da ascoltare
 const nessunaIscrizione = () => () => {};
+
+const NOMI_VALUTE: Record<Valuta, string> = {
+    EUR: "Euro",
+    USD: "Dollaro statunitense",
+    GBP: "Sterlina britannica",
+    CHF: "Franco svizzero",
+};
 
 export default function ProfileScreen() {
     const router = useRouter();
@@ -45,6 +54,22 @@ export default function ProfileScreen() {
     //Il terzo argomento vale durante la build del sito, dove non c'e' un browser
     const aggiungibile = useSyncExternalStore(nessunaIscrizione, puoAggiungereAllaHome, () => false);
     const [showHomeDialog, setShowHomeDialog] = useState(false);
+    const { valuta, impostaValuta } = usePreferenze();
+    const [showValutaDialog, setShowValutaDialog] = useState(false);
+    const [valutaInCorso, setValutaInCorso] = useState(false);
+
+    //cambia solo come si leggono gli importi: quelli gia' salvati restano gli stessi numeri
+    async function scegliValuta(nuova: string) {
+        if (nuova === valuta) {
+            setShowValutaDialog(false);
+            return;
+        }
+        setValutaInCorso(true);
+        const riuscito = await impostaValuta(nuova as Valuta);
+        setValutaInCorso(false);
+        setShowValutaDialog(false);
+        if (!riuscito) setMessaggio("Impossibile cambiare la valuta. Controlla la connessione.");
+    }
 
     async function handleContatta() {
         setShowSupportDialog(false);
@@ -209,12 +234,12 @@ export default function ProfileScreen() {
                     <View></View>
                 </View>
 
-                {/* in Expo Go il modulo delle notifiche non esiste: uno switch
-                    che non puo' funzionare e' peggio di una voce assente */}
-                {NOTIFICHE_DISPONIBILI && (
-                <>
                 <Text style={styles.sectionLabel}>APP</Text>
                 <View style={styles.sectionCard}>
+                    {/* in Expo Go il modulo delle notifiche non esiste: uno switch
+                        che non puo' funzionare e' peggio di una voce assente */}
+                    {NOTIFICHE_DISPONIBILI && (
+                    <>
                     <View style={styles.row}>
                         <MaterialCommunityIcons name="bell-outline" size={20} color={colors.accent} />
                         <View style={styles.rowTextGroup}>
@@ -229,9 +254,18 @@ export default function ProfileScreen() {
                             disabled={promemoriaInCorso}
                         />
                     </View>
+                    <View style={styles.rowDivider} />
+                    </>
+                    )}
+                    <Pressable style={styles.row} onPress={() => setShowValutaDialog(true)}>
+                        <MaterialCommunityIcons name="cash-multiple" size={20} color={colors.primary} />
+                        <View style={styles.rowTextGroup}>
+                            <Text style={styles.rowLabelInGroup}>Valuta</Text>
+                            <Text style={styles.rowHint}>{NOMI_VALUTE[valuta]} ({simbolo(valuta)})</Text>
+                        </View>
+                        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
+                    </Pressable>
                 </View>
-                </>
-                )}
 
                 <Text style={styles.sectionLabel}>DATI</Text>
                 <View style={styles.sectionCard}>
@@ -313,6 +347,27 @@ export default function ProfileScreen() {
                 </Button>
 
             </PaginaScorrevole>
+
+            <Portal>
+                <Dialog visible={showValutaDialog} onDismiss={() => setShowValutaDialog(false)}>
+                    <Dialog.Title>Valuta</Dialog.Title>
+                    <Dialog.Content>
+                        <RadioButton.Group onValueChange={scegliValuta} value={valuta}>
+                            {VALUTE.map((v) => (
+                                <RadioButton.Item
+                                    key={v}
+                                    value={v}
+                                    label={`${NOMI_VALUTE[v]} (${simbolo(v)})`}
+                                    disabled={valutaInCorso}
+                                />
+                            ))}
+                        </RadioButton.Group>
+                        <Text style={{ marginTop: 8, color: colors.textMuted }}>
+                            Gli importi già registrati non vengono convertiti.
+                        </Text>
+                    </Dialog.Content>
+                </Dialog>
+            </Portal>
 
             {/* un solo pulsante: non c'e' niente da confermare, solo istruzioni */}
             <Portal>

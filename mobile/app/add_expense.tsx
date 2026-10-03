@@ -18,6 +18,8 @@ import { apiFetch } from "@/utils/apiFetch";
 import { fromDateString, toDateString } from "@/utils/date";
 import { styles, colors } from "../styles/add-expense.styles";
 import { iconaPerGruppo } from "@/utils/categoryIcons";
+import { usePreferenze } from "@/utils/preferenze";
+import { simbolo } from "@/utils/formato";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { segnalaSalvataggio } from "@/utils/esitoAssistente";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -49,6 +51,7 @@ const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "backspace"
 const MAX_DECIMALS = 2;
 
 export default function AddExpenseScreen() {
+  const { valuta } = usePreferenze();
   const router = useRouter();
   // I parametri di rotta arrivano sempre come stringhe: li usa "Modifica"
   // dell'assistente per precompilare il form con i dati estratti.
@@ -303,7 +306,7 @@ export default function AddExpenseScreen() {
             IMPORTO
           </Text>
           <View style={styles.amountRow}>
-            <Text style={styles.currency}>€</Text>
+            <Text style={styles.currency}>{simbolo(valuta)}</Text>
             <Text style={styles.amountValue}>{amountRaw}</Text>
             {isAmountFocused && <BlinkingCursor />}
           </View>

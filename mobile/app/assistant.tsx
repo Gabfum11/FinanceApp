@@ -10,12 +10,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { toDateString, fromDateString } from "@/utils/date"
 import { iconaPerGruppo } from "@/utils/categoryIcons";
+import { usePreferenze } from "@/utils/preferenze";
 import { SelettoreData } from "@/components/SelettoreData";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { prendiSalvataggio } from "@/utils/esitoAssistente";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function AssistantScreen() {
+  const { importo } = usePreferenze();
   type ExpenseConfirmation = {
     id: number;
     description: string;
@@ -286,7 +288,7 @@ function handleDatePickerDismiss() {
                       : fromDateString(item.expenseData.date).toLocaleDateString("it-IT")}
                   </Text>
                 </View>
-                <Text style={styles.savedAmount}>€{item.expenseData.amount.toFixed(2)}</Text>
+                <Text style={styles.savedAmount}>{importo(item.expenseData.amount)}</Text>
               </View>
             </View>
           ) : (
@@ -323,7 +325,7 @@ function handleDatePickerDismiss() {
         <View style={styles.expenseCard}>
           <Text variant="labelSmall" style={styles.cardLabel}>IMPORTO</Text>
           <Text variant="headlineMedium" style={styles.cardAmount}>
-            €{pendingExpense.amount.toFixed(2)}
+            {importo(pendingExpense.amount)}
           </Text>
           <Text style={styles.confirmationDetail}>
             Descrizione: {pendingExpense.description}

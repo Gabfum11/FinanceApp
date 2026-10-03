@@ -13,11 +13,11 @@ class User(Base):
     #nullable: chi entra solo con Google non ha una password da conservare
     hashed_password = Column(String, nullable=True)
     #id stabile dell'account Google: l'email puo' cambiare, questo no perche' e' un identificativo univoco generato da Google, serverà per login con Google. Se l'utente entra solo con email/password, resta null
-    google_id = Column(String, index=True, unique=True, nullable=True) 
+    google_id = Column(String, index=True, unique=True, nullable=True) #vuoto se l'utente si registra normalmente, non con Google
     nickname = Column(String, nullable=True)
     monthly_budget = Column(Float, nullable=True)
     budget_start_day = Column(Integer, nullable=True, default=1)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True) 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     is_verified=Column(Boolean,default=False)
     is_admin = Column(Boolean, default=False, nullable=False) #l'admin non puo' essere disattivato, serve per avere un account di emergenza per accedere al db se qualcosa va storto
@@ -31,6 +31,13 @@ class User(Base):
     #il tutorial di primo avvio e' per account, non per telefono: chi lo ha
     #visto non lo rivede su un altro dispositivo, chi crea un account nuovo si'
     tutorial_visto = Column(Boolean, default=False, nullable=False, server_default="false")
+    #codice ISO 4217 della valuta in cui l'utente registra tutto: le spese sono
+    #numeri senza valuta, questa decide solo come mostrarli. Una sola per account,
+    #niente conversioni: cambiarla non tocca gli importi gia' salvati
+    currency = Column(String(3), default="EUR", nullable=False, server_default="EUR")
+    #lingua dei testi che parte dal server (email, notifiche, esportazione):
+    #quella dell'app sta sul telefono, che la manda qui quando cambia
+    language = Column(String(2), default="it", nullable=False, server_default="it")
     expenses = relationship("Expense", back_populates="owner")
 
     @property

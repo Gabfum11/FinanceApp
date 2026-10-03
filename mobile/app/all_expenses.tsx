@@ -10,6 +10,7 @@ import { styles } from "@/styles/all_expenses.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { iconaPerGruppo } from "@/utils/categoryIcons";
+import { usePreferenze } from "@/utils/preferenze";
 
 type Expense = {
   id: number;
@@ -45,6 +46,7 @@ function periodStart(period: Period): Date | null {
 }
 
 export default function ExpenseList() {
+  const { importo } = usePreferenze();
     const insets = useSafeAreaInsets();
     const [expenses, setExpenses]=useState<Expense[]>([]);
     const [expensesLoaded, setExpensesLoaded] = useState(false);
@@ -240,7 +242,7 @@ export default function ExpenseList() {
                     <Text style={styles.summaryCount}>
                         {filtered.length} {filtered.length === 1 ? "spesa" : "spese"}
                     </Text>
-                    <Text style={styles.summaryTotal}>€{total.toFixed(2)}</Text>
+                    <Text style={styles.summaryTotal}>{importo(total)}</Text>
                 </>
             )}
         </View>
@@ -269,7 +271,7 @@ export default function ExpenseList() {
                         {item.category_name ?? "Non assegnata"} · {formatDataSpesa(item.date)}
                     </Text>
                 </View>
-                <Text style={styles.expenseAmount}>- €{item.amount.toFixed(2)}</Text>
+                <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
                 <IconButton icon="pencil-outline" size={18} onPress={() => openEdit(item)} />
                 <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} />
             </View>

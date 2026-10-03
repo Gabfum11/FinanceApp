@@ -355,6 +355,22 @@ def set_push_token(payload: schemas.PushToken, db: Session = Depends(get_db), cu
     db.commit()
     return {"detail": "Dispositivo registrato per le notifiche"}
 
+@router.patch("/preferences", response_model=schemas.UserOut)
+def update_preferences(preferences: schemas.UpdatePreferences, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    """Valuta e lingua dell'utente, scelte dal Profilo.
+
+    PATCH: arriva solo quello che cambia. Restituisce l'utente aggiornato, cosi'
+    l'app riparte dai valori salvati invece di fidarsi di quelli che ha mandato.
+    """
+    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
+    if preferences.currency is not None:
+        utente.currency = preferences.currency
+    if preferences.language is not None:
+        utente.language = preferences.language
+    db.commit()
+    db.refresh(utente)
+    return utente
+
 @router.put("/tutorial-visto")
 def set_tutorial_visto(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
     """Il tutorial di primo avvio e' stato completato o saltato.

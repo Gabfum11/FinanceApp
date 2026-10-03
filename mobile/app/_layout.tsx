@@ -6,6 +6,7 @@ import { PaperProvider } from 'react-native-paper';
 
 import { theme } from '@/theme';
 import { InvitoHome } from '@/components/InvitoHome';
+import { PreferenzeProvider } from '@/utils/preferenze';
 
 export const unstable_settings = {
   initialRouteName: 'index',
@@ -15,6 +16,8 @@ export default function RootLayout() {
 
   return (
     <PaperProvider theme={theme}>
+      {/* valuta e lingua dell'utente, per tutte le schermate */}
+      <PreferenzeProvider>
       <ThemeProvider value={DefaultTheme}>
         <Stack>
           {/*
@@ -39,6 +42,7 @@ export default function RootLayout() {
         <InvitoHome />
         <StatusBar style="auto" />
       </ThemeProvider>
+      </PreferenzeProvider>
     </PaperProvider>
   );
 }

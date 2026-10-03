@@ -105,6 +105,8 @@ class UserOut(BaseModel):
     nickname: str
     has_password: bool #False per gli account creati con Google
     tutorial_visto: bool
+    currency: str
+    language: str
 
     class Config:
         from_attributes = True
@@ -174,6 +176,16 @@ class GoogleLogin(BaseModel):
 
 class UpdateProfile(BaseModel):
     nickname: str = Field(..., min_length=1, max_length=50)
+
+#le valute e le lingue che l'app sa mostrare: qualsiasi altro valore e' rifiutato
+#con un 422, cosi' il database non contiene mai un codice che l'app non conosce
+Valuta = Literal["EUR", "USD", "GBP", "CHF"]
+Lingua = Literal["it", "en"]
+
+class UpdatePreferences(BaseModel):
+    #entrambe facoltative: si puo' cambiare una sola delle due
+    currency: Valuta | None = None
+    language: Lingua | None = None
 
 class PushToken(BaseModel):
     #solo il formato di Expo: qualsiasi altra stringa farebbe fallire ogni invio

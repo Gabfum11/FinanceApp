@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { IconButton, Text, Button, ActivityIndicator, Snackbar } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
+import { usePreferenze } from "@/utils/preferenze";
 import { useCallback, useEffect, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
 import { styles } from "@/styles/budget.styles";
@@ -36,6 +37,7 @@ type ConfermaInAttesa =
   | { tipo: "pausa" | "riattiva" | "elimina"; subId: number };
 
 export default function BudgetScreen() {
+  const { importo } = usePreferenze();
   const [subscriptions, setSubscriptions]=useState<Subscription[]>([]);
   const [conferma, setConferma] = useState<ConfermaInAttesa | null>(null);
   //ogni conferma registra una spesa: un doppio tocco ne creerebbe due
@@ -170,7 +172,7 @@ export default function BudgetScreen() {
                 {!item.auto_renew && " · Manuale"}
               </Text>
             </View>
-            <Text style={styles.subAmount}>€{item.amount.toFixed(2)}</Text>
+            <Text style={styles.subAmount}>{importo(item.amount)}</Text>
             <IconButton icon="pencil-outline" size={18} onPress={()=>openEdit(item)} />
             <IconButton icon="pause" size={18} onPress={()=>confirmToggle(item.id, true)} />
           </View>
@@ -224,7 +226,7 @@ export default function BudgetScreen() {
                       <Text style={styles.dueOverdue}>{getOverdueText(item.next_date)}</Text>
                     </View>
                   </View>
-                  <Text style={styles.subAmount}>€{item.amount.toFixed(2)}</Text>
+                  <Text style={styles.subAmount}>{importo(item.amount)}</Text>
                 </View>
                 <Text style={styles.dueQuestion}>
                   Il pagamento non è automatico: hai rinnovato per {mesi[new Date().getMonth()]}?

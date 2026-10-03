@@ -3,6 +3,7 @@ import { View, Pressable } from "react-native";
 import { IconButton, Text, Snackbar, ActivityIndicator } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
+import { usePreferenze } from "@/utils/preferenze";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import { PieChart } from "react-native-gifted-charts";
 import { styles } from "@/styles/stats.styles";
@@ -23,6 +24,7 @@ function formatCycleLabel(cycleStart: string, cycleEnd: string): string {
 }
 
 export default function StatsScreen() {
+  const { importo } = usePreferenze();
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -142,7 +144,7 @@ export default function StatsScreen() {
                       <View style={[styles.legendDot, { backgroundColor: "#E0E0E0" }]} />
                       <Text style={styles.legendLabel}>Disponibile</Text>
                     </View>
-                    <Text style={styles.legendPercentage}>€{remaining.toFixed(2)}</Text>
+                    <Text style={styles.legendPercentage}>{importo(remaining)}</Text>
                   </View>
                 )}
               </View>
@@ -155,7 +157,7 @@ export default function StatsScreen() {
                   centerLabelComponent={() => (
                     <View style={{ alignItems: "center" }}>
                       <Text style={styles.totalLabel}>Speso</Text>
-                      <Text style={styles.totalAmount}>€{total.toFixed(2)}</Text>
+                      <Text style={styles.totalAmount}>{importo(total)}</Text>
                     </View>
                   )}
                 />

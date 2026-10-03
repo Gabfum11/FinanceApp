@@ -20,6 +20,7 @@ import { PRIVACY_URL } from "@/config";
 import { GoogleButton } from "@/components/GoogleButton";
 import { useGoogleLogin } from "@/utils/useGoogleLogin";
 import { segnaPresentazioneVista } from "@/utils/presentazione";
+import { usePreferenze } from "@/utils/preferenze";
 import { colors } from "@/styles/tokens";
 import { styles } from "@/styles/presentazione.styles";
 
@@ -63,6 +64,7 @@ function Punti({ attivo, scuri = false, centrati = false }: { attivo: number; sc
 }
 
 function IllustrazioneSpese() {
+  const { importo } = usePreferenze();
   return (
     <>
       <View style={styles.fumetto}>
@@ -81,7 +83,7 @@ function IllustrazioneSpese() {
             <Text style={styles.esitoDescrizione}>Supermercato</Text>
             <Text style={styles.esitoMeta}>Spesa alimentare · {ieri()}</Text>
           </View>
-          <Text style={styles.esitoImporto}>40,00 €</Text>
+          <Text style={styles.esitoImporto}>{importo(40)}</Text>
         </View>
       </View>
     </>
@@ -89,6 +91,7 @@ function IllustrazioneSpese() {
 }
 
 function IllustrazioneBudget() {
+  const { importo } = usePreferenze();
   const oggi = (new Date().getDay() + 6) % 7; //lunedi' = 0, come le etichette
   const scala = Math.max(...SPESE_SETTIMANA) * 1.3;
   return (
@@ -100,15 +103,15 @@ function IllustrazioneBudget() {
           <Text style={styles.budgetPeriodo}>{periodoBudget()}</Text>
         </View>
         <View style={styles.budgetImporti}>
-          <Text style={styles.budgetResto}>412,50 €</Text>
-          <Text style={styles.budgetTotale}>di 800,00 €</Text>
+          <Text style={styles.budgetResto}>{importo(412.5)}</Text>
+          <Text style={styles.budgetTotale}>di {importo(800)}</Text>
         </View>
         <View style={styles.barra}>
           <View style={styles.barraPiena} />
         </View>
         <View style={styles.legenda}>
           <View style={styles.legendaPunto} />
-          <Text style={styles.legendaTesto}>Speso 387,50 €</Text>
+          <Text style={styles.legendaTesto}>Speso {importo(387.5)}</Text>
         </View>
       </View>
       <View style={styles.settimana}>
@@ -116,7 +119,7 @@ function IllustrazioneBudget() {
         <View style={styles.colonne}>
           {SPESE_SETTIMANA.map((valore, i) => (
             <View key={i} style={styles.colonna}>
-              <Text style={styles.colonnaValore}>{valore} €</Text>
+              <Text style={styles.colonnaValore}>{importo(valore, 0)}</Text>
               <View
                 style={[
                   styles.colonnaBarra,
@@ -155,6 +158,7 @@ function Abbonamento({ nome, meta, importo }: { nome: string; meta: string; impo
 }
 
 function IllustrazioneAbbonamenti() {
+  const { importo } = usePreferenze();
   return (
     <>
       {!SUL_WEB && (
@@ -163,13 +167,13 @@ function IllustrazioneAbbonamenti() {
           <View style={{ flex: 1 }}>
             <Text style={styles.notificaApp}>TrackIt</Text>
             <Text style={styles.notificaTitolo}>Palestra si rinnova domani</Text>
-            <Text style={styles.notificaTesto}>39,90 € · mensile</Text>
+            <Text style={styles.notificaTesto}>{importo(39.9)} · mensile</Text>
           </View>
         </View>
       )}
       <Text style={styles.sezione}>Abbonamenti attivi</Text>
-      <Abbonamento nome="Palestra" meta="Palestra · Scade domani" importo="39,90 €" />
-      <Abbonamento nome="Netflix" meta="Abbonamenti digitali · Scade tra 9 giorni" importo="13,99 €" />
+      <Abbonamento nome="Palestra" meta="Palestra · Scade domani" importo={importo(39.9)} />
+      <Abbonamento nome="Netflix" meta="Abbonamenti digitali · Scade tra 9 giorni" importo={importo(13.99)} />
     </>
   );
 }

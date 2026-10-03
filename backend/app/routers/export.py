@@ -75,7 +75,7 @@ def export_expenses(db: Session = Depends(get_db), current_user: models.User = D
         ])
 
     contenuto = _scrivi_csv(
-        ["Data", "Descrizione", "Importo", "Categoria", "Gruppo"], righe
+        ["Data", "Descrizione", f"Importo ({current_user.currency})", "Categoria", "Gruppo"], righe
     )
     return _risposta_csv(contenuto, f"trackit-spese-{date.today().isoformat()}.csv")
 
@@ -104,7 +104,7 @@ def export_subscriptions(db: Session = Depends(get_db), current_user: models.Use
         ])
 
     contenuto = _scrivi_csv(
-        ["Descrizione", "Importo", "Frequenza", "Prossimo addebito",
+        ["Descrizione", f"Importo ({current_user.currency})", "Frequenza", "Prossimo addebito",
          "Stato", "Rinnovo", "Categoria", "Gruppo"],
         righe,
     )

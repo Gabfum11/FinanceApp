@@ -16,6 +16,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
+from app.business_logic.formato import formatta_importo
 from app.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -34,10 +35,6 @@ def oggi_in_italia() -> date:
     return datetime.now(FUSO).date()
 
 
-def _euro(valore: float) -> str:
-    return f"{valore:.2f}".replace(".", ",") + " €"
-
-
 def _secondi_di_validita(rinnovo: date) -> int:
     """Quanto a lungo la push aspetta un telefono spento prima di essere scartata.
 
@@ -48,12 +45,12 @@ def _secondi_di_validita(rinnovo: date) -> int:
     return max(int((fine - datetime.now(FUSO)).total_seconds()), 0)
 
 
-def _messaggio(sub: models.Subscriptions, token: str) -> dict:
+def _messaggio(sub: models.Subscriptions, utente: models.User) -> dict:
     frequenza = FREQUENZE.get(sub.frequency, sub.frequency)
     return {
-        "to": token,
+        "to": utente.push_token,
         "title": f"{sub.description} si rinnova domani",
-        "body": f"{_euro(sub.amount)} · {frequenza}",
+        "body": f"{formatta_importo(sub.amount, utente.currency)} · {frequenza}",
         "data": {"subscriptionId": sub.id},
         "channelId": CANALE,
         "ttl": _secondi_di_validita(sub.next_date),
@@ -101,7 +98,7 @@ def invia_promemoria(db: Session) -> dict:
         db.commit()  #rilascia il blocco anche quando non c'e' niente da inviare
         return {"inviati": 0, "falliti": 0, "token_rimossi": 0}
 
-    messaggi = [_messaggio(sub, utente.push_token) for sub, utente in righe]
+    messaggi = [_messaggio(sub, utente) for sub, utente in righe]
     esiti = invia_a_expo(messaggi)
 
     inviati = falliti = 0

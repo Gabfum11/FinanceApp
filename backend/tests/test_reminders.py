@@ -36,8 +36,8 @@ def expo(monkeypatch):
 
 @pytest.fixture
 def abbonamento(db_session, make_user):
-    def _crea(giorni=1, token=TOKEN, is_active=True, email="u@t.it", **extra):
-        user_id = make_user(email=email, push_token=token)
+    def _crea(giorni=1, token=TOKEN, is_active=True, email="u@t.it", currency="EUR", **extra):
+        user_id = make_user(email=email, push_token=token, currency=currency)
         db = db_session()
         sub = models.Subscriptions(
             description=extra.pop("description", "Netflix"),
@@ -131,6 +131,11 @@ class TestContenuto:
         assert m["body"] == "12,99 € · mensile"
         assert m["channelId"] == "abbonamenti"
         assert m["data"] == {"subscriptionId": sub_id}
+
+    def test_importo_nella_valuta_dell_utente(self, cron, expo, abbonamento):
+        abbonamento(description="Netflix", amount=12.99, currency="CHF")
+        cron()
+        assert expo["messaggi"][0]["body"] == "12,99 CHF · mensile"
 
     def test_scade_con_la_fine_del_giorno_del_rinnovo(self, cron, expo, abbonamento):
         """Un avviso "si rinnova domani" ricevuto dopo il rinnovo confonderebbe."""
