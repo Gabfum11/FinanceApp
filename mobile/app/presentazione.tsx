@@ -178,6 +178,9 @@ export default function Presentazione() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  //in una lista orizzontale ogni pagina e' alta quanto il suo contenuto, e nel
+  //browser non si allunga da sola: si misura lo spazio vero e glielo si da'
+  const [altezza, setAltezza] = useState(0);
   const lista = useRef<FlatList<number>>(null);
   const [pagina, setPagina] = useState(0);
   const [errore, setErrore] = useState("");
@@ -223,7 +226,7 @@ export default function Presentazione() {
   function struttura(indice: number, children: ReactNode, piede: ReactNode) {
     return (
       <ScrollView
-        style={{ width }}
+        style={{ width, height: altezza }}
         contentContainerStyle={[styles.pagina, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }]}
       >
         <View style={styles.intestazione}>
@@ -263,7 +266,7 @@ export default function Presentazione() {
       case 0:
         return (
           <ScrollView
-            style={[{ width }, styles.paginaScura]}
+            style={[{ width, height: altezza }, styles.paginaScura]}
             contentContainerStyle={[styles.pagina, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}
           >
             <View style={styles.logoArea}>
@@ -374,23 +377,25 @@ export default function Presentazione() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={(e) => setAltezza(e.nativeEvent.layout.height)}>
       {/* testo della barra di stato chiaro sulla prima pagina, che e' scura */}
       <StatusBar style={pagina === 0 ? "light" : "dark"} />
-      <FlatList
-        ref={lista}
-        data={PAGINE}
-        keyExtractor={(i) => String(i)}
-        renderItem={({ item }) => disegna(item)}
-        horizontal
-        pagingEnabled
-        bounces={false}
-        showsHorizontalScrollIndicator={false}
-        onScroll={scorrimento}
-        scrollEventThrottle={16}
-        getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
-        extraData={[width, insets.top, google.isReady, google.isLoading]}
-      />
+      {altezza > 0 && (
+        <FlatList
+          ref={lista}
+          data={PAGINE}
+          keyExtractor={(i) => String(i)}
+          renderItem={({ item }) => disegna(item)}
+          horizontal
+          pagingEnabled
+          bounces={false}
+          showsHorizontalScrollIndicator={false}
+          onScroll={scorrimento}
+          scrollEventThrottle={16}
+          getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
+          extraData={[width, altezza, insets.top, google.isReady, google.isLoading]}
+        />
+      )}
       <Snackbar visible={errore !== ""} onDismiss={() => setErrore("")}>
         {errore}
       </Snackbar>
