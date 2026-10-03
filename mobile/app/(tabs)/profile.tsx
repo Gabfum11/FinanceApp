@@ -11,17 +11,14 @@ import { cancellaSessione, chiudiSessione } from "@/utils/session";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { styles } from "@/styles/profile.styles";
 import { colors } from "@/styles/tokens";
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
-import { puoAggiungereAllaHome } from "@/utils/aggiuntaHome";
 import { usePreferenze } from "@/utils/preferenze";
 import { VALUTE, LINGUE, simbolo, type Valuta, type Lingua } from "@/utils/formato";
 import { useTranslation } from "react-i18next";
 
-//il dispositivo non cambia mentre si usa l'app: non c'e' niente da ascoltare
-const nessunaIscrizione = () => () => {};
 
 
 export default function ProfileScreen() {
@@ -46,10 +43,6 @@ export default function ProfileScreen() {
     const [showLogoutAllDialog, setShowLogoutAllDialog] = useState(false);
     //l'icona di logout e' piccola e in alto: un tocco per sbaglio non deve buttare fuori
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-    //solo su iPhone, nel browser: chi ha chiuso l'invito iniziale ci puo' ripensare.
-    //Il terzo argomento vale durante la build del sito, dove non c'e' un browser
-    const aggiungibile = useSyncExternalStore(nessunaIscrizione, puoAggiungereAllaHome, () => false);
-    const [showHomeDialog, setShowHomeDialog] = useState(false);
     const { valuta, impostaValuta, lingua, impostaLingua } = usePreferenze();
     const { t } = useTranslation();
     //i messaggi in basso compaiono sopra la barra delle schede, non sotto
@@ -324,16 +317,6 @@ export default function ProfileScreen() {
 
                 <Text style={styles.sectionLabel}>{t("profilo.sezioneSupporto")}</Text>
                 <View style={styles.sectionCard}>
-                    {aggiungibile && (
-                        <>
-                            <Pressable style={styles.row} onPress={() => setShowHomeDialog(true)}>
-                                <MaterialCommunityIcons name="cellphone-arrow-down" size={20} color={colors.primary} />
-                                <Text style={styles.rowLabel}>{t("profilo.aggiungiHome")}</Text>
-                                <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
-                            </Pressable>
-                            <View style={styles.rowDivider} />
-                        </>
-                    )}
                     <Pressable style={styles.row} onPress={() => router.navigate({ pathname: "/(tabs)/home", params: { tour: "1" } })}>
                         <MaterialCommunityIcons name="school-outline" size={20} color={colors.primary} />
                         <Text style={styles.rowLabel}>{t("profilo.rivediTutorial")}</Text>
@@ -455,24 +438,6 @@ export default function ProfileScreen() {
                         <Button mode="contained" onPress={confermaValuta} loading={valutaInCorso} disabled={valutaInCorso}>
                             {t("profilo.cambiaValuta")}
                         </Button>
-                    </Dialog.Actions>
-                </Dialog>
-            </Portal>
-
-            {/* un solo pulsante: non c'e' niente da confermare, solo istruzioni */}
-            <Portal>
-                <Dialog visible={showHomeDialog} onDismiss={() => setShowHomeDialog(false)} style={styles.dialog}>
-                    <Dialog.Title style={styles.dialogTitle}>{t("profilo.homeTitolo")}</Dialog.Title>
-                    <Dialog.Content>
-                        <Text style={styles.dialogText}>{t("profilo.homePasso1")}</Text>
-                        <Text style={styles.dialogText}>{t("profilo.homePasso2")}</Text>
-                        {/* l'icona ha dati suoi, separati da Safari: la sessione non passa */}
-                        <Text style={styles.dialogNota}>
-                            {t("profilo.homeNota")}
-                        </Text>
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button onPress={() => setShowHomeDialog(false)}>{t("invitoHome.hoCapito")}</Button>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
