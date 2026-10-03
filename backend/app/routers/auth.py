@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
 from app.state import limiter
-from app.business_logic import security, email_service, google_auth
+from app.business_logic import security, email_service, google_auth, valuta_estera
+from app.business_logic.cambi import CambioNonDisponibile
 from app.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -363,7 +364,21 @@ def update_preferences(preferences: schemas.UpdatePreferences, db: Session = Dep
     l'app riparte dai valori salvati invece di fidarsi di quelli che ha mandato.
     """
     utente = db.query(models.User).filter(models.User.id == current_user.id).first()
-    if preferences.currency is not None:
+    if preferences.currency is not None and preferences.currency != utente.currency:
+        if preferences.convert_history:
+            try:
+                valuta_estera.converti_storico(db, utente, preferences.currency)
+            except CambioNonDisponibile:
+                #niente a meta': o tutto convertito o tutto com'era
+                db.rollback()
+                raise HTTPException(status_code=503, detail="Exchange rate unavailable")
+        else:
+            #i numeri restano gli stessi: un abbonamento con il prezzo nella nuova
+            #valuta torna semplicemente "nella valuta dell'utente"
+            db.query(models.Subscriptions).filter(
+                models.Subscriptions.user_id == utente.id,
+                models.Subscriptions.currency == preferences.currency,
+            ).update({models.Subscriptions.currency: None})
         utente.currency = preferences.currency
     if preferences.language is not None:
         utente.language = preferences.language

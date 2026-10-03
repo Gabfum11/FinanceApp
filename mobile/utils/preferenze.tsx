@@ -15,8 +15,8 @@ const CHIAVE_LINGUA = "preferenze_lingua";
 type Preferenze = {
   valuta: Valuta;
   lingua: Lingua;
-  /** salva sull'account e, se il server accetta, anche qui */
-  impostaValuta: (valuta: Valuta) => Promise<boolean>;
+  /** salva sull'account e, se il server accetta, anche qui. converti: anche le spese passate */
+  impostaValuta: (valuta: Valuta, converti?: boolean) => Promise<EsitoValuta>;
   /** allinea alla risposta di /auth/me: vince sempre l'account */
   sincronizza: (dati: { currency?: unknown; language?: unknown }) => void;
   /** importo nella valuta e nella lingua dell'utente */
@@ -26,6 +26,9 @@ type Preferenze = {
   /** importo coperto dall'occhio della home */
   nascosto: string;
 };
+
+//"cambio": il servizio dei tassi non ha risposto e non e' cambiato niente
+export type EsitoValuta = "ok" | "cambio" | "errore";
 
 const ContestoPreferenze = createContext<Preferenze | null>(null);
 
@@ -54,18 +57,19 @@ export function PreferenzeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const impostaValuta = useCallback(
-    async (nuova: Valuta) => {
+    async (nuova: Valuta, converti = false): Promise<EsitoValuta> => {
       try {
         const response = await apiFetch("/auth/preferences", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ currency: nuova }),
+          body: JSON.stringify({ currency: nuova, convert_history: converti }),
         });
-        if (!response.ok) return false;
+        if (response.status === 503) return "cambio";
+        if (!response.ok) return "errore";
         sincronizza(await response.json());
-        return true;
+        return "ok";
       } catch {
-        return false;
+        return "errore";
       }
     },
     [sincronizza]

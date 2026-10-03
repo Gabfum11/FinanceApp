@@ -57,18 +57,32 @@ export default function ProfileScreen() {
     const { valuta, impostaValuta } = usePreferenze();
     const [showValutaDialog, setShowValutaDialog] = useState(false);
     const [valutaInCorso, setValutaInCorso] = useState(false);
+    //scelta la nuova valuta, si chiede cosa fare delle spese passate
+    const [valutaNuova, setValutaNuova] = useState<Valuta | null>(null);
+    const [convertiPassate, setConvertiPassate] = useState(true);
 
-    //cambia solo come si leggono gli importi: quelli gia' salvati restano gli stessi numeri
-    async function scegliValuta(nuova: string) {
-        if (nuova === valuta) {
-            setShowValutaDialog(false);
-            return;
-        }
-        setValutaInCorso(true);
-        const riuscito = await impostaValuta(nuova as Valuta);
-        setValutaInCorso(false);
+    function scegliValuta(nuova: string) {
         setShowValutaDialog(false);
-        if (!riuscito) setMessaggio("Impossibile cambiare la valuta. Controlla la connessione.");
+        if (nuova === valuta) return;
+        setConvertiPassate(true);
+        setValutaNuova(nuova as Valuta);
+    }
+
+    async function confermaValuta() {
+        if (!valutaNuova) return;
+        setValutaInCorso(true);
+        const esito = await impostaValuta(valutaNuova, convertiPassate);
+        setValutaInCorso(false);
+        const nome = NOMI_VALUTE[valutaNuova];
+        setValutaNuova(null);
+        if (esito === "ok") {
+            setMessaggio(convertiPassate ? `Valuta cambiata in ${nome}: spese e budget convertiti` : `Valuta cambiata in ${nome}`);
+        } else if (esito === "cambio") {
+            //il server non ha cambiato niente: si puo' riprovare o scegliere l'altra opzione
+            setMessaggio("Tassi di cambio non disponibili ora: niente è stato modificato. Riprova tra poco.");
+        } else {
+            setMessaggio("Impossibile cambiare la valuta. Controlla la connessione.");
+        }
     }
 
     async function handleContatta() {
@@ -358,14 +372,47 @@ export default function ProfileScreen() {
                                     key={v}
                                     value={v}
                                     label={`${NOMI_VALUTE[v]} (${simbolo(v)})`}
-                                    disabled={valutaInCorso}
                                 />
                             ))}
                         </RadioButton.Group>
-                        <Text style={{ marginTop: 8, color: colors.textMuted }}>
-                            Gli importi già registrati non vengono convertiti.
-                        </Text>
                     </Dialog.Content>
+                </Dialog>
+            </Portal>
+
+            <Portal>
+                <Dialog visible={valutaNuova !== null} onDismiss={() => !valutaInCorso && setValutaNuova(null)}>
+                    <Dialog.Title>
+                        Passare a {valutaNuova ? `${NOMI_VALUTE[valutaNuova]} (${simbolo(valutaNuova)})` : ""}?
+                    </Dialog.Title>
+                    <Dialog.Content>
+                        <RadioButton.Group
+                            onValueChange={(scelta) => setConvertiPassate(scelta === "converti")}
+                            value={convertiPassate ? "converti" : "mantieni"}
+                        >
+                            <RadioButton.Item
+                                value="converti"
+                                label="Converti anche le spese passate"
+                                disabled={valutaInCorso}
+                            />
+                            <Text style={{ marginLeft: 16, marginBottom: 8, color: colors.textMuted }}>
+                                Ogni spesa con il cambio del suo giorno, il budget con quello di oggi. Le cifre originali restano salvate.
+                            </Text>
+                            <RadioButton.Item
+                                value="mantieni"
+                                label="Solo da adesso in poi"
+                                disabled={valutaInCorso}
+                            />
+                            <Text style={{ marginLeft: 16, color: colors.textMuted }}>
+                                Gli importi registrati restano gli stessi numeri, con il nuovo simbolo.
+                            </Text>
+                        </RadioButton.Group>
+                    </Dialog.Content>
+                    <Dialog.Actions>
+                        <Button onPress={() => setValutaNuova(null)} disabled={valutaInCorso}>Annulla</Button>
+                        <Button mode="contained" onPress={confermaValuta} loading={valutaInCorso} disabled={valutaInCorso}>
+                            Cambia valuta
+                        </Button>
+                    </Dialog.Actions>
                 </Dialog>
             </Portal>
 

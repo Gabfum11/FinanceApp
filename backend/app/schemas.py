@@ -205,6 +205,9 @@ class UpdatePreferences(BaseModel):
     #entrambe facoltative: si puo' cambiare una sola delle due
     currency: Valuta | None = None
     language: Lingua | None = None
+    #cambiando valuta: True converte anche le spese passate, con il tasso del
+    #loro giorno; False le lascia come sono (stessi numeri, nuovo simbolo)
+    convert_history: bool = False
 
 class PushToken(BaseModel):
     #solo il formato di Expo: qualsiasi altra stringa farebbe fallire ogni invio

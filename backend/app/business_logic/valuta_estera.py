@@ -7,7 +7,9 @@ usato restano accanto, per mostrarli e per ricalcolare se la spesa cambia.
 from datetime import date
 
 from app import models
-from app.business_logic.cambi import converti
+from sqlalchemy.orm import Session
+
+from app.business_logic.cambi import converti, precarica
 
 
 def applica_importo(
@@ -54,3 +56,48 @@ def spesa_da_abbonamento(sub: models.Subscriptions, giorno: date, valuta_utente:
     )
     applica_importo(spesa, sub.amount, sub.currency, valuta_utente)
     return spesa
+
+
+def converti_storico(db: Session, utente: models.User, nuova: str) -> None:
+    """Porta spese e budget dell'utente nella nuova valuta, senza perdere niente.
+
+    Ogni spesa si converte con il tasso del suo giorno, partendo dalla cifra
+    vera: quella in valuta estera resta la sua, quella nella vecchia valuta
+    dell'utente diventa a sua volta "originale". Si puo' quindi cambiare valuta
+    piu' volte senza accumulare arrotondamenti, e tornare indietro riporta le
+    cifre di partenza.
+
+    Gli abbonamenti mantengono il prezzo vero: quelli nella vecchia valuta la
+    ricordano, e da adesso ogni rinnovo li converte nella nuova.
+
+    Non salva: lo fa chi chiama, tutto insieme. Se un tasso manca solleva
+    CambioNonDisponibile prima di aver toccato qualsiasi cifra.
+    """
+    vecchia = utente.currency
+    oggi = date.today()
+    spese = db.query(models.Expense).filter(models.Expense.user_id == utente.id).all()
+    abbonamenti = db.query(models.Subscriptions).filter(models.Subscriptions.user_id == utente.id).all()
+
+    #prima tutti i tassi, una richiesta per valuta di partenza: se ne manca uno
+    #ci si ferma qui, con il database ancora intatto
+    giorni_per_valuta: dict[str, set[date]] = {}
+    for spesa in spese:
+        partenza = spesa.original_currency or vecchia
+        if partenza != nuova:
+            giorni_per_valuta.setdefault(partenza, set()).add(spesa.date)
+    if utente.monthly_budget:
+        giorni_per_valuta.setdefault(vecchia, set()).add(oggi)
+    for partenza, giorni in giorni_per_valuta.items():
+        precarica(partenza, nuova, giorni)
+
+    for spesa in spese:
+        if spesa.original_currency:
+            applica_importo(spesa, spesa.original_amount, spesa.original_currency, nuova)
+        else:
+            applica_importo(spesa, spesa.amount, vecchia, nuova)
+    if utente.monthly_budget:
+        #il budget e' un obiettivo per i mesi a venire: vale il cambio di oggi
+        utente.monthly_budget = converti(utente.monthly_budget, vecchia, nuova, oggi)[0]
+    for sub in abbonamenti:
+        prezzo_in = sub.currency or vecchia
+        sub.currency = None if prezzo_in == nuova else prezzo_in
