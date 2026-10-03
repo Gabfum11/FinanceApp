@@ -5,6 +5,7 @@ import { PaperProvider } from 'react-native-paper';
 
 
 import { theme } from '@/theme';
+import { InvitoHome } from '@/components/InvitoHome';
 
 export const unstable_settings = {
   initialRouteName: 'index',
@@ -34,6 +35,8 @@ export default function RootLayout() {
           <Stack.Screen name="modify_profile" options={{ headerShown: false }} />
           <Stack.Screen name="changePassw" options={{ headerShown: false }} />
         </Stack>
+        {/* fuori dallo Stack: resta sopra qualsiasi schermata, presentazione compresa */}
+        <InvitoHome />
         <StatusBar style="auto" />
       </ThemeProvider>
     </PaperProvider>

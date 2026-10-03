@@ -11,9 +11,13 @@ import { cancellaSessione, chiudiSessione } from "@/utils/session";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { styles } from "@/styles/profile.styles";
 import { colors } from "@/styles/tokens";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
+import { puoAggiungereAllaHome } from "@/utils/aggiuntaHome";
+
+//il dispositivo non cambia mentre si usa l'app: non c'e' niente da ascoltare
+const nessunaIscrizione = () => () => {};
 
 export default function ProfileScreen() {
     const router = useRouter();
@@ -37,6 +41,10 @@ export default function ProfileScreen() {
     const [showLogoutAllDialog, setShowLogoutAllDialog] = useState(false);
     //l'icona di logout e' piccola e in alto: un tocco per sbaglio non deve buttare fuori
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+    //solo su iPhone, nel browser: chi ha chiuso l'invito iniziale ci puo' ripensare.
+    //Il terzo argomento vale durante la build del sito, dove non c'e' un browser
+    const aggiungibile = useSyncExternalStore(nessunaIscrizione, puoAggiungereAllaHome, () => false);
+    const [showHomeDialog, setShowHomeDialog] = useState(false);
 
     async function handleContatta() {
         setShowSupportDialog(false);
@@ -254,6 +262,16 @@ export default function ProfileScreen() {
 
                 <Text style={styles.sectionLabel}>SUPPORTO</Text>
                 <View style={styles.sectionCard}>
+                    {aggiungibile && (
+                        <>
+                            <Pressable style={styles.row} onPress={() => setShowHomeDialog(true)}>
+                                <MaterialCommunityIcons name="cellphone-arrow-down" size={20} color={colors.primary} />
+                                <Text style={styles.rowLabel}>Aggiungi alla Home</Text>
+                                <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
+                            </Pressable>
+                            <View style={styles.rowDivider} />
+                        </>
+                    )}
                     <Pressable style={styles.row} onPress={() => router.navigate({ pathname: "/(tabs)/home", params: { tour: "1" } })}>
                         <MaterialCommunityIcons name="school-outline" size={20} color={colors.primary} />
                         <Text style={styles.rowLabel}>Rivedi il tutorial</Text>
@@ -295,6 +313,24 @@ export default function ProfileScreen() {
                 </Button>
 
             </PaginaScorrevole>
+
+            {/* un solo pulsante: non c'e' niente da confermare, solo istruzioni */}
+            <Portal>
+                <Dialog visible={showHomeDialog} onDismiss={() => setShowHomeDialog(false)}>
+                    <Dialog.Title>Aggiungi TrackIt alla Home</Dialog.Title>
+                    <Dialog.Content>
+                        <Text>1. Tocca Condividi nella barra di Safari.</Text>
+                        <Text>2. Scegli «Aggiungi alla schermata Home».</Text>
+                        {/* l'icona ha dati suoi, separati da Safari: la sessione non passa */}
+                        <Text style={{ marginTop: 12, color: colors.textMuted }}>
+                            Dall&apos;icona dovrai accedere di nuovo: per iPhone è un&apos;app separata da Safari.
+                        </Text>
+                    </Dialog.Content>
+                    <Dialog.Actions>
+                        <Button onPress={() => setShowHomeDialog(false)}>Ho capito</Button>
+                    </Dialog.Actions>
+                </Dialog>
+            </Portal>
 
             <ConfirmDialog
                 visible={showLogoutDialog}
