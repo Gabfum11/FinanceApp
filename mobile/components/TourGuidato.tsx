@@ -21,9 +21,6 @@ type Passaggio = {
   testo: string;
   margine: number;
   raggio: number;
-  //nella barra delle schede si registra solo l'icona: il buco si allarga
-  //a tutta la colonna, etichetta compresa
-  colonnaTab?: boolean;
 };
 
 //nel browser non ci sono notifiche push: i testi non devono promettere avvisi
@@ -58,9 +55,9 @@ const PASSAGGI: Passaggio[] = [
     bersaglio: "abbonamenti",
     titolo: "tour.abbonamenti.titolo",
     testo: "tour.abbonamenti.testo",
-    margine: 4,
-    raggio: 14,
-    colonnaTab: true,
+    //la scheda intera, icona e nome: e' gia' una pillola
+    margine: 2,
+    raggio: 18,
   },
   {
     //subito dopo gli abbonamenti: i promemoria sono spenti finche' non si
@@ -68,17 +65,17 @@ const PASSAGGI: Passaggio[] = [
     bersaglio: "profilo",
     titolo: SUL_WEB ? "tour.profiloWeb.titolo" : "tour.promemoria.titolo",
     testo: SUL_WEB ? "tour.profiloWeb.testo" : "tour.promemoria.testo",
-    margine: 4,
-    raggio: 14,
-    colonnaTab: true,
+    //la scheda intera, icona e nome: e' gia' una pillola
+    margine: 2,
+    raggio: 18,
   },
   {
     bersaglio: "statistiche",
     titolo: "tour.statistiche.titolo",
     testo: "tour.statistiche.testo",
-    margine: 4,
-    raggio: 14,
-    colonnaTab: true,
+    //la scheda intera, icona e nome: e' gia' una pillola
+    margine: 2,
+    raggio: 18,
   },
   {
     bersaglio: "occhio",
@@ -89,7 +86,6 @@ const PASSAGGI: Passaggio[] = [
   },
 ];
 
-const COLONNE_TAB = 5;
 const ICONA_APP = require("../assets/images/logo/trackit-icon-rounded-180.png");
 
 //velo pieno con un rettangolo arrotondato vuoto: evenodd lascia trasparente
@@ -166,12 +162,7 @@ export function TourGuidato({ onFine, dalProfilo = false }: Props) {
         else onFine("completato");
         return;
       }
-      let rett = { x: r.x - schermo.x, y: r.y - schermo.y, w: r.w, h: r.h };
-      if (p.colonnaTab) {
-        const colonna = schermo.w / COLONNE_TAB;
-        const centro = rett.x + rett.w / 2;
-        rett = { x: centro - colonna / 2, y: rett.y - 4, w: colonna, h: rett.h + 22 };
-      }
+      const rett = { x: r.x - schermo.x, y: r.y - schermo.y, w: r.w, h: r.h };
       setMisura({
         indice,
         rett: {

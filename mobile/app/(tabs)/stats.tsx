@@ -13,6 +13,7 @@ import { styles } from "@/styles/stats.styles";
 import { colors } from "@/styles/tokens";
 import { useFocusEffect, useRouter } from "expo-router";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
+import { useSpazioBarra } from "@/utils/barraSchede";
 
 type CategoryStat = {
   category_name: string;
@@ -29,6 +30,8 @@ function formatCycleLabel(cycleStart: string, cycleEnd: string): string {
 export default function StatsScreen() {
   const { importo } = usePreferenze();
   const { t } = useTranslation();
+  //i messaggi in basso compaiono sopra la barra delle schede, non sotto
+  const spazioBarra = useSpazioBarra();
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -94,7 +97,7 @@ export default function StatsScreen() {
 
   return (
     <View style={styles.container}>
-      <PaginaScorrevole style={styles.content}>
+      <PaginaScorrevole style={styles.content} sopraBarra>
         <View style={styles.selectorRow}>
           <IconButton icon="chevron-left" onPress={() => setCycleOffset((prev) => prev - 1)} />
           <Text variant="titleMedium">
@@ -179,7 +182,8 @@ export default function StatsScreen() {
 
       </PaginaScorrevole>
 
-      <Snackbar visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} duration={3000}>
+      <Snackbar
+    wrapperStyle={{ marginBottom: spazioBarra }} visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} duration={3000}>
         {errorMessage}
       </Snackbar>
     </View>

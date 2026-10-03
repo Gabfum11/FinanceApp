@@ -14,6 +14,7 @@ import { colors } from "@/styles/tokens";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
+import { useSpazioBarra } from "@/utils/barraSchede";
 import { puoAggiungereAllaHome } from "@/utils/aggiuntaHome";
 import { usePreferenze } from "@/utils/preferenze";
 import { VALUTE, LINGUE, simbolo, type Valuta, type Lingua } from "@/utils/formato";
@@ -51,6 +52,8 @@ export default function ProfileScreen() {
     const [showHomeDialog, setShowHomeDialog] = useState(false);
     const { valuta, impostaValuta, lingua, impostaLingua } = usePreferenze();
     const { t } = useTranslation();
+    //i messaggi in basso compaiono sopra la barra delle schede, non sotto
+    const spazioBarra = useSpazioBarra();
     const nomeValuta = (v: Valuta) => t(`valute.${v}`);
     const [showLinguaDialog, setShowLinguaDialog] = useState(false);
     const [showValutaDialog, setShowValutaDialog] = useState(false);
@@ -220,7 +223,7 @@ export default function ProfileScreen() {
 
     return (
         <View style={styles.container}>
-            <PaginaScorrevole style={styles.content}>
+            <PaginaScorrevole style={styles.content} sopraBarra>
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>{t("profilo.titolo")}</Text>
                     <IconButton
@@ -552,7 +555,8 @@ export default function ProfileScreen() {
                 </Dialog>
             </Portal>
 
-            <Snackbar visible={!!messaggio} onDismiss={() => setMessaggio("")}>
+            <Snackbar
+      wrapperStyle={{ marginBottom: spazioBarra }} visible={!!messaggio} onDismiss={() => setMessaggio("")}>
                 {messaggio}
             </Snackbar>
         </View>

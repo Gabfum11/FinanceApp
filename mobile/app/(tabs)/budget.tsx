@@ -8,6 +8,7 @@ import { router, useFocusEffect } from "expo-router";
 import { styles } from "@/styles/budget.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
+import { useSpazioBarra } from "@/utils/barraSchede";
 import { useTranslation } from "react-i18next";
 import i18n from "@/utils/i18n";
 import { nomeCategoria } from "@/utils/categorie";
@@ -43,6 +44,8 @@ type ConfermaInAttesa =
 export default function BudgetScreen() {
   const { importoIn } = usePreferenze();
   const { t } = useTranslation();
+  //i messaggi in basso compaiono sopra la barra delle schede, non sotto
+  const spazioBarra = useSpazioBarra();
   const [subscriptions, setSubscriptions]=useState<Subscription[]>([]);
   const [conferma, setConferma] = useState<ConfermaInAttesa | null>(null);
   //ogni conferma registra una spesa: un doppio tocco ne creerebbe due
@@ -164,7 +167,7 @@ export default function BudgetScreen() {
     }
   return (
     <View style={styles.container}>
-      <PaginaScorrevole style={styles.content}>
+      <PaginaScorrevole style={styles.content} sopraBarra>
         <Text variant="headlineMedium">{t("abbonamenti.attivi")}</Text>
         {activeSubscriptions.map((item) => (
           <View key={item.id} style={styles.subRow}>
@@ -265,6 +268,7 @@ export default function BudgetScreen() {
       />
 
       <Snackbar
+    wrapperStyle={{ marginBottom: spazioBarra }}
         visible={loadError}
         onDismiss={() => setLoadError(false)}
         action={{ label: t("comune.riprova"), onPress: loadSubscriptions }}

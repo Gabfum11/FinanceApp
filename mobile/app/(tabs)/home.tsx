@@ -18,6 +18,7 @@ import { segnaBenvenutoVisto } from "@/utils/benvenuto";
 import { bersaglio } from "@/utils/tour";
 import { usePreferenze } from "@/utils/preferenze";
 import { useTranslation } from "react-i18next";
+import { useSpazioBarra } from "@/utils/barraSchede";
 import { nomeCategoria } from "@/utils/categorie";
 import { localeAttuale } from "@/utils/date";
 import Animated, {
@@ -86,6 +87,8 @@ export default function HomeScreen() {
   const [saldoVisibile, setSaldoVisibile] = useState(true);
   const { importo: formatta, importoIn, nascosto, sincronizza } = usePreferenze();
   const { t } = useTranslation();
+  //i messaggi in basso compaiono sopra la barra delle schede, non sotto
+  const spazioBarra = useSpazioBarra();
   const GIORNI_SETTIMANA = t("comune.giorniBrevi").split(",");
   const rotazioneBot = useSharedValue(0);
 
@@ -264,7 +267,7 @@ export default function HomeScreen() {
     <View style={styles.screen}>
       {/* la pagina scorre: con schermi bassi o caratteri di sistema grandi
           i blocchi superavano l'altezza e le transazioni finivano sotto la barra */}
-      <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}>
+      <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 16, paddingBottom: spazioBarra }]}>
       <View style={styles.titleRow}>
         <Text variant="headlineMedium" style={styles.title}>
           {t("home.ciao", { nome: nickname })}
@@ -432,6 +435,7 @@ export default function HomeScreen() {
       />
 
       <Snackbar
+    wrapperStyle={{ marginBottom: spazioBarra }}
         visible={loadError}
         onDismiss={() => setLoadError(false)}
         action={{ label: t("comune.riprova"), onPress: loadAll }}
