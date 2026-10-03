@@ -111,6 +111,15 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight:"bold"
   },
+  //importo convertito sopra, cifra originale in piccolo sotto
+  amountColumn: {
+    alignItems: "flex-end",
+  },
+  expenseOriginal: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
   expenseAmount: {
     fontSize: 16,
     color: colors.danger,

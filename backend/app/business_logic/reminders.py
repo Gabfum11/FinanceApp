@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.business_logic.formato import formatta_importo
+from app.business_logic.cambi import CambioNonDisponibile, tasso
 from app.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -45,12 +46,26 @@ def _secondi_di_validita(rinnovo: date) -> int:
     return max(int((fine - datetime.now(FUSO)).total_seconds()), 0)
 
 
+def _prezzo(sub: models.Subscriptions, utente: models.User) -> str:
+    """Il prezzo nella sua valuta e, se diversa, quanto vale nella valuta dell'utente."""
+    valuta = sub.currency or utente.currency
+    prezzo = formatta_importo(sub.amount, valuta)
+    if valuta == utente.currency:
+        return prezzo
+    try:
+        valore, _ = tasso(valuta, utente.currency, oggi_in_italia())
+    except CambioNonDisponibile:
+        #meglio il prezzo vero da solo che nessun promemoria
+        return prezzo
+    return f"{prezzo} (≈ {formatta_importo(sub.amount * valore, utente.currency)})"
+
+
 def _messaggio(sub: models.Subscriptions, utente: models.User) -> dict:
     frequenza = FREQUENZE.get(sub.frequency, sub.frequency)
     return {
         "to": utente.push_token,
         "title": f"{sub.description} si rinnova domani",
-        "body": f"{formatta_importo(sub.amount, utente.currency)} · {frequenza}",
+        "body": f"{_prezzo(sub, utente)} · {frequenza}",
         "data": {"subscriptionId": sub.id},
         "channelId": CANALE,
         "ttl": _secondi_di_validita(sub.next_date),

@@ -20,6 +20,9 @@ type Expense = {
   category_id: number | null;
   category_name: string | null;
   created_at : string;
+  //spesa pagata in un'altra valuta: amount è già convertito
+  original_amount?: number | null;
+  original_currency?: string | null;
 };
 //"Caffè" va trovato anche digitando "caffe": togliamo accenti e maiuscole
 function normalize(text: string): string {
@@ -46,7 +49,7 @@ function periodStart(period: Period): Date | null {
 }
 
 export default function ExpenseList() {
-  const { importo } = usePreferenze();
+  const { importo, importoIn } = usePreferenze();
     const insets = useSafeAreaInsets();
     const [expenses, setExpenses]=useState<Expense[]>([]);
     const [expensesLoaded, setExpensesLoaded] = useState(false);
@@ -144,7 +147,8 @@ export default function ExpenseList() {
             pathname: "/add_expense",
             params: {
                 editId: String(expense.id),
-                amount: String(expense.amount),
+                amount: String(expense.original_currency ? expense.original_amount : expense.amount),
+                ...(expense.original_currency && { currency: expense.original_currency }),
                 description: expense.description,
                 date: expense.date,
                 ...(expense.category_id !== null && { categoryId: String(expense.category_id) }),
@@ -271,7 +275,12 @@ export default function ExpenseList() {
                         {item.category_name ?? "Non assegnata"} · {formatDataSpesa(item.date)}
                     </Text>
                 </View>
-                <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
+                <View style={styles.amountColumn}>
+                    <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
+                    {item.original_currency && item.original_amount != null && (
+                        <Text style={styles.expenseOriginal}>{importoIn(item.original_amount, item.original_currency)}</Text>
+                    )}
+                </View>
                 <IconButton icon="pencil-outline" size={18} onPress={() => openEdit(item)} />
                 <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} />
             </View>

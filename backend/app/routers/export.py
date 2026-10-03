@@ -70,12 +70,16 @@ def export_expenses(db: Session = Depends(get_db), current_user: models.User = D
             spesa.date.isoformat(),
             spesa.description,
             _importo(spesa.amount),
+            #pagata in un'altra valuta: la cifra vera accanto a quella convertita
+            _importo(spesa.original_amount) if spesa.original_currency else "",
+            spesa.original_currency or "",
             categoria.name if categoria else "",
             categoria.parent.name if categoria and categoria.parent else "",
         ])
 
     contenuto = _scrivi_csv(
-        ["Data", "Descrizione", f"Importo ({current_user.currency})", "Categoria", "Gruppo"], righe
+        ["Data", "Descrizione", f"Importo ({current_user.currency})", "Importo originale", "Valuta originale",
+         "Categoria", "Gruppo"], righe
     )
     return _risposta_csv(contenuto, f"trackit-spese-{date.today().isoformat()}.csv")
 
@@ -95,6 +99,8 @@ def export_subscriptions(db: Session = Depends(get_db), current_user: models.Use
         righe.append([
             sub.description,
             _importo(sub.amount),
+            #un abbonamento puo' avere il prezzo in un'altra valuta
+            sub.currency or current_user.currency,
             FREQUENZE.get(sub.frequency, sub.frequency),
             sub.next_date.isoformat(),
             "Attivo" if sub.is_active else "In pausa",
@@ -104,7 +110,7 @@ def export_subscriptions(db: Session = Depends(get_db), current_user: models.Use
         ])
 
     contenuto = _scrivi_csv(
-        ["Descrizione", f"Importo ({current_user.currency})", "Frequenza", "Prossimo addebito",
+        ["Descrizione", "Importo", "Valuta", "Frequenza", "Prossimo addebito",
          "Stato", "Rinnovo", "Categoria", "Gruppo"],
         righe,
     )

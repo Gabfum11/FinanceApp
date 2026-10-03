@@ -9,10 +9,16 @@ from app.business_logic import security
 from datetime import date
 from app.business_logic.budget import get_budget_cycle
 from app.routers.subscriptions import run_due_renewals
+from app.business_logic.cambi import CambioNonDisponibile
+from app.business_logic.valuta_estera import applica_importo
 from app.state import limiter, user_or_ip
 from dateutil.relativedelta import relativedelta, MO
 from datetime import timedelta
 router = APIRouter(prefix="/expenses", tags=["expenses"]) #creazione del router
+
+#messaggio fisso e in inglese, come gli altri codici di errore: l'app lo riconosce
+#e propone di scrivere a mano la cifra convertita
+CAMBIO_NON_DISPONIBILE = "Exchange rate unavailable"
 #prefix = expenses significa che ogni endpoint definito qui avrà automaticamente expenses davanti al suo percorso
 
 
@@ -27,11 +33,16 @@ def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)
             raise HTTPException(status_code=404, detail="Category not found")
     new_expense = models.Expense( #viene usato il mmodello creando un'istanza secondo la sua forma
         description=expense.description,
-        amount=expense.amount,
         date=expense.date,
         category_id=expense.category_id,
         user_id=current_user.id,  
     )
+    #nella valuta dell'utente, o convertita se pagata in un'altra
+    try:
+        applica_importo(new_expense, expense.amount, expense.currency, current_user.currency, expense.converted_amount)
+    except CambioNonDisponibile:
+        #il client propone di scrivere a mano la cifra convertita (converted_amount)
+        raise HTTPException(status_code=503, detail=CAMBIO_NON_DISPONIBILE)
     db.add(new_expense) #prepara il salvataggio
     db.commit() #salva davvero
     db.refresh(new_expense) #per avere id e created_at aggiornati
@@ -131,8 +142,24 @@ def update_expense(expense_id: int, changes: schemas.ExpenseUpdate, db: Session 
         if category is None:
             raise HTTPException(status_code=404, detail="Category not found")
 
+    #importo, valuta e data decidono la conversione: si ricalcola tutto insieme.
+    #Per una spesa in valuta estera "amount" e' la cifra in quella valuta
+    cambia_importo = any(campo in updates for campo in ("amount", "currency", "date", "converted_amount"))
+    valuta = updates.pop("currency", expense.original_currency)
+    convertito = updates.pop("converted_amount", None)
+    importo_attuale = expense.original_amount if expense.original_currency else expense.amount
+    #un amount inviato a null non cancella l'importo: resta quello di prima
+    importo = updates.pop("amount", None) or importo_attuale
+
     for field, value in updates.items():
         setattr(expense, field, value)
+
+    if cambia_importo:
+        try:
+            applica_importo(expense, importo, valuta, current_user.currency, convertito)
+        except CambioNonDisponibile:
+            db.rollback()
+            raise HTTPException(status_code=503, detail=CAMBIO_NON_DISPONIBILE)
 
     db.commit()
     db.refresh(expense)
@@ -223,5 +250,8 @@ def extract_expense_preview(request: Request, data_expense: dict, db: Session = 
         "category_name": category_name,
         "category_group": category_group,
         "recurring": extracted["recurring"],
-        "frequency" : extracted["frequency"]
+        "frequency" : extracted["frequency"],
+        #solo se diversa da quella dell'utente: "15 euro" detto da chi conta in euro
+        #e' una spesa normale
+        "currency": None if extracted.get("currency") in (None, current_user.currency) else extracted["currency"],
     }

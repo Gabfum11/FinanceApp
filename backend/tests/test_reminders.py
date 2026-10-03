@@ -36,7 +36,7 @@ def expo(monkeypatch):
 
 @pytest.fixture
 def abbonamento(db_session, make_user):
-    def _crea(giorni=1, token=TOKEN, is_active=True, email="u@t.it", currency="EUR", **extra):
+    def _crea(giorni=1, token=TOKEN, is_active=True, email="u@t.it", currency="EUR", valuta_abbonamento=None, **extra):
         user_id = make_user(email=email, push_token=token, currency=currency)
         db = db_session()
         sub = models.Subscriptions(
@@ -46,6 +46,7 @@ def abbonamento(db_session, make_user):
             next_date=reminders.oggi_in_italia() + timedelta(days=giorni),
             user_id=user_id,
             is_active=is_active,
+            currency=valuta_abbonamento,
             **extra,
         )
         db.add(sub)
@@ -136,6 +137,25 @@ class TestContenuto:
         abbonamento(description="Netflix", amount=12.99, currency="CHF")
         cron()
         assert expo["messaggi"][0]["body"] == "12,99 CHF · mensile"
+
+    def test_prezzo_in_valuta_estera_con_la_cifra_convertita(self, cron, expo, abbonamento, monkeypatch):
+        from app.business_logic import cambi
+        monkeypatch.setattr(cambi, "_chiedi_tasso", lambda da, a, giorno: (0.9, giorno))
+        cambi._tassi.clear()
+        abbonamento(description="Servizio", amount=10, valuta_abbonamento="USD")
+        cron()
+        assert expo["messaggi"][0]["body"] == "10,00 $ (≈ 9,00 €) · mensile"
+
+    def test_senza_tasso_parte_comunque_con_il_prezzo_vero(self, cron, expo, abbonamento, monkeypatch):
+        from app.business_logic import cambi
+
+        def giu(da, a, giorno):
+            raise cambi.httpx.ConnectError("irraggiungibile")
+        monkeypatch.setattr(cambi, "_chiedi_tasso", giu)
+        cambi._tassi.clear()
+        abbonamento(description="Servizio", amount=10, valuta_abbonamento="USD")
+        cron()
+        assert expo["messaggi"][0]["body"] == "10,00 $ · mensile"
 
     def test_scade_con_la_fine_del_giorno_del_rinnovo(self, cron, expo, abbonamento):
         """Un avviso "si rinnova domani" ricevuto dopo il rinnovo confonderebbe."""

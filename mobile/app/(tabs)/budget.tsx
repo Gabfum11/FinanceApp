@@ -30,6 +30,7 @@ type Subscription = {
   category_name: string | null;
   is_active:boolean;
   auto_renew:boolean;
+  currency?: string | null; //prezzo in un'altra valuta; vuota = quella dell'utente
 };
 const mesi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
 //conferma in attesa: il tipo dice quale azione parte alla conferma
@@ -37,7 +38,7 @@ type ConfermaInAttesa =
   | { tipo: "pausa" | "riattiva" | "elimina"; subId: number };
 
 export default function BudgetScreen() {
-  const { importo } = usePreferenze();
+  const { importoIn } = usePreferenze();
   const [subscriptions, setSubscriptions]=useState<Subscription[]>([]);
   const [conferma, setConferma] = useState<ConfermaInAttesa | null>(null);
   //ogni conferma registra una spesa: un doppio tocco ne creerebbe due
@@ -88,6 +89,7 @@ export default function BudgetScreen() {
           description: sub.description,
           frequency: sub.frequency,
           autoRenew: String(sub.auto_renew),
+          ...(sub.currency && { currency: sub.currency }),
           date: sub.next_date, //in modifica il campo data mostra il prossimo addebito
           ...(sub.category_id !== null && { categoryId: String(sub.category_id) }),
         },
@@ -172,7 +174,7 @@ export default function BudgetScreen() {
                 {!item.auto_renew && " · Manuale"}
               </Text>
             </View>
-            <Text style={styles.subAmount}>{importo(item.amount)}</Text>
+            <Text style={styles.subAmount}>{importoIn(item.amount, item.currency)}</Text>
             <IconButton icon="pencil-outline" size={18} onPress={()=>openEdit(item)} />
             <IconButton icon="pause" size={18} onPress={()=>confirmToggle(item.id, true)} />
           </View>
@@ -226,7 +228,7 @@ export default function BudgetScreen() {
                       <Text style={styles.dueOverdue}>{getOverdueText(item.next_date)}</Text>
                     </View>
                   </View>
-                  <Text style={styles.subAmount}>{importo(item.amount)}</Text>
+                  <Text style={styles.subAmount}>{importoIn(item.amount, item.currency)}</Text>
                 </View>
                 <Text style={styles.dueQuestion}>
                   Il pagamento non è automatico: hai rinnovato per {mesi[new Date().getMonth()]}?

@@ -5,9 +5,22 @@ from app.database import get_db
 from app.business_logic import security
 from app.business_logic.budget import safe_day
 from app.business_logic.categorization import attach_category_names
+from app.business_logic.cambi import CambioNonDisponibile
+from app.business_logic.valuta_estera import spesa_da_abbonamento
+from app.logging_config import get_logger
 from datetime import date
 from dateutil.relativedelta import relativedelta
 router=APIRouter(prefix="/subscriptions", tags=["subscriptions"]) # tags serve per la pagina /docs
+logger = get_logger(__name__)
+
+#stesso testo di expenses.CAMBIO_NON_DISPONIBILE: l'app lo riconosce
+CAMBIO_NON_DISPONIBILE = "Exchange rate unavailable"
+
+
+def _valuta_abbonamento(valuta: str | None, valuta_utente: str) -> str | None:
+    #la valuta dell'utente si salva come vuota: cosi' se un giorno l'utente la
+    #cambia, l'abbonamento segue la nuova invece di restare legato alla vecchia
+    return None if valuta == valuta_utente else valuta
 
 #quanti rinnovi arretrati accettiamo di registrare in un colpo solo alla creazione:
 #oltre questa soglia e' probabile un errore sulla data (es. anno sbagliato)
@@ -55,18 +68,18 @@ def create_subscription(subscription: schemas.SubscriptionCreate, db: Session=De
         user_id=current_user.id,
         next_date=next_date,
         auto_renew=subscription.auto_renew,
+        currency=_valuta_abbonamento(subscription.currency, current_user.currency),
     )
     db.add(new_subscription)
 
     #una spesa per ogni rinnovo gia' avvenuto, datata al giorno in cui e' avvenuto
-    for due_date in due_dates:
-        db.add(models.Expense(
-            description=subscription.description,
-            amount=subscription.amount,
-            date=due_date,
-            category_id=subscription.category_id,
-            user_id=current_user.id,
-        ))
+    #e convertita con il tasso di quel giorno
+    try:
+        for due_date in due_dates:
+            db.add(spesa_da_abbonamento(new_subscription, due_date, current_user.currency))
+    except CambioNonDisponibile:
+        db.rollback()
+        raise HTTPException(status_code=503, detail=CAMBIO_NON_DISPONIBILE)
     db.commit()
     db.refresh(new_subscription)
 
@@ -94,19 +107,20 @@ def run_due_renewals(db: Session, user_id: int) -> list[models.Subscriptions]:
     aggiornati solo quando l'utente apre la schermata Abbonamenti."""
     today=date.today()
     subscriptions=abbonamenti_bloccati(db, user_id).all()
+    valuta_utente = db.query(models.User.currency).filter(models.User.id == user_id).scalar() or "EUR"
     for sub in subscriptions:
         if not sub.is_active:
             continue
         if not sub.auto_renew:
             continue #per non creare spese automatiche per abbonamenti che non si rinnovano automaticamente
         while sub.next_date<=today:
-            new_expense = models.Expense(
-                description=sub.description,
-                amount=sub.amount,
-                date=sub.next_date,
-                category_id=sub.category_id,
-                user_id=user_id,
-            )
+            try:
+                new_expense = spesa_da_abbonamento(sub, sub.next_date, valuta_utente)
+            except CambioNonDisponibile:
+                #senza tasso il rinnovo non si registra e la data non avanza:
+                #ci si riprova alla prossima lettura, con lo stesso giorno di cambio
+                logger.warning("rinnovo rimandato: cambio non disponibile", extra={"subscription_id": sub.id})
+                break
             db.add(new_expense)
             sub.next_date = advance(sub.next_date, sub.frequency)
     #sempre, anche senza rinnovi: il commit rilascia il blocco, che altrimenti
@@ -145,13 +159,11 @@ def mark_subscription_paid(subscription_id: int, db: Session = Depends(get_db), 
     if sub is None:
         raise HTTPException(status_code=404, detail="Subscription not found")
 
-    new_expense = models.Expense(
-        description=sub.description,
-        amount=sub.amount,
-        date=date.today(),
-        category_id=sub.category_id,
-        user_id=current_user.id,
-    )
+    try:
+        new_expense = spesa_da_abbonamento(sub, date.today(), current_user.currency)
+    except CambioNonDisponibile:
+        db.rollback()
+        raise HTTPException(status_code=503, detail=CAMBIO_NON_DISPONIBILE)
     db.add(new_expense)
 
     sub.next_date = advance(sub.next_date, sub.frequency)
@@ -185,6 +197,8 @@ def update_subscription(subscription_id: int, changes: schemas.SubscriptionUpdat
         raise HTTPException(status_code=422, detail="Il prossimo addebito deve essere una data futura")
 
     new_frequency = updates.get("frequency")
+    if "currency" in updates:
+        updates["currency"] = _valuta_abbonamento(updates["currency"], current_user.currency)
     for field, value in updates.items():
         setattr(sub, field, value)
 

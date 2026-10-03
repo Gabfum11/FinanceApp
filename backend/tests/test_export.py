@@ -69,7 +69,7 @@ class TestFormato:
 class TestSpese:
     def test_intestazioni(self, client, utente):
         assert righe_di(client.get("/export/expenses.csv").text)[0] == \
-            "Data;Descrizione;Importo (EUR);Categoria;Gruppo"
+            "Data;Descrizione;Importo (EUR);Importo originale;Valuta originale;Categoria;Gruppo"
 
     def test_una_riga_per_spesa(self, client, utente, categoria):
         for i in range(3):
@@ -113,7 +113,7 @@ class TestSpese:
 class TestAbbonamenti:
     def test_intestazioni(self, client, utente):
         assert righe_di(client.get("/export/subscriptions.csv").text)[0] == \
-            "Descrizione;Importo (EUR);Frequenza;Prossimo addebito;Stato;Rinnovo;Categoria;Gruppo"
+            "Descrizione;Importo;Valuta;Frequenza;Prossimo addebito;Stato;Rinnovo;Categoria;Gruppo"
 
     def test_frequenza_in_italiano(self, client, utente):
         client.post("/subscriptions/", json={"description": "Netflix", "amount": 12.0,

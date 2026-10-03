@@ -5,12 +5,24 @@ from typing import Literal
 #schema in entrata(create) -> verifica che i dati che l'utente manda sono nel formato che ci si aspetta
 #schema in uscita(out) -> verifica se il sistema restituisce solo ciò che è appropriato da mostrare nella forma giusta
 
+#le valute e le lingue che l'app sa mostrare: qualsiasi altro valore e' rifiutato
+#con un 422, cosi' il database non contiene mai un codice che l'app non conosce
+Valuta = Literal["EUR", "USD", "GBP", "CHF"]
+Lingua = Literal["it", "en"]
+
+
 
 class ExpenseCreate(BaseModel): #rappresenta i dati che il frontend manda a te quando crea una spesa
     description: str = Field(..., min_length=1, max_length=200) #il campo è obbligatorio e deve avere lunghezza compresa tra 1 e 100
     amount: float = Field(..., gt=0, le=1000000) #il valore deve essere maggiore di 0 e minore o uguale a 1 milione
     date: date
     category_id: int | None = None
+    #valuta in cui e' stata pagata, se diversa da quella dell'utente: amount e'
+    #allora la cifra in quella valuta, e il server la converte
+    currency: Valuta | None = None
+    #la cifra gia' convertita, quando l'utente la conosce (es. dall'estratto
+    #conto) o il servizio dei tassi non risponde: il server non converte
+    converted_amount: float | None = Field(None, gt=0, le=1000000)
 
 
 class ExpenseOut(BaseModel): # rappresenta i dati che tu mandi al frontend dopo aver salvato quella spesa
@@ -22,6 +34,10 @@ class ExpenseOut(BaseModel): # rappresenta i dati che tu mandi al frontend dopo 
     category_name:str | None =None #se il valore non viene fornito il default è None
     category_group: str | None = None #gruppo della categoria: il client lo usa per l'icona
     created_at: datetime
+    #solo per le spese in valuta estera: amount e' gia' convertito
+    original_amount: float | None = None
+    original_currency: str | None = None
+    exchange_rate: float | None = None
 
     class Config:
         from_attributes=True #serve per convertire un oggetto SQLAlchemy in un dizionario, altrimenti FastAPI non sa come fare e solleva un errore
@@ -31,6 +47,10 @@ class ExpenseUpdate(BaseModel): #modifica parziale: i campi assenti restano inva
     amount: float | None = Field(None, gt=0, le=1000000)
     date: date_type | None = None #date_type: il campo "date" oscura il tipo omonimo
     category_id: int | None = None
+    #come in ExpenseCreate: per una spesa in valuta estera amount e' la cifra in
+    #quella valuta. La valuta dell'utente la riporta a una spesa normale
+    currency: Valuta | None = None
+    converted_amount: float | None = Field(None, gt=0, le=1000000)
 
 
 class SubscriptionCreate(BaseModel):
@@ -40,6 +60,8 @@ class SubscriptionCreate(BaseModel):
     category_id: int | None = None
     start_date: date | None = None #se assente l'abbonamento parte da oggi
     auto_renew: bool = True #i client che non lo mandano mantengono il comportamento di prima
+    #valuta del prezzo, se diversa da quella dell'utente: ogni rinnovo lo converte
+    currency: Valuta | None = None
 
 
 class SubscriptionUpdate(BaseModel):
@@ -51,6 +73,7 @@ class SubscriptionUpdate(BaseModel):
     #si sposta il prossimo addebito, non la data di partenza: quella ha gia'
     #generato le spese arretrate e cambiarla renderebbe lo storico incoerente
     next_date: date_type | None = None
+    currency: Valuta | None = None
 
 
 class SubscriptionOut(BaseModel):
@@ -65,6 +88,7 @@ class SubscriptionOut(BaseModel):
     category_group: str | None = None #gruppo della categoria: il client lo usa per l'icona
     created_at: datetime
     auto_renew: bool=True
+    currency: str | None = None #vuota = la valuta dell'utente
 
     class Config:
         from_attributes = True
@@ -177,11 +201,6 @@ class GoogleLogin(BaseModel):
 class UpdateProfile(BaseModel):
     nickname: str = Field(..., min_length=1, max_length=50)
 
-#le valute e le lingue che l'app sa mostrare: qualsiasi altro valore e' rifiutato
-#con un 422, cosi' il database non contiene mai un codice che l'app non conosce
-Valuta = Literal["EUR", "USD", "GBP", "CHF"]
-Lingua = Literal["it", "en"]
-
 class UpdatePreferences(BaseModel):
     #entrambe facoltative: si puo' cambiare una sola delle due
     currency: Valuta | None = None
@@ -191,3 +210,10 @@ class PushToken(BaseModel):
     #solo il formato di Expo: qualsiasi altra stringa farebbe fallire ogni invio
     token: str = Field(..., max_length=200, pattern=r"^ExponentPushToken\[.+\]$")
     
+
+
+class ExchangeRateOut(BaseModel):
+    from_currency: str
+    to_currency: str
+    rate: float
+    date: date_type #il giorno del tasso usato: nel fine settimana e' l'ultimo pubblicato

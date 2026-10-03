@@ -131,6 +131,9 @@ def _resolve_date_expr(raw, today: date, allow_future: bool = False) -> date | N
     return None
 
 
+#le stesse di schemas.Valuta
+VALUTE_RICONOSCIUTE = {"EUR", "USD", "GBP", "CHF"}
+
 def extract_expense_from_text(
     text: str,
     category_names: list[str] | None = None,
@@ -170,7 +173,7 @@ def extract_expense_from_text(
                     "role": "system",
                     "content": (
                         "Estrai da questo testo una spesa. Rispondi SOLO con un JSON valido, "
-                        'nel formato esatto {"description": "...", "amount": 0.0, "date_expr": null, "category": null, "recurring": false,"frequency": null}. '
+                        'nel formato esatto {"description": "...", "amount": 0.0, "date_expr": null, "category": null, "recurring": false,"frequency": null, "currency": null}. '
                         + category_rule +
                         'se il testo indica che la spesa si ripete periodicamente (es. "al mese", "ogni settimana", "abbonamento"),'
                         'imposta "recurring":true e "frequency" con uno tra "monthly", "weekly", "yearly". '
@@ -186,6 +189,9 @@ def extract_expense_from_text(
                         'lascia "date_expr": null. '
                         "la regola vale anche quando \"recurring\" e' true: in quel caso "
                         "\"date_expr\" indica da quando parte l'abbonamento. "
+                        'se il testo nomina una valuta, imposta "currency" con il suo codice: '
+                        '"EUR" (euro), "USD" (dollari, $), "GBP" (sterline, £), "CHF" (franchi svizzeri). '
+                        "se non nomina nessuna valuta, o ne nomina un'altra, lascia \"currency\": null. "
                         "Usa i nomi di categoria esattamente come elencati sopra; "
                         "gli esempi che seguono mostrano solo la forma, non i nomi ammessi. "
                         "Non aggiungere altro testo, solo il JSON. "
@@ -194,6 +200,7 @@ def extract_expense_from_text(
                         'Esempio di forma: {"description": "Visita dottore", "amount": 20.0, "date_expr": "mercoledi", "category": "Visite mediche"}. '
                         'Esempio di forma: {"description": "Benzina", "amount": 60.0, "date_expr": "3 settembre", "category": "Carburante"}. '
                         'Esempio di forma: {"description": "Palestra", "amount": 60.0, "date_expr": null, "category": "Palestra", "recurring": true, "frequency": "monthly"}. '
+                        'Esempio di forma: {"description": "Cena", "amount": 40.0, "date_expr": "ieri", "category": "Pranzi e cene", "currency": "GBP"}. '
                         'se il testo non descrive una spesa, mancano dei dati, oppure contiene parole generiche, rispondi esattamente con '
                         '{"error": "not_an_expense"}'
                     ),
@@ -230,13 +237,18 @@ def extract_expense_from_text(
         else:
             match = next((n for n in category_names if n.lower() == category.strip().lower()), None)
             category = match
+        #solo le valute che l'app conosce: un codice inventato diventa "nessuna valuta"
+        currency = parsed.get("currency")
+        if currency not in VALUTE_RICONOSCIUTE:
+            currency = None
         return {
             "description":description,
             "amount": amount,
             "date": expense_date,
             "category": category,
             "recurring":recurring,
-            "frequency": frequency
+            "frequency": frequency,
+            "currency": currency,
         }
     except RateLimitError:
         #il testo era valido: e' Groq a essere saturo. Propagare invece di

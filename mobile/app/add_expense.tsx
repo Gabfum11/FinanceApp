@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, IconButton, ActivityIndicator, Portal, Switch } from "react-native-paper";
+import { Text, IconButton, ActivityIndicator, Portal, Switch, Menu } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SelettoreData } from "@/components/SelettoreData";
@@ -19,7 +19,7 @@ import { fromDateString, toDateString } from "@/utils/date";
 import { styles, colors } from "../styles/add-expense.styles";
 import { iconaPerGruppo } from "@/utils/categoryIcons";
 import { usePreferenze } from "@/utils/preferenze";
-import { simbolo } from "@/utils/formato";
+import { simbolo, eValuta, VALUTE, type Valuta } from "@/utils/formato";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { segnalaSalvataggio } from "@/utils/esitoAssistente";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -48,10 +48,12 @@ const FREQUENCIES: { value: Frequency; label: string }[] = [
 ];
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "backspace"];
+//stesso testo del server: lo riconosce e propone di scrivere a mano la cifra convertita
+const CAMBIO_NON_DISPONIBILE = "Exchange rate unavailable";
 const MAX_DECIMALS = 2;
 
 export default function AddExpenseScreen() {
-  const { valuta } = usePreferenze();
+  const { valuta, importo: formatta } = usePreferenze();
   const router = useRouter();
   // I parametri di rotta arrivano sempre come stringhe: li usa "Modifica"
   // dell'assistente per precompilare il form con i dati estratti.
@@ -65,6 +67,7 @@ export default function AddExpenseScreen() {
     editId?: string; //presente solo quando si modifica un elemento esistente
     fromAssistant?: string; //aperto da "Modifica" dell'assistente: l'esito torna alla chat
     autoRenew?: string; //dalla card dell'assistente o dall'abbonamento in modifica
+    currency?: string; //spesa o abbonamento in valuta estera
   }>();
   const editId = params.editId;
   const isEditing = !!editId;
@@ -91,6 +94,22 @@ export default function AddExpenseScreen() {
   //spento = "Manuale": a ogni scadenza l'app chiede se si è rinnovato
   const [autoRenew, setAutoRenew] = useState(params.autoRenew !== "false");
 
+  // Valuta in cui è stata pagata. null = quella dell'account: così, se il
+  // valore salvato sul telefono arriva un attimo dopo, la spesa non diventa
+  // per sbaglio "in valuta estera" nella valuta di prima.
+  const [valutaScelta, setValutaScelta] = useState<Valuta | null>(() =>
+    eValuta(params.currency) ? params.currency : null
+  );
+  const valutaSpesa = valutaScelta ?? valuta;
+  const estera = valutaSpesa !== valuta;
+  const [menuValuta, setMenuValuta] = useState(false);
+  // Tasso per l'anteprima, legato a valuta e giorno per cui è stato chiesto:
+  // cambiando l'una o l'altro, quello vecchio non si mostra più.
+  const [cambio, setCambio] = useState<{ chiave: string; rate: number; date: string } | null>(null);
+  const [cambioMancante, setCambioMancante] = useState<string | null>(null);
+  // la cifra addebitata, scritta a mano quando il tasso non si trova
+  const [convertitoRaw, setConvertitoRaw] = useState("");
+
   // L'importo non è un TextInput, quindi il "focus" è esplicito: regge
   // la visibilità del tastierino e del cursore lampeggiante.
   const [isAmountFocused, setIsAmountFocused] = useState(false);
@@ -110,6 +129,7 @@ export default function AddExpenseScreen() {
     isSubscription,
     frequency,
     autoRenew,
+    valutaScelta,
   }));
   // la categoria proposta si conosce solo dopo aver caricato l'elenco
   const [categoriaIniziale, setCategoriaIniziale] = useState<number | null>(null);
@@ -120,11 +140,41 @@ export default function AddExpenseScreen() {
     isSubscription !== iniziali.isSubscription ||
     frequency !== iniziali.frequency ||
     autoRenew !== iniziali.autoRenew ||
+    valutaScelta !== iniziali.valutaScelta ||
     (category?.id ?? null) !== categoriaIniziale;
   const { lasciaUscire, dialogo } = useConfirmDiscard(modificato);
 
   const amount = parseFloat(amountRaw.replace(",", "."));
-  const canSave = !isSaving && amount > 0 && category !== null;
+  const giorno = toDateString(date);
+  const chiaveCambio = `${valutaSpesa}-${giorno}`;
+  const cambioAttuale = estera && cambio?.chiave === chiaveCambio ? cambio : null;
+  const senzaCambio = estera && cambioMancante === chiaveCambio;
+  const convertito = parseFloat(convertitoRaw.replace(",", "."));
+  // una spesa estera senza tasso si salva solo con la cifra scritta a mano;
+  // un abbonamento no: il server la riprova a ogni rinnovo
+  const mancaConvertito = senzaCambio && !isSubscription && !(convertito > 0);
+  const canSave = !isSaving && amount > 0 && category !== null && !mancaConvertito;
+
+  useEffect(() => {
+    if (!estera) return;
+    let annullato = false;
+    apiFetch(`/exchange-rate?from_currency=${valutaSpesa}&day=${giorno}`)
+      .then(async (response) => {
+        if (annullato) return;
+        if (!response.ok) {
+          setCambioMancante(chiaveCambio);
+          return;
+        }
+        const dati = await response.json();
+        if (!annullato) setCambio({ chiave: chiaveCambio, rate: dati.rate, date: dati.date });
+      })
+      .catch(() => {
+        if (!annullato) setCambioMancante(chiaveCambio);
+      });
+    return () => {
+      annullato = true;
+    };
+  }, [estera, valutaSpesa, giorno, chiaveCambio]);
 
   useEffect(() => {
     async function loadCategories() {
@@ -191,10 +241,18 @@ export default function AddExpenseScreen() {
     setIsAmountFocused(false);
     setIsSaving(true);
     setError(null);
+    // in modifica l'importo si manda solo se è cambiato: per una spesa estera il
+    // server lo riconvertirebbe, e una cifra scritta a mano andrebbe persa
+    const importoCambiato =
+      !isEditing ||
+      amountRaw !== iniziali.amountRaw ||
+      giorno !== iniziali.date ||
+      valutaScelta !== iniziali.valutaScelta;
     const common = {
       description: description.trim() || category!.name,
-      amount,
       category_id: category!.id,
+      ...(importoCambiato && { amount, currency: valutaSpesa }),
+      ...(importoCambiato && senzaCambio && !isSubscription && { converted_amount: convertito }),
     };
     const collection = isSubscription ? "/subscriptions/" : "/expenses/";
     //in modifica start_date non si tocca: ha gia' generato le spese arretrate
@@ -219,6 +277,16 @@ export default function AddExpenseScreen() {
           .json()
           .then((body) => (typeof body?.detail === "string" ? body.detail : null))
           .catch(() => null);
+        if (detail === CAMBIO_NON_DISPONIBILE) {
+          // il tasso c'era per l'anteprima ma non al salvataggio: si chiede la cifra a mano
+          setCambioMancante(chiaveCambio);
+          setError(
+            isSubscription
+              ? "Cambio non disponibile in questo momento. Riprova tra poco."
+              : `Cambio non disponibile in questo momento: scrivi quanto ti è stato addebitato in ${simbolo(valuta)}.`
+          );
+          return;
+        }
         setError(
           detail ??
             (isSubscription
@@ -232,7 +300,9 @@ export default function AddExpenseScreen() {
         segnalaSalvataggio({
           id: saved.id,
           description: saved.description,
-          amount: saved.amount,
+          //la cifra digitata, nella sua valuta: è quella che la chat mostra
+          amount,
+          currency: estera ? valutaSpesa : null,
           date: toDateString(date),
           category_id: saved.category_id,
           category_name: saved.category_name ?? null,
@@ -306,14 +376,78 @@ export default function AddExpenseScreen() {
             IMPORTO
           </Text>
           <View style={styles.amountRow}>
-            <Text style={styles.currency}>{simbolo(valuta)}</Text>
+            <Menu
+              visible={menuValuta}
+              onDismiss={() => setMenuValuta(false)}
+              anchor={
+                <Pressable
+                  style={styles.valutaTocco}
+                  onPress={() => {
+                    setIsAmountFocused(false);
+                    setMenuValuta(true);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Valuta ${valutaSpesa}: tocca per cambiarla`}
+                >
+                  <Text style={styles.currency}>{simbolo(valutaSpesa)}</Text>
+                  <MaterialCommunityIcons name="chevron-down" size={18} color={colors.green} />
+                </Pressable>
+              }
+            >
+              {VALUTE.map((v) => (
+                <Menu.Item
+                  key={v}
+                  title={`${simbolo(v)}  ${v}`}
+                  leadingIcon={v === valutaSpesa ? "check" : undefined}
+                  onPress={() => {
+                    setError(null);
+                    setValutaScelta(v === valuta ? null : v);
+                    setMenuValuta(false);
+                  }}
+                />
+              ))}
+            </Menu>
             <Text style={styles.amountValue}>{amountRaw}</Text>
             {isAmountFocused && <BlinkingCursor />}
           </View>
           <View style={[styles.amountUnderline, !isAmountFocused && styles.amountUnderlineBlurred]} />
+          {cambioAttuale && amount > 0 && (
+            <Text style={styles.anteprima}>
+              ≈ {formatta(amount * cambioAttuale.rate)} · cambio del{" "}
+              {fromDateString(cambioAttuale.date).toLocaleDateString("it-IT", { day: "numeric", month: "short" })}
+              {isSubscription && " (ricalcolato a ogni rinnovo)"}
+            </Text>
+          )}
+          {senzaCambio && (
+            <Text style={styles.anteprimaErrore}>
+              {isSubscription
+                ? "Cambio non disponibile ora: verrà calcolato a ogni rinnovo."
+                : "Cambio non disponibile ora: scrivi qui sotto quanto ti è stato addebitato."}
+            </Text>
+          )}
         </Pressable>
 
         <View style={styles.fields}>
+          {senzaCambio && !isSubscription && (
+            <View>
+              <Text variant="bodySmall" style={styles.fieldLabel}>
+                Importo addebitato in {simbolo(valuta)}
+              </Text>
+              <View style={styles.field}>
+                <MaterialCommunityIcons name="bank-outline" size={20} color={colors.label} />
+                <RNTextInput
+                  value={convertitoRaw}
+                  onChangeText={setConvertitoRaw}
+                  onFocus={() => setIsAmountFocused(false)}
+                  keyboardType="decimal-pad"
+                  placeholder="Dall'estratto conto"
+                  placeholderTextColor={colors.placeholder}
+                  style={styles.convertitoInput}
+                />
+              </View>
+            </View>
+          )}
+
           <View>
             <Text variant="bodySmall" style={styles.fieldLabel}>
               Categoria

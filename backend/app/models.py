@@ -73,6 +73,14 @@ class Expense(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
 
+    #spesa pagata in un'altra valuta (es. 40 GBP a Londra): amount resta nella
+    #valuta dell'utente, cosi' budget e statistiche sommano cifre omogenee, e qui
+    #si conserva la cifra vera con il tasso usato. Tutti e tre vuoti = spesa
+    #nella valuta dell'utente, come prima
+    original_amount = Column(Float, nullable=True)
+    original_currency = Column(String(3), nullable=True)
+    exchange_rate = Column(Float, nullable=True)
+
     owner = relationship("User", back_populates="expenses") #permette facilmente di ottenere il proprietario partendo da una spesa
     category = relationship("Category", back_populates="expenses") #se aggiungi una spesa, sqlalchemy aggiorna automaticamente la lista di spese della categoria, e viceversa
 
@@ -92,6 +100,10 @@ class Subscriptions(Base):
     #la next_date per cui il promemoria push e' gia' partito: se il cron chiama
     #due volte lo stesso giorno, il secondo giro non manda doppioni
     reminder_sent_for = Column(Date, nullable=True)
+    #valuta del prezzo (es. un servizio fatturato in USD): amount e' in questa
+    #valuta e ogni rinnovo lo converte con il tasso del suo giorno. Vuota = la
+    #valuta dell'utente, senza conversione
+    currency = Column(String(3), nullable=True)
 
     user = relationship("User")
     category = relationship("Category")

@@ -12,6 +12,8 @@ export type SpesaSalvata = {
   category_group: string | null;
   recurring: boolean;
   frequency: string | null;
+  //valuta della cifra, se diversa da quella dell'utente
+  currency?: string | null;
 };
 
 let ultimaSalvata: SpesaSalvata | null = null;

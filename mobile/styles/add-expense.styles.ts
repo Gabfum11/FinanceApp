@@ -300,4 +300,28 @@ export const styles = StyleSheet.create({
     marginTop: 12,
     paddingHorizontal: 20,
   },
+  //il simbolo si tocca per cambiare valuta: la freccia lo fa capire
+  valutaTocco: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 4,
+    paddingRight: 2,
+  },
+  anteprima: {
+    marginTop: 10,
+    color: colors.label,
+    fontSize: 14,
+  },
+  anteprimaErrore: {
+    marginTop: 10,
+    color: colors.error,
+    fontSize: 13,
+    textAlign: "center",
+    paddingHorizontal: 20,
+  },
+  convertitoInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 0,
+  },
 });

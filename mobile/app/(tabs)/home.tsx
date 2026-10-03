@@ -34,6 +34,9 @@ type Expense = {
   category_id: number | null; //può tornare utile
   category_name: string | null;
   created_at : string;
+  //spesa pagata in un'altra valuta: amount è già convertito
+  original_amount?: number | null;
+  original_currency?: string | null;
 };
 
 type DayStat = {
@@ -79,7 +82,7 @@ export default function HomeScreen() {
   const [loadError, setLoadError] = useState(false);
   //chi usa l'app in pubblico può nascondere le cifre, come nelle app bancarie
   const [saldoVisibile, setSaldoVisibile] = useState(true);
-  const { importo: formatta, nascosto, sincronizza } = usePreferenze();
+  const { importo: formatta, importoIn, nascosto, sincronizza } = usePreferenze();
   const rotazioneBot = useSharedValue(0);
 
   useEffect(() => {
@@ -389,7 +392,12 @@ export default function HomeScreen() {
             <Text style={styles.expenseDescription}>{item.description}</Text>
             <Text style={styles.expenseMeta}>{item.category_name ?? "Non assegnata"}{" · "}{formatDataSpesa(item.date)}</Text>
           </View>
-          <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
+          <View style={styles.amountColumn}>
+            <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
+            {saldoVisibile && item.original_currency && item.original_amount != null && (
+              <Text style={styles.expenseOriginal}>{importoIn(item.original_amount, item.original_currency)}</Text>
+            )}
+          </View>
         </View>
       ))}
       {expensesLoaded && expenses.length === 0 && (

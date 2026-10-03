@@ -21,6 +21,8 @@ type Preferenze = {
   sincronizza: (dati: { currency?: unknown; language?: unknown }) => void;
   /** importo nella valuta e nella lingua dell'utente */
   importo: (valore: number, decimali?: number) => string;
+  /** importo in un'altra valuta (spesa o abbonamento in valuta estera); vuota = quella dell'utente */
+  importoIn: (valore: number, valutaImporto: string | null | undefined) => string;
   /** importo coperto dall'occhio della home */
   nascosto: string;
 };
@@ -76,6 +78,7 @@ export function PreferenzeProvider({ children }: { children: ReactNode }) {
       impostaValuta,
       sincronizza,
       importo: (v, decimali = 2) => formattaImporto(v, valuta, lingua, decimali),
+      importoIn: (v, valutaImporto) => formattaImporto(v, eValuta(valutaImporto) ? valutaImporto : valuta, lingua),
       nascosto: importoNascosto(valuta, lingua),
     }),
     [valuta, lingua, impostaValuta, sincronizza]

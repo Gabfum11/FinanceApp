@@ -17,7 +17,7 @@ import { prendiSalvataggio } from "@/utils/esitoAssistente";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function AssistantScreen() {
-  const { importo } = usePreferenze();
+  const { importoIn } = usePreferenze();
   type ExpenseConfirmation = {
     id: number;
     description: string;
@@ -28,6 +28,7 @@ export default function AssistantScreen() {
     category_id:number | null;
     recurring: boolean;
     frequency: string | null;
+    currency?: string | null; //riconosciuta nel testo ("40 sterline"), se diversa da quella dell'utente
   };
 
   type ChatMessage = {
@@ -160,12 +161,14 @@ function handleDatePickerDismiss() {
       category_id: pendingExpense.category_id,
       start_date: pendingExpense.date, //da quando parte: genera gli eventuali arretrati
       auto_renew: autoRenew,
+      currency: pendingExpense.currency ?? undefined,
     }:
     {
       description: pendingExpense.description,
       amount: pendingExpense.amount,
       date: pendingExpense.date,
       category_id: pendingExpense.category_id,
+      currency: pendingExpense.currency ?? undefined,
     }
     const response = await apiFetch(endpoint, {
       method: "POST",
@@ -220,6 +223,7 @@ function handleDatePickerDismiss() {
         ...(proposal.frequency !== null && { frequency: proposal.frequency }),
         fromAssistant: "true",
         autoRenew: String(autoRenew),
+        ...(proposal.currency && { currency: proposal.currency }),
       },
     });
   }
@@ -288,7 +292,7 @@ function handleDatePickerDismiss() {
                       : fromDateString(item.expenseData.date).toLocaleDateString("it-IT")}
                   </Text>
                 </View>
-                <Text style={styles.savedAmount}>{importo(item.expenseData.amount)}</Text>
+                <Text style={styles.savedAmount}>{importoIn(item.expenseData.amount, item.expenseData.currency)}</Text>
               </View>
             </View>
           ) : (
@@ -325,7 +329,7 @@ function handleDatePickerDismiss() {
         <View style={styles.expenseCard}>
           <Text variant="labelSmall" style={styles.cardLabel}>IMPORTO</Text>
           <Text variant="headlineMedium" style={styles.cardAmount}>
-            {importo(pendingExpense.amount)}
+            {importoIn(pendingExpense.amount, pendingExpense.currency)}
           </Text>
           <Text style={styles.confirmationDetail}>
             Descrizione: {pendingExpense.description}
