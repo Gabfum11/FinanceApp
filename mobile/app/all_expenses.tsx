@@ -204,7 +204,7 @@ export default function ExpenseList() {
                     accessibilityState={{ selected: period === p.value }}
                 >
                     <Text style={[styles.chipLabel, period === p.value && styles.chipLabelSelected]}>
-                        {p.label}
+                        {t(p.label)}
                     </Text>
                 </Pressable>
             ))}
