@@ -399,7 +399,7 @@ export default function HomeScreen() {
       )}
       </ScrollView>
 
-      {(tourVisibile || tourDalProfilo) && <TourGuidato onFine={fineTour} />}
+      {(tourVisibile || tourDalProfilo) && <TourGuidato onFine={fineTour} dalProfilo={tourDalProfilo} />}
 
       <ConfirmDialog
         visible={showExitDialog}

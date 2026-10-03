@@ -27,64 +27,65 @@ type Passaggio = {
 //nel browser non ci sono notifiche push: i testi non devono promettere avvisi
 const SUL_WEB = Platform.OS === "web";
 
+//la presentazione prima della registrazione ha gia' spiegato perche' usare
+//l'app: qui si mostra solo dove sta ogni cosa. L'assistente viene per primo,
+//perche' e' quello che la presentazione ha promesso
 const PASSAGGI: Passaggio[] = [
+  {
+    bersaglio: "assistente",
+    titolo: "Ecco l'assistente",
+    testo: "Prova subito: scrivi la tua prima spesa a parole.",
+    margine: 6,
+    raggio: 24,
+  },
   {
     bersaglio: "aggiungi",
     titolo: "Aggiungi una spesa",
-    testo: SUL_WEB
-      ? "Tocca + per registrarla.\nDa qui aggiungi anche gli abbonamenti."
-      : "Tocca + per registrarla.\nSe è un abbonamento, ti avviso il giorno prima di ogni rinnovo.",
+    testo: "Tocca + per inserirla a mano, anche gli abbonamenti.",
     margine: 6,
     raggio: 34,
   },
   {
     bersaglio: "nuovo-budget",
     titolo: "Imposta il budget",
-    testo: "Decidi quanto spendere al mese.",
+    testo: "Decidi quanto spendere e da che giorno riparte il mese.",
     margine: 6,
     raggio: 24,
-  },
-  {
-    bersaglio: "occhio",
-    titolo: "Nascondi gli importi",
-    testo: "Utile quando sei in pubblico. La scelta resta anche quando riapri l'app.",
-    margine: 4,
-    raggio: 26,
-  },
-  {
-    bersaglio: "assistente",
-    titolo: "Scrivila a parole",
-    testo: "Scrivi “Pizza 15 euro ieri” e l'assistente registra la spesa per te.",
-    margine: 6,
-    raggio: 24,
-  },
-  {
-    bersaglio: "statistiche",
-    titolo: "Le tue statistiche",
-    testo: "Puoi vedere come hai speso il tuo budget ogni mese.",
-    margine: 4,
-    raggio: 14,
-    colonnaTab: true,
   },
   {
     bersaglio: "abbonamenti",
     titolo: "I tuoi abbonamenti",
-    testo: "Qui li trovi tutti: mettili in pausa, modificali e conferma quelli da rinnovare.",
+    testo: "Mettili in pausa, modificali e conferma quelli da rinnovare.",
     margine: 4,
     raggio: 14,
     colonnaTab: true,
   },
   {
     //subito dopo gli abbonamenti: i promemoria sono spenti finche' non si
-    //accendono qui, e il passaggio 1 li promette
+    //accendono qui, e la presentazione li promette
     bersaglio: "profilo",
-    titolo: "Il tuo profilo",
+    titolo: SUL_WEB ? "Il tuo profilo" : "Attiva i promemoria",
     testo: SUL_WEB
       ? "Qui puoi esportare i tuoi dati e rivedere questo tutorial."
-      : "Attiva qui i promemoria degli abbonamenti. Puoi anche esportare i tuoi dati e rivedere questo tutorial.",
+      : "Accendili qui: ti avvisiamo il giorno prima di ogni rinnovo.",
     margine: 4,
     raggio: 14,
     colonnaTab: true,
+  },
+  {
+    bersaglio: "statistiche",
+    titolo: "Le tue statistiche",
+    testo: "Guarda come hai speso il budget, mese per mese.",
+    margine: 4,
+    raggio: 14,
+    colonnaTab: true,
+  },
+  {
+    bersaglio: "occhio",
+    titolo: "Nascondi gli importi",
+    testo: "Utile in pubblico. La scelta resta anche quando riapri l'app.",
+    margine: 4,
+    raggio: 26,
   },
 ];
 
@@ -107,10 +108,12 @@ function pathConBuco(larghezza: number, altezza: number, b: Rettangolo, raggio: 
 
 type Props = {
   onFine: (come: "completato" | "saltato") => void;
+  //"Rivedi il tutorial" dal profilo: l'account non e' appena nato
+  dalProfilo?: boolean;
 };
 
 //va montato solo quando serve: ogni apertura riparte dalla card di benvenuto
-export function TourGuidato({ onFine }: Props) {
+export function TourGuidato({ onFine, dalProfilo = false }: Props) {
   //-1 = card di benvenuto, poi gli indici di PASSAGGI
   const [indice, setIndice] = useState(-1);
   const [schermo, setSchermo] = useState<Rettangolo | null>(null);
@@ -264,10 +267,10 @@ export function TourGuidato({ onFine }: Props) {
           >
             <Image source={ICONA_APP} style={styles.introLogo} />
             <Text variant="titleLarge" style={styles.introTitle}>
-              Benvenuto in TrackIt
+              {dalProfilo ? "Il tour di TrackIt" : "Account creato!"}
             </Text>
             <Text variant="bodyMedium" style={styles.introText}>
-              Ti mostro in pochi secondi dove si trova tutto.
+              Ti mostro in pochi secondi dove trovi tutto.
             </Text>
             <Button
               mode="contained"
