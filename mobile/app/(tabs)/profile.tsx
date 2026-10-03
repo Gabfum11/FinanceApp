@@ -16,7 +16,8 @@ import { apiFetch } from "@/utils/apiFetch";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { puoAggiungereAllaHome } from "@/utils/aggiuntaHome";
 import { usePreferenze } from "@/utils/preferenze";
-import { VALUTE, simbolo, type Valuta } from "@/utils/formato";
+import { VALUTE, LINGUE, simbolo, type Valuta, type Lingua } from "@/utils/formato";
+import { useTranslation } from "react-i18next";
 
 //il dispositivo non cambia mentre si usa l'app: non c'e' niente da ascoltare
 const nessunaIscrizione = () => () => {};
@@ -54,7 +55,9 @@ export default function ProfileScreen() {
     //Il terzo argomento vale durante la build del sito, dove non c'e' un browser
     const aggiungibile = useSyncExternalStore(nessunaIscrizione, puoAggiungereAllaHome, () => false);
     const [showHomeDialog, setShowHomeDialog] = useState(false);
-    const { valuta, impostaValuta } = usePreferenze();
+    const { valuta, impostaValuta, lingua, impostaLingua } = usePreferenze();
+    const { t } = useTranslation();
+    const [showLinguaDialog, setShowLinguaDialog] = useState(false);
     const [showValutaDialog, setShowValutaDialog] = useState(false);
     const [valutaInCorso, setValutaInCorso] = useState(false);
     //scelta la nuova valuta, si chiede cosa fare delle spese passate
@@ -279,6 +282,15 @@ export default function ProfileScreen() {
                         </View>
                         <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
                     </Pressable>
+                    <View style={styles.rowDivider} />
+                    <Pressable style={styles.row} onPress={() => setShowLinguaDialog(true)}>
+                        <MaterialCommunityIcons name="translate" size={20} color={colors.primary} />
+                        <View style={styles.rowTextGroup}>
+                            <Text style={styles.rowLabelInGroup}>{t("lingua.titolo")}</Text>
+                            <Text style={styles.rowHint}>{t(`lingua.${lingua}`)}</Text>
+                        </View>
+                        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
+                    </Pressable>
                 </View>
 
                 <Text style={styles.sectionLabel}>DATI</Text>
@@ -375,6 +387,27 @@ export default function ProfileScreen() {
                                 />
                             ))}
                         </RadioButton.Group>
+                    </Dialog.Content>
+                </Dialog>
+            </Portal>
+
+            <Portal>
+                <Dialog visible={showLinguaDialog} onDismiss={() => setShowLinguaDialog(false)}>
+                    <Dialog.Title>{t("lingua.titolo")}</Dialog.Title>
+                    <Dialog.Content>
+                        <RadioButton.Group
+                            onValueChange={(scelta) => {
+                                setShowLinguaDialog(false);
+                                impostaLingua(scelta as Lingua);
+                            }}
+                            value={lingua}
+                        >
+                            {/* ogni lingua nella sua lingua: chi non capisce l'italiano la riconosce */}
+                            {LINGUE.map((l) => (
+                                <RadioButton.Item key={l} value={l} label={t(`lingua.${l}`)} />
+                            ))}
+                        </RadioButton.Group>
+                        <Text style={{ marginTop: 8, color: colors.textMuted }}>{t("lingua.nota")}</Text>
                     </Dialog.Content>
                 </Dialog>
             </Portal>

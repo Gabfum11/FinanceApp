@@ -7,6 +7,8 @@ import { PaperProvider } from 'react-native-paper';
 import { theme } from '@/theme';
 import { InvitoHome } from '@/components/InvitoHome';
 import { PreferenzeProvider } from '@/utils/preferenze';
+//configura le traduzioni prima che si disegni qualsiasi schermata
+import '@/utils/i18n';
 
 export const unstable_settings = {
   initialRouteName: 'index',

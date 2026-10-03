@@ -1,0 +1,9 @@
+{
+  "lingua": {
+    "it": "Italiano",
+    "en": "English",
+    "selettore": "App language",
+    "titolo": "Language",
+    "nota": "Also used for emails and notifications."
+  }
+}

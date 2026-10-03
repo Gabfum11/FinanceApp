@@ -11,6 +11,7 @@ import { GoogleButton } from "@/components/GoogleButton";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import * as WebBrowser from "expo-web-browser";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
+import { SelettoreLingua } from "@/components/SelettoreLingua";
 
 
 export default function LoginScreen() {
@@ -59,6 +60,8 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>{/*container di tutta la schermata*/}
       <PaginaScorrevole style={styles.content} tastiera>
+        {/* per chi ha saltato la presentazione o torna dopo un logout */}
+        <SelettoreLingua />
         <View style={styles.logoContainer}>
           <Image source={require("../assets/images/logo/trackit-icon-rounded-180.png")} style={styles.logo} />
           <Text style={styles.logoLabel}>TrackIt</Text>

@@ -21,6 +21,7 @@ import { GoogleButton } from "@/components/GoogleButton";
 import { useGoogleLogin } from "@/utils/useGoogleLogin";
 import { segnaPresentazioneVista } from "@/utils/presentazione";
 import { usePreferenze } from "@/utils/preferenze";
+import { SelettoreLingua } from "@/components/SelettoreLingua";
 import { colors } from "@/styles/tokens";
 import { styles } from "@/styles/presentazione.styles";
 
@@ -273,6 +274,8 @@ export default function Presentazione() {
             style={[{ width, height: altezza }, styles.paginaScura]}
             contentContainerStyle={[styles.pagina, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}
           >
+            {/* la lingua si sceglie subito: e' la prima cosa che si vede */}
+            <SelettoreLingua scuro />
             <View style={styles.logoArea}>
               <View style={styles.cerchioEsterno}>
                 <View style={styles.cerchioInterno}>

@@ -1,0 +1,9 @@
+{
+  "lingua": {
+    "it": "Italiano",
+    "en": "English",
+    "selettore": "Lingua dell'app",
+    "titolo": "Lingua",
+    "nota": "Vale anche per le email e le notifiche."
+  }
+}
