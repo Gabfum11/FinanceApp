@@ -129,6 +129,30 @@ export const styles = StyleSheet.create({
         lineHeight: 20,
         color: colors.text,
     },
+    //nota sotto le scelte: secondaria, come gli altri suggerimenti dell'app
+    dialogNota: {
+        marginTop: spacing.md,
+        fontSize: 13,
+        lineHeight: 18,
+        color: colors.textMuted,
+    },
+    //le voci con il pallino allineate al titolo: Paper aggiunge un rientro suo
+    opzione: {
+        paddingHorizontal: 0,
+    },
+    opzioneTesto: {
+        fontSize: 15,
+        color: colors.text,
+    },
+    //la spiegazione sotto una scelta, nella finestra del cambio valuta
+    opzioneNota: {
+        fontSize: 13,
+        lineHeight: 18,
+        color: colors.textMuted,
+    },
+    opzioneNotaStaccata: {
+        marginBottom: spacing.sm,
+    },
     //l'indirizzo staccato dal testo: si legge e si trascrive piu' facilmente.
     //Blu e non verde: il verde nell'app segnala un'azione, questo e' solo testo
     supportEmail: {

@@ -371,12 +371,14 @@ export default function ProfileScreen() {
             </PaginaScorrevole>
 
             <Portal>
-                <Dialog visible={showValutaDialog} onDismiss={() => setShowValutaDialog(false)}>
-                    <Dialog.Title>{t("profilo.valuta")}</Dialog.Title>
+                <Dialog visible={showValutaDialog} onDismiss={() => setShowValutaDialog(false)} style={styles.dialog}>
+                    <Dialog.Title style={styles.dialogTitle}>{t("profilo.valuta")}</Dialog.Title>
                     <Dialog.Content>
                         <RadioButton.Group onValueChange={scegliValuta} value={valuta}>
                             {VALUTE.map((v) => (
                                 <RadioButton.Item
+                                    labelStyle={styles.opzioneTesto}
+                                    style={styles.opzione}
                                     key={v}
                                     value={v}
                                     label={`${nomeValuta(v)} (${simbolo(v)})`}
@@ -388,8 +390,8 @@ export default function ProfileScreen() {
             </Portal>
 
             <Portal>
-                <Dialog visible={showLinguaDialog} onDismiss={() => setShowLinguaDialog(false)}>
-                    <Dialog.Title>{t("lingua.titolo")}</Dialog.Title>
+                <Dialog visible={showLinguaDialog} onDismiss={() => setShowLinguaDialog(false)} style={styles.dialog}>
+                    <Dialog.Title style={styles.dialogTitle}>{t("lingua.titolo")}</Dialog.Title>
                     <Dialog.Content>
                         <RadioButton.Group
                             onValueChange={(scelta) => {
@@ -400,17 +402,19 @@ export default function ProfileScreen() {
                         >
                             {/* ogni lingua nella sua lingua: chi non capisce l'italiano la riconosce */}
                             {LINGUE.map((l) => (
-                                <RadioButton.Item key={l} value={l} label={t(`lingua.${l}`)} />
+                                <RadioButton.Item
+                                    labelStyle={styles.opzioneTesto}
+                                    style={styles.opzione} key={l} value={l} label={t(`lingua.${l}`)} />
                             ))}
                         </RadioButton.Group>
-                        <Text style={{ marginTop: 8, color: colors.textMuted }}>{t("lingua.nota")}</Text>
+                        <Text style={styles.dialogNota}>{t("lingua.nota")}</Text>
                     </Dialog.Content>
                 </Dialog>
             </Portal>
 
             <Portal>
-                <Dialog visible={valutaNuova !== null} onDismiss={() => !valutaInCorso && setValutaNuova(null)}>
-                    <Dialog.Title>
+                <Dialog visible={valutaNuova !== null} onDismiss={() => !valutaInCorso && setValutaNuova(null)} style={styles.dialog}>
+                    <Dialog.Title style={styles.dialogTitle}>
                         {valutaNuova ? t("profilo.passareA", { valuta: `${nomeValuta(valutaNuova)} (${simbolo(valutaNuova)})` }) : ""}
                     </Dialog.Title>
                     <Dialog.Content>
@@ -419,19 +423,23 @@ export default function ProfileScreen() {
                             value={convertiPassate ? "converti" : "mantieni"}
                         >
                             <RadioButton.Item
+                                    labelStyle={styles.opzioneTesto}
+                                    style={styles.opzione}
                                 value="converti"
                                 label={t("profilo.converti")}
                                 disabled={valutaInCorso}
                             />
-                            <Text style={{ marginLeft: 16, marginBottom: 8, color: colors.textMuted }}>
+                            <Text style={[styles.opzioneNota, styles.opzioneNotaStaccata]}>
                                 {t("profilo.convertiTesto")}
                             </Text>
                             <RadioButton.Item
+                                    labelStyle={styles.opzioneTesto}
+                                    style={styles.opzione}
                                 value="mantieni"
                                 label={t("profilo.mantieni")}
                                 disabled={valutaInCorso}
                             />
-                            <Text style={{ marginLeft: 16, color: colors.textMuted }}>
+                            <Text style={styles.opzioneNota}>
                                 {t("profilo.mantieniTesto")}
                             </Text>
                         </RadioButton.Group>
@@ -447,13 +455,13 @@ export default function ProfileScreen() {
 
             {/* un solo pulsante: non c'e' niente da confermare, solo istruzioni */}
             <Portal>
-                <Dialog visible={showHomeDialog} onDismiss={() => setShowHomeDialog(false)}>
-                    <Dialog.Title>{t("profilo.homeTitolo")}</Dialog.Title>
+                <Dialog visible={showHomeDialog} onDismiss={() => setShowHomeDialog(false)} style={styles.dialog}>
+                    <Dialog.Title style={styles.dialogTitle}>{t("profilo.homeTitolo")}</Dialog.Title>
                     <Dialog.Content>
-                        <Text>{t("profilo.homePasso1")}</Text>
-                        <Text>{t("profilo.homePasso2")}</Text>
+                        <Text style={styles.dialogText}>{t("profilo.homePasso1")}</Text>
+                        <Text style={styles.dialogText}>{t("profilo.homePasso2")}</Text>
                         {/* l'icona ha dati suoi, separati da Safari: la sessione non passa */}
-                        <Text style={{ marginTop: 12, color: colors.textMuted }}>
+                        <Text style={styles.dialogNota}>
                             {t("profilo.homeNota")}
                         </Text>
                     </Dialog.Content>
