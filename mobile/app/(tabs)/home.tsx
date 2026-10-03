@@ -19,7 +19,7 @@ import { bersaglio } from "@/utils/tour";
 import { usePreferenze } from "@/utils/preferenze";
 import { useTranslation } from "react-i18next";
 import { useSpazioBarra } from "@/utils/barraSchede";
-import { useSchermoStretto, LARGHEZZA_MASSIMA } from "@/utils/layout";
+import { useSchermoStretto, LARGHEZZA_MASSIMA, SCHERMO_MOLTO_STRETTO } from "@/utils/layout";
 import { nomeCategoria } from "@/utils/categorie";
 import { localeAttuale } from "@/utils/date";
 import Animated, {
@@ -91,8 +91,10 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   //i messaggi in basso compaiono sopra la barra delle schede, non sotto
   const spazioBarra = useSpazioBarra();
-  //su uno schermo stretto il saluto e la pillola dell'assistente non ci stanno entrambi interi
-  const stretto = useSchermoStretto();
+  //la scritta "Assistente" resta quasi sempre: e' la funzione principale dell'app.
+  //Se lo spazio manca e' il saluto a rimpicciolirsi; solo sui telefoni molto
+  //stretti la pillola passa alla sola icona
+  const stretto = useSchermoStretto(SCHERMO_MOLTO_STRETTO);
   const GIORNI_SETTIMANA = t("comune.giorniBrevi").split(",");
   const rotazioneBot = useSharedValue(0);
 
