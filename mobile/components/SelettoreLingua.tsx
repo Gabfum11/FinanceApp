@@ -4,8 +4,9 @@ import { useTranslation } from "react-i18next";
 import { usePreferenze } from "@/utils/preferenze";
 import { LINGUE } from "@/utils/formato";
 import { styles } from "@/styles/selettore-lingua.styles";
+import { Bandiera } from "@/components/Bandiera";
 
-// Pillola IT | EN per chi non ha ancora un account: sta in alto nella prima
+// Pillola con bandiera e codice (IT | EN) per chi non ha ancora un account: sta in alto nella prima
 // pagina della presentazione e nel login. Dopo l'accesso la lingua si cambia
 // dal Profilo. Ogni lingua e' scritta nella sua lingua ("English", non
 // "Inglese"): chi non capisce l'italiano deve riconoscerla.
@@ -27,6 +28,7 @@ export function SelettoreLingua({ scuro = false }: { scuro?: boolean }) {
             accessibilityLabel={t(`lingua.${l}`)}
             hitSlop={6}
           >
+            <Bandiera lingua={l} />
             <Text
               style={[
                 styles.testo,

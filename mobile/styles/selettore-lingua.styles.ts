@@ -13,13 +13,17 @@ export const styles = StyleSheet.create({
   pillolaScura: {
     backgroundColor: colors.overlayMuted,
   },
+  //bandiera e codice affiancati: a sinistra un po' meno spazio, la bandiera e' tonda
   voce: {
     minWidth: 44,
     height: 32,
-    paddingHorizontal: 10,
+    paddingLeft: 8,
+    paddingRight: 12,
     borderRadius: 999,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 6,
   },
   voceScelta: {
     backgroundColor: colors.surface,
