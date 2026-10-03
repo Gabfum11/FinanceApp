@@ -44,6 +44,10 @@ RELATIVE_DAYS = {
     "ieri": 1,
     "altro ieri": 2,
     "l'altro ieri": 2,
+    #l'assistente capisce anche l'inglese: il modello copia l'espressione com'e'
+    "today": 0,
+    "yesterday": 1,
+    "day before yesterday": 2,
 }
 
 WEEKDAY_INDEX = {
@@ -54,6 +58,8 @@ WEEKDAY_INDEX = {
     "venerdi": 4, "venerdì": 4,
     "sabato": 5,
     "domenica": 6,
+    "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
+    "friday": 4, "saturday": 5, "sunday": 6,
 }
 
 
@@ -70,18 +76,38 @@ MONTH_INDEX = {
     "ottobre": 10, "ott": 10,
     "novembre": 11, "nov": 11,
     "dicembre": 12, "dic": 12,
+    #in inglese: le abbreviazioni uguali all'italiano (feb, mar, apr, nov) ci sono gia'
+    "january": 1, "jan": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6, "jun": 6,
+    "july": 7, "jul": 7,
+    "august": 8, "aug": 8,
+    "september": 9, "sep": 9, "sept": 9,
+    "october": 10, "oct": 10,
+    "november": 11,
+    "december": 12, "dec": 12,
 }
 
 # "3 settembre", "3 settembre 2025", "3/9", "03/09/25", "3-9-2025"
-_DATE_WITH_MONTH_NAME = re.compile(r"^(\d{1,2})\s+([a-z]+)(?:\s+(\d{4}))?$")
+_DATE_WITH_MONTH_NAME = re.compile(r"^(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?([a-z]+)\.?,?(?:\s+(\d{4}))?$")
+# in inglese anche col mese davanti: "September 3", "Sept 3rd, 2025"
+_DATE_MONTH_FIRST = re.compile(r"^([a-z]+)\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?(?:\s+(\d{4}))?$")
 _DATE_NUMERIC = re.compile(r"^(\d{1,2})[/\-.](\d{1,2})(?:[/\-.](\d{2}|\d{4}))?$")
 
 
 def _resolve_absolute_date(expr: str, today: date, allow_future: bool) -> date | None:
     """Data con giorno e mese espliciti. Senza anno si intende l'ultima volta che e' capitata."""
     m = _DATE_WITH_MONTH_NAME.match(expr)
+    primo_il_mese = _DATE_MONTH_FIRST.match(expr) if not m else None
     if m:
         day, month, year = int(m.group(1)), MONTH_INDEX.get(m.group(2)), m.group(3)
+        if month is None:
+            return None
+    elif primo_il_mese:
+        day, month, year = int(primo_il_mese.group(2)), MONTH_INDEX.get(primo_il_mese.group(1)), primo_il_mese.group(3)
         if month is None:
             return None
     else:
@@ -111,13 +137,18 @@ def _resolve_date_expr(raw, today: date, allow_future: bool = False) -> date | N
         return None
 
     expr = raw.strip().lower()
-    absolute = _resolve_absolute_date(" ".join(expr.removeprefix("il ").split()), today, allow_future)
+    #"il 3 settembre", "on 3 September", "the 3rd of September"
+    senza_articolo = expr.removeprefix("il ").removeprefix("on ").removeprefix("the ")
+    absolute = _resolve_absolute_date(" ".join(senza_articolo.split()), today, allow_future)
     if absolute:
         return absolute
 
     # "scorso"/"passato" non cambiano il calcolo: un giorno della settimana e' sempre passato
     for filler in (" scorso", " scorsa", " passato", " passata", "di ", "lo ", "la ", "il "):
         expr = expr.replace(filler, " ")
+    #"last monday", "on monday", "the day before yesterday"
+    for prefisso in ("last ", "on ", "the "):
+        expr = expr.strip().removeprefix(prefisso)
     expr = " ".join(expr.split())
 
     if expr in RELATIVE_DAYS:
@@ -183,6 +214,10 @@ def extract_expense_from_text(
                         '"lunedi", "martedi", "mercoledi", "giovedi", "venerdi", "sabato", "domenica", '
                         'oppure una data con giorno e mese copiata com\'e\', con l\'anno solo se il testo lo dice '
                         '(es. "3 settembre", "3 settembre 2025", "3/9"). '
+                        'Il testo puo\' essere anche in inglese: in quel caso copia l\'espressione inglese, '
+                        'tra "today", "yesterday", "day before yesterday", i giorni della settimana '
+                        '("monday"... "sunday", anche con "last" davanti) o una data come "3 September" o "September 3". '
+                        'Anche "description" resta nella lingua del testo. '
                         "Se il giorno e' seguito da \"scorso\" usa comunque solo il nome del giorno: "
                         '"sabato scorso" -> "date_expr": "sabato". '
                         "se il testo non dice quando, o usa un'espressione diversa da queste, "
@@ -190,7 +225,7 @@ def extract_expense_from_text(
                         "la regola vale anche quando \"recurring\" e' true: in quel caso "
                         "\"date_expr\" indica da quando parte l'abbonamento. "
                         'se il testo nomina una valuta, imposta "currency" con il suo codice: '
-                        '"EUR" (euro), "USD" (dollari, $), "GBP" (sterline, £), "CHF" (franchi svizzeri). '
+                        '"EUR" (euro), "USD" (dollari, dollars, $), "GBP" (sterline, pounds, £), "CHF" (franchi svizzeri, Swiss francs). '
                         "se non nomina nessuna valuta, o ne nomina un'altra, lascia \"currency\": null. "
                         "Usa i nomi di categoria esattamente come elencati sopra; "
                         "gli esempi che seguono mostrano solo la forma, non i nomi ammessi. "

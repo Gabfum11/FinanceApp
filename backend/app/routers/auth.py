@@ -46,6 +46,7 @@ async def register(request:Request, user: schemas.UserCreate, db: Session = Depe
         email=normalized_email,
         hashed_password=security.hash_password(user.password),
         nickname=user.nickname,
+        language=user.language,
     )
     db.add(new_user)
     db.commit()
@@ -61,7 +62,7 @@ async def register(request:Request, user: schemas.UserCreate, db: Session = Depe
     db.add(new_otp)
     db.commit()
     db.refresh(new_otp)
-    await email_service.send_otp_email(normalized_email,otp_code, purpose="email_verification")
+    await email_service.send_otp_email(normalized_email,otp_code, purpose="email_verification", lingua=new_user.language)
     return new_user
 
 @router.post("/verify-otp", response_model=schemas.Token)
@@ -277,7 +278,7 @@ async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=De
         db.commit()
         db.refresh(new_otp)
         try:
-            await email_service.send_otp_email(payload.email,otp_code, purpose=payload.purpose)
+            await email_service.send_otp_email(payload.email,otp_code, purpose=payload.purpose, lingua=auth_user.language)
         except Exception:
             #si registra l'id, non l'email: e' un dato personale e i log di
             #Render restano leggibili per giorni. logger.exception include

@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.business_logic.formato import formatta_importo
 from app.business_logic.cambi import CambioNonDisponibile, tasso
+from app.business_logic.testi import testo
 from app.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -29,7 +30,6 @@ FUSO = ZoneInfo("Europe/Rome")
 CANALE = "abbonamenti"
 #limite di Expo per singola richiesta
 MESSAGGI_PER_RICHIESTA = 100
-FREQUENZE = {"monthly": "mensile", "weekly": "settimanale", "yearly": "annuale"}
 
 
 def oggi_in_italia() -> date:
@@ -49,7 +49,7 @@ def _secondi_di_validita(rinnovo: date) -> int:
 def _prezzo(sub: models.Subscriptions, utente: models.User) -> str:
     """Il prezzo nella sua valuta e, se diversa, quanto vale nella valuta dell'utente."""
     valuta = sub.currency or utente.currency
-    prezzo = formatta_importo(sub.amount, valuta)
+    prezzo = formatta_importo(sub.amount, valuta, utente.language)
     if valuta == utente.currency:
         return prezzo
     try:
@@ -57,14 +57,15 @@ def _prezzo(sub: models.Subscriptions, utente: models.User) -> str:
     except CambioNonDisponibile:
         #meglio il prezzo vero da solo che nessun promemoria
         return prezzo
-    return f"{prezzo} (≈ {formatta_importo(sub.amount * valore, utente.currency)})"
+    return f"{prezzo} (≈ {formatta_importo(sub.amount * valore, utente.currency, utente.language)})"
 
 
 def _messaggio(sub: models.Subscriptions, utente: models.User) -> dict:
-    frequenza = FREQUENZE.get(sub.frequency, sub.frequency)
+    #nella lingua dell'utente: la notifica arriva anche con l'app chiusa
+    frequenza = testo(utente.language, f"frequenza_{sub.frequency}") if sub.frequency in ("monthly", "weekly", "yearly") else sub.frequency
     return {
         "to": utente.push_token,
-        "title": f"{sub.description} si rinnova domani",
+        "title": testo(utente.language, "notifica_titolo", nome=sub.description),
         "body": f"{_prezzo(sub, utente)} · {frequenza}",
         "data": {"subscriptionId": sub.id},
         "channelId": CANALE,

@@ -11,9 +11,12 @@ import { messaggioErrore } from "@/utils/messaggioErrore";
 import * as WebBrowser from "expo-web-browser";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useTranslation } from "react-i18next";
+import { usePreferenze } from "@/utils/preferenze";
 
 export default function RegisterScreen() {
     const { t } = useTranslation();
+    //l'email con il codice parte subito: deve essere nella lingua scelta qui
+    const { lingua } = usePreferenze();
     const[nickname,setnickName]=useState("");
     const[email,setEmail]=useState("");
     const[password,setPassword]=useState("")
@@ -34,7 +37,7 @@ export default function RegisterScreen() {
             const response = await fetch(`${API_URL}/auth/register`, {
                 method:"POST",
                 headers: {"Content-Type": "application/json"},
-                body:JSON.stringify({nickname,email,password}),
+                body:JSON.stringify({nickname,email,password, language: lingua}),
             });
             if(!response.ok) {
                 const messaggio = await messaggioErrore(response, t("registrazione.datiErrati"));

@@ -121,6 +121,9 @@ class UserCreate(BaseModel):
     email: EmailStr #questo tipo valida automaticamente che la stringa abbia un formato email 
     password: str=Field(...,min_length=8, max_length=72)
     nickname: str
+    #la lingua scelta nell'app prima di avere un account: l'email con il codice
+    #parte subito, e deve essere gia' in quella lingua
+    language: Lingua = "it"
 
 
 class UserOut(BaseModel):
