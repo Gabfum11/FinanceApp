@@ -1,5 +1,5 @@
 import { View, Pressable } from "react-native";
-import { Text, IconButton, Button, Dialog, Portal, TextInput, ActivityIndicator, Snackbar, Switch, RadioButton } from "react-native-paper";
+import { Text, Button, Dialog, Portal, TextInput, ActivityIndicator, Snackbar, Switch, RadioButton } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { esportaCsv } from "@/utils/exportData";
 import { impostaPromemoria, promemoriaAttivi, dimenticaDispositivo, NOTIFICHE_DISPONIBILI } from "@/utils/notifications";
@@ -226,14 +226,17 @@ export default function ProfileScreen() {
             <PaginaScorrevole style={styles.content} sopraBarra>
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>{t("profilo.titolo")}</Text>
-                    <IconButton
-                        icon="logout"
-                        mode="outlined"
-                        iconColor={colors.danger}
+                    {/* scritta e icona insieme: l'icona da sola non diceva cosa fa */}
+                    <Pressable
                         onPress={() => setShowLogoutDialog(true)}
-                        style={styles.logoutButton}
+                        style={({ pressed }) => [styles.logoutButton, pressed && styles.logoutPremuto]}
+                        accessibilityRole="button"
                         accessibilityLabel={t("profilo.esci")}
-                    />
+                        hitSlop={4}
+                    >
+                        <Text style={styles.logoutTesto}>{t("profilo.esciTitolo")}</Text>
+                        <MaterialCommunityIcons name="logout" size={20} color={colors.danger} />
+                    </Pressable>
                 </View>
 
                 <View style={styles.profCard}>

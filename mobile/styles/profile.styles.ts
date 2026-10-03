@@ -22,8 +22,26 @@ export const styles = StyleSheet.create({
         fontWeight: "700",
         color: colors.text,
     },
-    logoutButton:{
-        margin:0
+    //pillola con il bordo, come il pulsante dell'occhio in home: un testo
+    //rosso da solo sembrerebbe un avviso, non un comando
+    logoutButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        height: 40,
+        paddingHorizontal: 14,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.surface,
+    },
+    logoutPremuto: {
+        opacity: 0.7,
+    },
+    logoutTesto: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: colors.danger,
     },
     profCard: {
         flexDirection: "row",
