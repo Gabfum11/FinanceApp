@@ -6,7 +6,6 @@ import {
   ScrollView,
   BackHandler,
   Platform,
-  useWindowDimensions,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
@@ -187,10 +186,11 @@ function IllustrazioneAbbonamenti() {
 export default function Presentazione() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   //in una lista orizzontale ogni pagina e' alta quanto il suo contenuto, e nel
-  //browser non si allunga da sola: si misura lo spazio vero e glielo si da'
-  const [altezza, setAltezza] = useState(0);
+  //browser non si allunga da sola: si misura lo spazio vero e glielo si da'.
+  //Anche la larghezza: su tablet e computer l'app e' una colonna piu' stretta
+  //della finestra, e pagine larghe quanto la finestra uscirebbero dai lati
+  const [{ width, altezza }, setSpazio] = useState({ width: 0, altezza: 0 });
   const lista = useRef<FlatList<number>>(null);
   const [pagina, setPagina] = useState(0);
   const [errore, setErrore] = useState("");
@@ -385,10 +385,10 @@ export default function Presentazione() {
   }
 
   return (
-    <View style={styles.container} onLayout={(e) => setAltezza(e.nativeEvent.layout.height)}>
+    <View style={styles.container} onLayout={(e) => setSpazio({ width: e.nativeEvent.layout.width, altezza: e.nativeEvent.layout.height })}>
       {/* testo della barra di stato chiaro sulla prima pagina, che e' scura */}
       <StatusBar style={pagina === 0 ? "light" : "dark"} />
-      {altezza > 0 && (
+      {altezza > 0 && width > 0 && (
         <FlatList
           ref={lista}
           data={PAGINE}

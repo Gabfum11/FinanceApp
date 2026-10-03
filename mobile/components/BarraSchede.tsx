@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { bersaglio } from "@/utils/tour";
 import { DISTANZA_DAL_FONDO } from "@/utils/barraSchede";
+import { useSchermoStretto } from "@/utils/layout";
 import { colors } from "@/styles/tokens";
 import { styles } from "@/styles/barra-schede.styles";
 
@@ -38,6 +39,9 @@ export function BarraSchede({ state, descriptors, navigation }: BottomTabBarProp
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  //su uno schermo stretto "Abbonamenti" non ci sta: il nome resta solo sulla
+  //scheda attiva, le altre mostrano l'icona (il lettore di schermo legge comunque il nome)
+  const stretto = useSchermoStretto();
   //con la tastiera aperta la barra le finirebbe sopra
   const [tastiera, setTastiera] = useState(false);
 
@@ -98,9 +102,11 @@ export function BarraSchede({ state, descriptors, navigation }: BottomTabBarProp
                 color={attiva ? colors.primaryDark : colors.textMuted}
               />
             </View>
-            <Text style={[styles.nome, attiva && styles.nomeAttivo]} numberOfLines={1}>
-              {titolo}
-            </Text>
+            {(attiva || !stretto) && (
+              <Text style={[styles.nome, attiva && styles.nomeAttivo]} numberOfLines={1}>
+                {titolo}
+              </Text>
+            )}
           </Pressable>
         );
       })}

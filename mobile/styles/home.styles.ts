@@ -16,6 +16,8 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    //il saluto non deve mai toccare la pillola dell'assistente
+    gap: 12,
     marginBottom: 24,
   },
   title: {

@@ -7,6 +7,9 @@ import { PaperProvider } from 'react-native-paper';
 import { theme } from '@/theme';
 import { InvitoHome } from '@/components/InvitoHome';
 import { PreferenzeProvider } from '@/utils/preferenze';
+import { View } from 'react-native';
+import { LARGHEZZA_MASSIMA } from '@/utils/layout';
+import { colors } from '@/styles/tokens';
 //configura le traduzioni prima che si disegni qualsiasi schermata
 import '@/utils/i18n';
 
@@ -21,6 +24,11 @@ export default function RootLayout() {
       {/* valuta e lingua dell'utente, per tutte le schermate */}
       <PreferenzeProvider>
       <ThemeProvider value={DefaultTheme}>
+        {/* su tablet e computer l'app resta una colonna centrata: card e pulsanti
+            allungati per tutto lo schermo sarebbero scomodi da leggere e da toccare.
+            Sui telefoni la colonna e' larga quanto lo schermo e non cambia niente */}
+        <View style={{ flex: 1, backgroundColor: colors.surfaceAlt }}>
+        <View style={{ flex: 1, width: "100%", maxWidth: LARGHEZZA_MASSIMA, alignSelf: "center" }}>
         <Stack>
           {/*
             stack.screen registra una schermata presso il sistema di navigazione dicendo a expo router
@@ -42,6 +50,8 @@ export default function RootLayout() {
         </Stack>
         {/* fuori dallo Stack: resta sopra qualsiasi schermata, presentazione compresa */}
         <InvitoHome />
+        </View>
+        </View>
         <StatusBar style="auto" />
       </ThemeProvider>
       </PreferenzeProvider>

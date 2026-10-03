@@ -19,6 +19,7 @@ import { bersaglio } from "@/utils/tour";
 import { usePreferenze } from "@/utils/preferenze";
 import { useTranslation } from "react-i18next";
 import { useSpazioBarra } from "@/utils/barraSchede";
+import { useSchermoStretto, LARGHEZZA_MASSIMA } from "@/utils/layout";
 import { nomeCategoria } from "@/utils/categorie";
 import { localeAttuale } from "@/utils/date";
 import Animated, {
@@ -64,7 +65,8 @@ const CHIAVE_SALDO = "mostra_saldo";
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width: larghezzaSchermo } = useWindowDimensions();
+  //la colonna dell'app, non la finestra: su tablet e computer e' piu' stretta
+  const larghezzaSchermo = Math.min(useWindowDimensions().width, LARGHEZZA_MASSIMA);
   //loadAll puo' partire due volte di fila (focus e riprova): il tour va aperto una volta sola
   const benvenutoAperto = useRef(false);
   const [tourVisibile, setTourVisibile] = useState(false);
@@ -89,6 +91,8 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   //i messaggi in basso compaiono sopra la barra delle schede, non sotto
   const spazioBarra = useSpazioBarra();
+  //su uno schermo stretto il saluto e la pillola dell'assistente non ci stanno entrambi interi
+  const stretto = useSchermoStretto();
   const GIORNI_SETTIMANA = t("comune.giorniBrevi").split(",");
   const rotazioneBot = useSharedValue(0);
 
@@ -186,7 +190,7 @@ export default function HomeScreen() {
       if (response.ok) {
       const data = await response.json();
       // console.log("Dati utente ricevuti:", data); // dati sensibili, non loggare in produzione
-      setNickname(data.nickname);
+      setNickname((data.nickname ?? "").trim());
       setTutorialVisto(data.tutorial_visto);
       //valuta e lingua seguono l'account, anche se cambiate da un altro telefono
       sincronizza(data);
@@ -269,7 +273,9 @@ export default function HomeScreen() {
           i blocchi superavano l'altezza e le transazioni finivano sotto la barra */}
       <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 16, paddingBottom: spazioBarra }]}>
       <View style={styles.titleRow}>
-        <Text variant="headlineMedium" style={styles.title}>
+        {/* una riga sola: con un nome lungo il testo si rimpicciolisce invece di
+            andare a capo o finire sotto la pillola */}
+        <Text variant="headlineMedium" style={styles.title} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
           {t("home.ciao", { nome: nickname })}
         </Text>
         <Pressable
@@ -288,7 +294,7 @@ export default function HomeScreen() {
             source={require("../../assets/images/logo/trackit-bot-1024.png")}
             style={[styles.assistantIcon, salutoStyle]}
           />
-          <Text style={styles.assistantButtonLabel}>{t("home.assistente")}</Text>
+          {!stretto && <Text style={styles.assistantButtonLabel}>{t("home.assistente")}</Text>}
         </Pressable>
       </View>
       <View>

@@ -27,8 +27,8 @@ export default function ModifyProfile() {
             const response = await apiFetch("/auth/me");
             if (response.ok) {
                 const data = await response.json(); 
-                setNickname(data.nickname);
-                setNicknameOriginale(data.nickname);
+                setNickname((data.nickname ?? "").trim());
+                setNicknameOriginale((data.nickname ?? "").trim());
                 setEmail(data.email);
             }
         }
@@ -51,7 +51,8 @@ export default function ModifyProfile() {
             const response = await apiFetch("/auth/updateProfile", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nickname }),
+                //senza spazi ai lati: "Gabriele " diventava "Ciao Gabriele !"
+                body: JSON.stringify({ nickname: nickname.trim() }),
             });
             if (response.ok) {
                 lasciaUscire();
