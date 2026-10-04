@@ -431,7 +431,8 @@
     "compaiono": "Le statistiche compaiono dopo la prima spesa. Tocca + per aggiungerla.",
     "disponibile": "Disponibile",
     "speso": "Speso",
-    "impostaBudget": "Imposta un budget per vedere quanto ti resta"
+    "impostaBudget": "Imposta un budget per vedere quanto ti resta",
+    "avanzato": "Avanzato"
   },
   "valute": {
     "EUR": "Euro",

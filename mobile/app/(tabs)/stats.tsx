@@ -45,6 +45,8 @@ export default function StatsScreen() {
   const [cycleStart, setCycleStart] = useState<string | null>(null);
   const [cycleEnd, setCycleEnd] = useState<string | null>(null);
   const [budgetRemaining, setBudgetRemaining] = useState<number | null>(null);
+  //il budget mensile: nei mesi passati serve a calcolare quanto e' avanzato
+  const [budgetMensile, setBudgetMensile] = useState<number | null>(null);
   //null finche' non si sa: l'invito a impostarlo non deve lampeggiare all'apertura
   const [budgetImpostato, setBudgetImpostato] = useState<boolean | null>(null);
   const colori = ["#2ECC71", "#F5C518", "#3498DB", "#E74C3C", "#BDC3C7", "#9B59B6", "#1ABC9C", "#E67E22"];
@@ -70,14 +72,12 @@ export default function StatsScreen() {
   }
 
   async function loadBudget() {
-    if (cycleOffset !== 0) {
-      setBudgetRemaining(null);
-      return;
-    }
     const response = await apiFetch("/budget/status");
     if (response.ok) {
       const data = await response.json();
-      setBudgetRemaining(data.remaining);
+      //remaining vale per il mese in corso; per quelli passati si calcola dal totale
+      setBudgetRemaining(cycleOffset === 0 ? data.remaining : null);
+      setBudgetMensile(data.budget);
       setBudgetImpostato(data.budget != null);
     }
   }
@@ -90,7 +90,15 @@ export default function StatsScreen() {
   );
 
   const total = stats.reduce((sum, item) => sum + item.total, 0);
-  const remaining = budgetRemaining != null ? Math.max(budgetRemaining, 0) : 0;
+  //nei mesi passati c'e' solo il budget di oggi (lo storico non si conserva):
+  //se e' cambiato nel frattempo, l'avanzo di quei mesi e' approssimato
+  const meseInCorso = cycleOffset === 0;
+  const avanzo = meseInCorso ? budgetRemaining : budgetMensile != null ? budgetMensile - total : null;
+  const remaining = avanzo != null ? Math.max(avanzo, 0) : 0;
+  //le percentuali sono parti di cio' che la ciambella rappresenta: il budget, se
+  //non e' stato superato, altrimenti il totale speso. Cosi' fette e numeri coincidono
+  const baseCiambella = total + remaining;
+  const percentuale = (valore: number) => (baseCiambella > 0 ? Math.round((valore / baseCiambella) * 100) : 0);
   const pieData = [
     ...stats.map((item, index) => ({
       value: item.total,
@@ -157,14 +165,13 @@ export default function StatsScreen() {
               {stretto && ciambella}
               <View style={[styles.legendContainer, stretto && styles.legendaColonna]}>
                 {stats.map((item, index) => {
-                  const percentage = total > 0 ? (item.total / total) * 100 : 0;
                   return (
                     <View key={item.category_name} style={styles.legendRow}>
                       <View style={styles.legendLeft}>
                         <View style={[styles.legendDot, { backgroundColor: colori[index % colori.length] }]} />
                         <Text style={styles.legendLabel} numberOfLines={1}>{nomeCategoria(item.category_name)}</Text>
                       </View>
-                      <Text style={styles.legendPercentage}>{percentage.toFixed(0)}%</Text>
+                      <Text style={styles.legendPercentage}>{percentuale(item.total)}%</Text>
                     </View>
                   );
                 })}
@@ -172,9 +179,13 @@ export default function StatsScreen() {
                   <View style={styles.legendRow}>
                     <View style={styles.legendLeft}>
                       <View style={[styles.legendDot, { backgroundColor: "#E0E0E0" }]} />
-                      <Text style={styles.legendLabel} numberOfLines={1}>{t("statistiche.disponibile")}</Text>
+                      <Text style={styles.legendLabel} numberOfLines={1}>
+                        {meseInCorso ? t("statistiche.disponibile") : t("statistiche.avanzato")}
+                      </Text>
                     </View>
-                    <Text style={styles.legendPercentage}>{importo(remaining)}</Text>
+                    <Text style={styles.legendPercentage}>
+                      {percentuale(remaining)}% · {importo(remaining)}
+                    </Text>
                   </View>
                 )}
               </View>

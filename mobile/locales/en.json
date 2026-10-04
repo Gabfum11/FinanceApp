@@ -431,7 +431,8 @@
     "compaiono": "Stats appear after your first expense. Tap + to add one.",
     "disponibile": "Available",
     "speso": "Spent",
-    "impostaBudget": "Set a budget to see what's left"
+    "impostaBudget": "Set a budget to see what's left",
+    "avanzato": "Left over"
   },
   "valute": {
     "EUR": "Euro",
