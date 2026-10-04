@@ -9,7 +9,6 @@ Una notifica per abbonamento: piu' chiara di un riepilogo, si scarta una per
 una, e se sono tante Android le raggruppa da solo.
 """
 from datetime import date, datetime, time, timedelta
-from zoneinfo import ZoneInfo
 
 import httpx
 from sqlalchemy import or_
@@ -20,20 +19,16 @@ from app.business_logic.formato import formatta_importo
 from app.business_logic.cambi import CambioNonDisponibile, tasso
 from app.business_logic.testi import testo
 from app.logging_config import get_logger
+from app.business_logic.oggi import FUSO_ITALIA as FUSO, oggi_in_italia
 
 logger = get_logger(__name__)
 
 EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send"
 #Render ragiona in UTC: vicino a mezzanotte "domani" sarebbe il giorno sbagliato
-FUSO = ZoneInfo("Europe/Rome")
 #deve coincidere con il canale che l'app crea in utils/notifications.ts
 CANALE = "abbonamenti"
 #limite di Expo per singola richiesta
 MESSAGGI_PER_RICHIESTA = 100
-
-
-def oggi_in_italia() -> date:
-    return datetime.now(FUSO).date()
 
 
 def _secondi_di_validita(rinnovo: date) -> int:

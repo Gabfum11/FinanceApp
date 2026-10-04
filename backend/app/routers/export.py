@@ -20,6 +20,7 @@ from app import models
 from app.business_logic import security
 from app.business_logic.testi import lingua_valida, nome_categoria, testo
 from app.routers.subscriptions import run_due_renewals
+from app.business_logic.oggi import oggi
 
 router = APIRouter(prefix="/export", tags=["export"])
 
@@ -62,9 +63,9 @@ def _risposta_csv(contenuto: str, nome_file: str) -> StreamingResponse:
 
 
 @router.get("/expenses.csv")
-def export_expenses(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+def export_expenses(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
     #i rinnovi scaduti diventano spese: l'export deve contenerli
-    run_due_renewals(db, current_user.id)
+    run_due_renewals(db, current_user.id, giorno)
     lingua = lingua_valida(current_user.language)
 
     spese = (
@@ -95,11 +96,11 @@ def export_expenses(db: Session = Depends(get_db), current_user: models.User = D
         testo(lingua, "csv_categoria"),
         testo(lingua, "csv_gruppo"),
     ], righe)
-    return _risposta_csv(contenuto, f"trackit-{testo(lingua, 'file_spese')}-{date.today().isoformat()}.csv")
+    return _risposta_csv(contenuto, f"trackit-{testo(lingua, 'file_spese')}-{giorno.isoformat()}.csv")
 
 
 @router.get("/subscriptions.csv")
-def export_subscriptions(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+def export_subscriptions(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
     lingua = lingua_valida(current_user.language)
     abbonamenti = (
         db.query(models.Subscriptions)
@@ -133,4 +134,4 @@ def export_subscriptions(db: Session = Depends(get_db), current_user: models.Use
         testo(lingua, "csv_categoria"),
         testo(lingua, "csv_gruppo"),
     ], righe)
-    return _risposta_csv(contenuto, f"trackit-{testo(lingua, 'file_abbonamenti')}-{date.today().isoformat()}.csv")
+    return _risposta_csv(contenuto, f"trackit-{testo(lingua, 'file_abbonamenti')}-{giorno.isoformat()}.csv")

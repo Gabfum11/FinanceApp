@@ -122,7 +122,8 @@ if ORIGINI_WEB:
         CORSMiddleware,
         allow_origins=ORIGINI_WEB,
         allow_methods=["*"],
-        allow_headers=["Authorization", "Content-Type"],
+        #X-Local-Date: la data del telefono, per calcolare "oggi" (business_logic/oggi.py)
+        allow_headers=["Authorization", "Content-Type", "X-Local-Date"],
     )
 app.include_router(expenses.router)
 app.include_router(categories.router)

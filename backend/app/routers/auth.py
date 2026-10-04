@@ -6,6 +6,8 @@ from app import models, schemas
 from app.state import limiter
 from app.business_logic import security, email_service, google_auth, valuta_estera
 from app.business_logic.cambi import CambioNonDisponibile
+from app.business_logic.oggi import oggi
+from datetime import date
 from app.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -358,7 +360,7 @@ def set_push_token(payload: schemas.PushToken, db: Session = Depends(get_db), cu
     return {"detail": "Dispositivo registrato per le notifiche"}
 
 @router.patch("/preferences", response_model=schemas.UserOut)
-def update_preferences(preferences: schemas.UpdatePreferences, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+def update_preferences(preferences: schemas.UpdatePreferences, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
     """Valuta e lingua dell'utente, scelte dal Profilo.
 
     PATCH: arriva solo quello che cambia. Restituisce l'utente aggiornato, cosi'
@@ -368,7 +370,7 @@ def update_preferences(preferences: schemas.UpdatePreferences, db: Session = Dep
     if preferences.currency is not None and preferences.currency != utente.currency:
         if preferences.convert_history:
             try:
-                valuta_estera.converti_storico(db, utente, preferences.currency)
+                valuta_estera.converti_storico(db, utente, preferences.currency, giorno)
             except CambioNonDisponibile:
                 #niente a meta': o tutto convertito o tutto com'era
                 db.rollback()

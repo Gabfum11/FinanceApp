@@ -169,8 +169,10 @@ def extract_expense_from_text(
     text: str,
     category_names: list[str] | None = None,
     categories_by_group: dict[str, list[str]] | None = None,
+    oggi: date | None = None,
 ) -> dict | None:
-    today = date.today()
+    #il giorno dell'utente: "ieri" detto all'1 di notte e' il giorno prima del suo oggi
+    today = oggi or date.today()
     #la categoria esce dalla stessa chiamata: chiederla a parte costerebbe una seconda richiesta
     if category_names:
         if categories_by_group:

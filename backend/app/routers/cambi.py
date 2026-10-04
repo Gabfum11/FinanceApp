@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app import models, schemas
 from app.business_logic import security
 from app.business_logic.cambi import CambioNonDisponibile, tasso
+from app.business_logic.oggi import oggi
 
 router = APIRouter(prefix="/exchange-rate", tags=["exchange-rate"])
 
@@ -14,6 +15,7 @@ def get_exchange_rate(
     from_currency: schemas.Valuta,
     day: date | None = Query(None, description="giorno della spesa; vuoto = oggi"),
     current_user: models.User = Depends(security.get_current_user),
+    giorno: date = Depends(oggi),
 ):
     """Il tasso per convertire una spesa nella valuta dell'utente.
 
@@ -22,7 +24,7 @@ def get_exchange_rate(
     cosi' non diventa un servizio di cambi aperto a chiunque.
     """
     try:
-        valore, giorno = tasso(from_currency, current_user.currency, day or date.today())
+        valore, giorno = tasso(from_currency, current_user.currency, day or giorno)
     except CambioNonDisponibile:
         raise HTTPException(status_code=503, detail="Exchange rate unavailable")
     return {

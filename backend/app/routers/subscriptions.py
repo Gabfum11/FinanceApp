@@ -8,6 +8,7 @@ from app.business_logic.categorization import attach_category_names
 from app.business_logic.cambi import CambioNonDisponibile
 from app.business_logic.valuta_estera import spesa_da_abbonamento
 from app.logging_config import get_logger
+from app.business_logic.oggi import oggi, oggi_in_italia
 from datetime import date
 from dateutil.relativedelta import relativedelta
 router=APIRouter(prefix="/subscriptions", tags=["subscriptions"]) # tags serve per la pagina /docs
@@ -38,12 +39,12 @@ def advance(d: date, frequency: str, anchor_day: int | None = None) -> date:
     return nxt
 
 @router.post("/", response_model=schemas.SubscriptionOut)
-def create_subscription(subscription: schemas.SubscriptionCreate, db: Session=Depends(get_db),  current_user: models.User=Depends(security.get_current_user)):
+def create_subscription(subscription: schemas.SubscriptionCreate, db: Session=Depends(get_db),  current_user: models.User=Depends(security.get_current_user), giorno: date = Depends(oggi)):
     if subscription.category_id is not None:
         category = db.query(models.Category).filter(models.Category.id == subscription.category_id).first()
         if category is None:
             raise HTTPException(status_code=404, detail="Category not found")
-    today=date.today()
+    today = giorno
     start_date = subscription.start_date or today
     anchor_day = start_date.day if subscription.frequency != "weekly" else None
 
@@ -101,11 +102,12 @@ def abbonamenti_bloccati(db: Session, user_id: int):
     )
 
 
-def run_due_renewals(db: Session, user_id: int) -> list[models.Subscriptions]:
+def run_due_renewals(db: Session, user_id: int, oggi_utente: date | None = None) -> list[models.Subscriptions]:
     """Genera le spese dei rinnovi scaduti e restituisce gli abbonamenti dell'utente.
     Va chiamata da ogni endpoint che legge spese o budget: altrimenti i dati sono
-    aggiornati solo quando l'utente apre la schermata Abbonamenti."""
-    today=date.today()
+    aggiornati solo quando l'utente apre la schermata Abbonamenti.
+    oggi_utente: il giorno dell'utente (business_logic/oggi.py); senza, l'ora italiana."""
+    today = oggi_utente or oggi_in_italia()
     subscriptions=abbonamenti_bloccati(db, user_id).all()
     valuta_utente = db.query(models.User.currency).filter(models.User.id == user_id).scalar() or "EUR"
     for sub in subscriptions:
@@ -130,26 +132,26 @@ def run_due_renewals(db: Session, user_id: int) -> list[models.Subscriptions]:
 
 
 @router.get("/", response_model=list[schemas.SubscriptionOut])
-def list_subscriptions(db:Session=Depends(get_db),current_user: models.User=Depends(security.get_current_user)):
-    subscriptions = run_due_renewals(db, current_user.id)
+def list_subscriptions(db:Session=Depends(get_db),current_user: models.User=Depends(security.get_current_user), giorno: date = Depends(oggi)):
+    subscriptions = run_due_renewals(db, current_user.id, giorno)
     for sub in subscriptions:
         attach_category_names(sub)
     return subscriptions
 
 @router.patch("/{subscription_id}/toggle") #patch indica una modifica parziale a una risorsa esistente, toggle serve per invertire lo stato attuale del campo is_active
-def toggle_subscription(subscription_id:int, db: Session=Depends(get_db), current_user: models.User=Depends(security.get_current_user)):
+def toggle_subscription(subscription_id:int, db: Session=Depends(get_db), current_user: models.User=Depends(security.get_current_user), giorno: date = Depends(oggi)):
     sub=db.query(models.Subscriptions).filter(models.Subscriptions.user_id== current_user.id, models.Subscriptions.id==subscription_id).first()
     if sub is None:
         raise HTTPException(status_code=404, detail="Subscription not found")
     sub.is_active = not sub.is_active
     if sub.is_active:  # appena riattivato
-        sub.next_date = advance(date.today(), sub.frequency)
+        sub.next_date = advance(giorno, sub.frequency)
     db.commit()
     return {"detail": "Stato aggiornato", "is_active": sub.is_active}
 
 
 @router.post("/{subscription_id}/mark-paid", response_model=schemas.SubscriptionOut)
-def mark_subscription_paid(subscription_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+def mark_subscription_paid(subscription_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
     #bloccato come nei rinnovi: due conferme simultanee leggerebbero la stessa
     #next_date e la avanzerebbero una volta sola a fronte di due spese
     sub = db.query(models.Subscriptions).filter(
@@ -160,7 +162,7 @@ def mark_subscription_paid(subscription_id: int, db: Session = Depends(get_db), 
         raise HTTPException(status_code=404, detail="Subscription not found")
 
     try:
-        new_expense = spesa_da_abbonamento(sub, date.today(), current_user.currency)
+        new_expense = spesa_da_abbonamento(sub, giorno, current_user.currency)
     except CambioNonDisponibile:
         db.rollback()
         raise HTTPException(status_code=503, detail=CAMBIO_NON_DISPONIBILE)
@@ -174,7 +176,7 @@ def mark_subscription_paid(subscription_id: int, db: Session = Depends(get_db), 
     return sub  #ritorniamo sub per restituire la data aggiornata del prossimo pagamento
 
 @router.patch("/{subscription_id}", response_model=schemas.SubscriptionOut)
-def update_subscription(subscription_id: int, changes: schemas.SubscriptionUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+def update_subscription(subscription_id: int, changes: schemas.SubscriptionUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
     sub = db.query(models.Subscriptions).filter(
         models.Subscriptions.id == subscription_id,
         models.Subscriptions.user_id == current_user.id
@@ -193,7 +195,7 @@ def update_subscription(subscription_id: int, changes: schemas.SubscriptionUpdat
     #una data gia' passata verrebbe subito trasformata in spese arretrate
     #al primo run_due_renewals: non e' quello che chiede chi sposta il rinnovo
     new_next_date = updates.get("next_date")
-    if new_next_date is not None and new_next_date <= date.today():
+    if new_next_date is not None and new_next_date <= giorno:
         raise HTTPException(status_code=422, detail="Il prossimo addebito deve essere una data futura")
 
     new_frequency = updates.get("frequency")
@@ -207,7 +209,7 @@ def update_subscription(subscription_id: int, changes: schemas.SubscriptionUpdat
     #anche una data esplicita, e' quella a valere
     if new_frequency is not None and new_next_date is None:
         anchor_day = sub.next_date.day if new_frequency != "weekly" else None
-        sub.next_date = advance(date.today(), new_frequency, anchor_day)
+        sub.next_date = advance(giorno, new_frequency, anchor_day)
 
     db.commit()
     db.refresh(sub)

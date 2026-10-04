@@ -8,13 +8,15 @@ from app import models, schemas
 from app.business_logic import security
 from app.business_logic.budget import get_budget_cycle
 from app.routers.subscriptions import run_due_renewals
+from app.business_logic.oggi import oggi
 
 router = APIRouter(prefix="/budget", tags=["budget"])
 
 @router.get("/status")
-def get_budget_status(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
-    run_due_renewals(db, current_user.id) #senza, il budget ignora i rinnovi scaduti
-    reference_date = date.today()
+def get_budget_status(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
+    run_due_renewals(db, current_user.id, giorno) #senza, il budget ignora i rinnovi scaduti
+    #il giorno dell'utente: all'1 di notte del 1° il ciclo nuovo e' gia' iniziato
+    reference_date = giorno
     start_day = current_user.budget_start_day or 1
     cycle_start, cycle_end = get_budget_cycle(reference_date, start_day)
 

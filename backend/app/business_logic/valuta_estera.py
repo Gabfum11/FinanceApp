@@ -58,7 +58,7 @@ def spesa_da_abbonamento(sub: models.Subscriptions, giorno: date, valuta_utente:
     return spesa
 
 
-def converti_storico(db: Session, utente: models.User, nuova: str) -> None:
+def converti_storico(db: Session, utente: models.User, nuova: str, oggi: date | None = None) -> None:
     """Porta spese e budget dell'utente nella nuova valuta, senza perdere niente.
 
     Ogni spesa si converte con il tasso del suo giorno, partendo dalla cifra
@@ -74,7 +74,7 @@ def converti_storico(db: Session, utente: models.User, nuova: str) -> None:
     CambioNonDisponibile prima di aver toccato qualsiasi cifra.
     """
     vecchia = utente.currency
-    oggi = date.today()
+    oggi = oggi or date.today()
     spese = db.query(models.Expense).filter(models.Expense.user_id == utente.id).all()
     abbonamenti = db.query(models.Subscriptions).filter(models.Subscriptions.user_id == utente.id).all()
 

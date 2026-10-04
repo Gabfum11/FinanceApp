@@ -11,6 +11,7 @@ from app.business_logic.budget import get_budget_cycle
 from app.routers.subscriptions import run_due_renewals
 from app.business_logic.cambi import CambioNonDisponibile
 from app.business_logic.valuta_estera import applica_importo
+from app.business_logic.oggi import oggi
 from app.state import limiter, user_or_ip
 from dateutil.relativedelta import relativedelta, MO
 from datetime import timedelta
@@ -51,10 +52,10 @@ def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)
 
 @router.get("/", response_model=List[schemas.ExpenseOut])
 #dice a FASTAPI : la risposta è una lista di oggetti nella forma expenseOut
-def list_expenses(limit: int | None = Query(None, gt=0, le=500), db: Session = Depends(get_db), current_user: models.User=Depends(security.get_current_user)):
+def list_expenses(limit: int | None = Query(None, gt=0, le=500), db: Session = Depends(get_db), current_user: models.User=Depends(security.get_current_user), giorno: date = Depends(oggi)):
     #limit e' opzionale: senza, l'endpoint si comporta come prima. Serve alla Home,
     #che mostra solo le ultime spese e non deve scaricare tutto lo storico
-    run_due_renewals(db, current_user.id) #i rinnovi scaduti devono comparire tra le spese
+    run_due_renewals(db, current_user.id, giorno) #i rinnovi scaduti devono comparire tra le spese
     query = db.query(models.Expense).filter(models.Expense.user_id==current_user.id).order_by(models.Expense.created_at.desc())
     if limit is not None:
         query = query.limit(limit)
@@ -64,9 +65,9 @@ def list_expenses(limit: int | None = Query(None, gt=0, le=500), db: Session = D
     return expenses
 
 @router.get("/stats", response_model=schemas.StatsOut)
-def get_stats(cycle_offset: int = 0, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
-    run_due_renewals(db, current_user.id)
-    reference_date = date.today() - relativedelta(months=-cycle_offset)
+def get_stats(cycle_offset: int = 0, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
+    run_due_renewals(db, current_user.id, giorno)
+    reference_date = giorno - relativedelta(months=-cycle_offset)
     start_day = current_user.budget_start_day or 1
     cycle_start, cycle_end = get_budget_cycle(reference_date, start_day)
 
@@ -96,9 +97,9 @@ def get_stats(cycle_offset: int = 0, db: Session = Depends(get_db), current_user
         "categories": [{"category_name": name, "total": total} for name, total in category_expense],
     }
 @router.get("/weekly-stats", response_model=schemas.WeeklyStatsOut)
-def get_weekly_stats(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
-    run_due_renewals(db, current_user.id)
-    today = date.today()
+def get_weekly_stats(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
+    run_due_renewals(db, current_user.id, giorno)
+    today = giorno
     week_start = today + relativedelta(weekday=MO(-1))  # lunedì di questa settimana relative delta trova il lunedì più vicino al giorno corrente, se oggi è lunedì, restituirà oggi stesso
     week_end = week_start + timedelta(days=6)  # domenica
     daily_expense = db.query(
@@ -187,7 +188,7 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user:
 #tetto complessivo: senza, bastano due utenti attivi insieme per superare
 #il limite di Groq e ricevere 429 invece di una risposta
 @limiter.limit("8/minute", key_func=lambda request: "extract-preview-globale")
-def extract_expense_preview(request: Request, data_expense: dict, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+def extract_expense_preview(request: Request, data_expense: dict, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
     text = data_expense.get("expenseText", "")
     #solo le sottocategorie: una spesa non puo' essere assegnata a un gruppo.
     #Il gruppo viene comunque passato al modello come contesto, perche' aiuta
@@ -210,7 +211,8 @@ def extract_expense_preview(request: Request, data_expense: dict, db: Session = 
 
     #passiamo i nomi al modello: categoria ed estrazione escono dalla stessa chiamata
     try:
-        extracted = categorization.extract_expense_from_text(text, [c.name for c in categories], per_gruppo)
+        #"ieri" e "lunedi" si contano dal giorno dell'utente, non da quello del server
+        extracted = categorization.extract_expense_from_text(text, [c.name for c in categories], per_gruppo, oggi=giorno)
     except categorization.ServizioOccupato:
         #503 e non 422: la frase era valida, e' il servizio a non essere
         #disponibile. Dire "non ho capito" porterebbe a riscriverla invano
@@ -245,7 +247,7 @@ def extract_expense_preview(request: Request, data_expense: dict, db: Session = 
         "description": extracted["description"],
         "amount": extracted["amount"],
         # il modello la valorizza solo se il testo dice quando: altrimenti vale oggi
-        "date": extracted["date"] or date.today(),
+        "date": extracted["date"] or giorno,
         "category_id": category_id,
         "category_name": category_name,
         "category_group": category_group,
