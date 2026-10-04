@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { API_URL } from "@/config";
 import { cancellaSessione, rinnovaSessione, tokenDiAccesso } from "@/utils/session";
+import { toDateString } from "@/utils/date";
 
 //i 401 di get_current_user hanno questi messaggi: gli altri (password attuale
 //errata, conferma di eliminazione sbagliata) non riguardano la sessione e non
@@ -13,6 +14,9 @@ function richiesta(path: string, options: RequestInit, token: string | null) {
     headers: {
       ...(options.headers || {}),
       Authorization: `Bearer ${token}`,
+      //il server gira in UTC: senza la data del telefono, all'1 di notte del 1°
+      //del mese per lui sarebbe ancora il mese prima (backend/app/business_logic/oggi.py)
+      "X-Local-Date": toDateString(new Date()),
     },
   });
 }
