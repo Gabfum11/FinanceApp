@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
-import { colors, floatingShadow } from "./tokens";
+import { type Colori, floatingShadow } from "./tokens";
 
-export const styles = StyleSheet.create({
+export const creaStili = (colors: Colori) =>
+  StyleSheet.create({
   //sopra tutto, in basso: su iPhone il pulsante Condividi di Safari e' li' sotto
   card: {
     position: "absolute",

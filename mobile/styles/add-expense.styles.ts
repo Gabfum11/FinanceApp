@@ -1,16 +1,16 @@
 import { StyleSheet } from "react-native";
-import { colors as tokens, cardShadow, scrim } from "./tokens";
+import { type Colori, cardShadow, scrim } from "./tokens";
 
 // Alias locali sui token condivisi: i nomi restano quelli usati nella
 // schermata, ma i valori vengono da un posto solo.
 // Il blu del tastierino è specifico di qui: serve a non competere col verde,
 // riservato all'importo e al pulsante di salvataggio.
-export const colors = {
+export const coloriSpesa = (tokens: Colori) => ({
   background: tokens.background,
   surface: tokens.surface,
   green: tokens.primary,
   darkGreen: tokens.primaryDark,
-  keypadText: "#1B3A6B",
+  keypadText: tokens.keypad,
   label: tokens.textMuted,
   placeholder: tokens.textDisabled,
   border: tokens.border,
@@ -21,9 +21,11 @@ export const colors = {
   surfaceAlt: tokens.surfaceAlt,
   primarySoft: tokens.primarySoft,
   error: tokens.dangerDark,
-};
+});
 
-export const styles = StyleSheet.create({
+export const creaStili = (tokens: Colori) => {
+  const colors = coloriSpesa(tokens);
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -325,3 +327,4 @@ export const styles = StyleSheet.create({
     paddingVertical: 0,
   },
 });
+};

@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
-import { colors, cardShadow } from "./tokens";
+import { type Colori, cardShadow } from "./tokens";
 
-export const styles = StyleSheet.create({
+export const creaStili = (colors: Colori) =>
+  StyleSheet.create({
   screen: {
     flex: 1,
   },
@@ -135,7 +136,7 @@ export const styles = StyleSheet.create({
     textAlign:"right"
   },
   budgetCard: {
-    backgroundColor: colors.primaryDark,
+    backgroundColor: colors.surfaceDark,
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,

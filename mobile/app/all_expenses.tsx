@@ -6,13 +6,14 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { formatDataSpesa } from "@/utils/date";
-import { styles } from "@/styles/all_expenses.styles";
+import { creaStili } from "@/styles/all_expenses.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { iconaPerGruppo } from "@/utils/categoryIcons";
 import { usePreferenze } from "@/utils/preferenze";
 import { useTranslation } from "react-i18next";
 import { nomeCategoria } from "@/utils/categorie";
+import { useStili } from "@/utils/tema";
 
 type Expense = {
   id: number;
@@ -51,6 +52,7 @@ function periodStart(period: Period): Date | null {
 }
 
 export default function ExpenseList() {
+  const styles = useStili(creaStili);
   const { importo, importoIn } = usePreferenze();
   const { t } = useTranslation();
     const insets = useSafeAreaInsets();

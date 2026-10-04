@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
-import { colors, cardShadow, floatingShadow } from "./tokens";
+import { type Colori, cardShadow, floatingShadow } from "./tokens";
 
-export const styles = StyleSheet.create({
+export const creaStili = (colors: Colori) =>
+  StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
@@ -44,7 +45,7 @@ export const styles = StyleSheet.create({
         borderRadius:18, //bordi arrotondati, tipico delle chat
     },
     userBubble: {
-        backgroundColor:colors.primaryDark,
+        backgroundColor: colors.surfaceDark,
         alignSelf:"flex-end", //allineato a destra
         borderBottomRightRadius: 4, // "coda" verso chi ha scritto
     },

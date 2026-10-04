@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Animated,
   Keyboard,
@@ -16,7 +16,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SelettoreData } from "@/components/SelettoreData";
 import { apiFetch } from "@/utils/apiFetch";
 import { fromDateString, toDateString } from "@/utils/date";
-import { styles, colors } from "../styles/add-expense.styles";
+import { creaStili, coloriSpesa } from "../styles/add-expense.styles";
 import { iconaPerGruppo } from "@/utils/categoryIcons";
 import { usePreferenze } from "@/utils/preferenze";
 import { simbolo, eValuta, VALUTE, IMPORTO_MASSIMO, type Valuta } from "@/utils/formato";
@@ -27,6 +27,7 @@ import { useTranslation } from "react-i18next";
 import { nomeCategoria } from "@/utils/categorie";
 import { localeAttuale } from "@/utils/date";
 import { traduciErrore } from "@/utils/messaggioErrore";
+import { useStili, useTema } from "@/utils/tema";
 
 type Category = {
   id: number;
@@ -57,6 +58,9 @@ const CAMBIO_NON_DISPONIBILE = "Exchange rate unavailable";
 const MAX_DECIMALS = 2;
 
 export default function AddExpenseScreen() {
+  const styles = useStili(creaStili);
+  const { colors: tokens } = useTema();
+  const colors = useMemo(() => coloriSpesa(tokens), [tokens]);
   const { valuta, importo: formatta, importoIn } = usePreferenze();
   const { t } = useTranslation();
   const router = useRouter();
@@ -687,7 +691,10 @@ export default function AddExpenseScreen() {
 }
 
 function BlinkingCursor() {
-  const opacity = useRef(new Animated.Value(1)).current;
+  const styles = useStili(creaStili);
+  //useState e non useRef: il valore si crea una volta e si legge durante il
+  //disegno, cosa che con .current di un ref il linter non permette
+  const [opacity] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
     const animation = Animated.loop(

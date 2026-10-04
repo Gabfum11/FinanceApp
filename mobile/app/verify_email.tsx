@@ -5,9 +5,10 @@ import { API_URL } from "@/config";
 import { router, useLocalSearchParams } from "expo-router";
 import { salvaSessione } from "@/utils/session"
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { styles } from "@/styles/verify-email.styles";
+import { creaStili } from "@/styles/verify-email.styles";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import { useTranslation } from "react-i18next";
+import { useStili } from "@/utils/tema";
 const num=[0,1,2,3,4,5]
 const formatTime =(totseconds:number)=>{
     const minutes=Math.floor(totseconds/60);
@@ -16,6 +17,7 @@ const formatTime =(totseconds:number)=>{
 
 }
 export default function VerifyEmail(){
+  const styles = useStili(creaStili);
     const { t } = useTranslation();
     const [code,setCode]=useState("")
     const[step,setStep]=useState<"typing" | "invalid" | "correct">("typing")

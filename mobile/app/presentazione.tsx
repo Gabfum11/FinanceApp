@@ -23,8 +23,8 @@ import { usePreferenze } from "@/utils/preferenze";
 import { localeDi, type Lingua } from "@/utils/formato";
 import { useTranslation } from "react-i18next";
 import { SelettoreLingua } from "@/components/SelettoreLingua";
-import { colors } from "@/styles/tokens";
-import { styles } from "@/styles/presentazione.styles";
+import { creaStili } from "@/styles/presentazione.styles";
+import { useStili, useTema } from "@/utils/tema";
 
 const LOGO = require("../assets/images/logo/trackit-icon-rounded-180.png");
 const PAGINE = [0, 1, 2, 3, 4];
@@ -51,6 +51,7 @@ function periodoBudget(lingua: Lingua): string {
 }
 
 function Punti({ attivo, scuri = false, centrati = false }: { attivo: number; scuri?: boolean; centrati?: boolean }) {
+  const styles = useStili(creaStili);
   const { t } = useTranslation();
   return (
     <View
@@ -66,6 +67,8 @@ function Punti({ attivo, scuri = false, centrati = false }: { attivo: number; sc
 }
 
 function IllustrazioneSpese() {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
   const { importo, lingua } = usePreferenze();
   const { t } = useTranslation();
   return (
@@ -94,6 +97,8 @@ function IllustrazioneSpese() {
 }
 
 function IllustrazioneBudget() {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
   const { importo, lingua } = usePreferenze();
   const { t } = useTranslation();
   const oggi = (new Date().getDay() + 6) % 7; //lunedi' = 0, come le etichette
@@ -147,6 +152,8 @@ function IllustrazioneBudget() {
 }
 
 function Abbonamento({ nome, meta, importo }: { nome: string; meta: string; importo: string }) {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
   return (
     <View style={styles.abbonamento}>
       <View style={styles.abbonamentoIcona}>
@@ -162,6 +169,7 @@ function Abbonamento({ nome, meta, importo }: { nome: string; meta: string; impo
 }
 
 function IllustrazioneAbbonamenti() {
+  const styles = useStili(creaStili);
   const { importo } = usePreferenze();
   const { t } = useTranslation();
   return (
@@ -184,6 +192,8 @@ function IllustrazioneAbbonamenti() {
 }
 
 export default function Presentazione() {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   //in una lista orizzontale ogni pagina e' alta quanto il suo contenuto, e nel

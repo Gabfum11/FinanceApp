@@ -1,9 +1,10 @@
 import { StyleSheet } from "react-native";
-import { colors, radius } from "./tokens";
+import { type Colori, radius } from "./tokens";
 
 export const VELO = "rgba(12,22,17,0.68)";
 
-export const styles = StyleSheet.create({
+export const creaStili = (colors: Colori) =>
+  StyleSheet.create({
   ring: {
     position: "absolute",
     borderWidth: 2,

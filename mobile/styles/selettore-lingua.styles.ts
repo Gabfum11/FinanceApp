@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
-import { colors } from "./tokens";
+import { type Colori } from "./tokens";
 
-export const styles = StyleSheet.create({
+export const creaStili = (colors: Colori) =>
+  StyleSheet.create({
   pillola: {
     flexDirection: "row",
     alignSelf: "flex-end",
@@ -42,7 +43,8 @@ export const styles = StyleSheet.create({
   testoScelto: {
     color: colors.text,
   },
+  //sulla pillola bianca della pagina scura: resta verde scuro in entrambi i temi
   testoSceltoScuro: {
-    color: colors.primaryDark,
+    color: colors.surfaceDark,
   },
 });

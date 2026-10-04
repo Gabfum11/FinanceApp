@@ -8,8 +8,8 @@ import { useTranslation } from "react-i18next";
 import { bersaglio } from "@/utils/tour";
 import { DISTANZA_DAL_FONDO } from "@/utils/barraSchede";
 import { useSchermoStretto } from "@/utils/layout";
-import { colors } from "@/styles/tokens";
-import { styles } from "@/styles/barra-schede.styles";
+import { creaStili } from "@/styles/barra-schede.styles";
+import { useStili, useTema } from "@/utils/tema";
 
 // Barra delle schede staccata dai bordi, con gli angoli e l'ombra delle card.
 //
@@ -36,6 +36,8 @@ const BERSAGLI: Record<string, string | undefined> = {
 };
 
 export function BarraSchede({ state, descriptors, navigation }: BottomTabBarProps) {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();

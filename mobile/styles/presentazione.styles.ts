@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
-import { colors, cardShadow, floatingShadow } from "./tokens";
+import { type Colori, cardShadow, floatingShadow } from "./tokens";
 
-export const styles = StyleSheet.create({
+export const creaStili = (colors: Colori) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -12,7 +13,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   paginaScura: {
-    backgroundColor: colors.primaryDark,
+    backgroundColor: colors.surfaceDark,
   },
   intestazione: {
     flexDirection: "row",
@@ -121,7 +122,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 18,
     borderBottomRightRadius: 4,
-    backgroundColor: colors.primaryDark,
+    backgroundColor: colors.surfaceDark,
   },
   fumettoTesto: {
     color: colors.textOnPrimary,
@@ -179,7 +180,7 @@ export const styles = StyleSheet.create({
   },
   // --- pagina 3: budget ---
   budgetCard: {
-    backgroundColor: colors.primaryDark,
+    backgroundColor: colors.surfaceDark,
     borderRadius: 20,
     padding: 20,
     overflow: "hidden",

@@ -9,8 +9,7 @@ import { PRIVACY_URL } from "@/config";
 import { useFocusEffect, useRouter } from "expo-router";
 import { cancellaSessione, chiudiSessione } from "@/utils/session";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { styles } from "@/styles/profile.styles";
-import { colors } from "@/styles/tokens";
+import { creaStili } from "@/styles/profile.styles";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
@@ -18,10 +17,13 @@ import { useSpazioBarra } from "@/utils/barraSchede";
 import { usePreferenze } from "@/utils/preferenze";
 import { VALUTE, LINGUE, simbolo, type Valuta, type Lingua } from "@/utils/formato";
 import { useTranslation } from "react-i18next";
+import { useStili, useTema } from "@/utils/tema";
 
 
 
 export default function ProfileScreen() {
+  const styles = useStili(creaStili);
+  const { colors, scuro, impostaScuro } = useTema();
     const router = useRouter();
     const [nickname, setNickname] = useState("");
     const [email, setEmail] = useState("");
@@ -286,6 +288,15 @@ export default function ProfileScreen() {
                         </View>
                         <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
                     </Pressable>
+                    <View style={styles.rowDivider} />
+                    {/* cambia subito: niente da confermare, si torna indietro con lo stesso tocco */}
+                    <View style={styles.row}>
+                        <MaterialCommunityIcons name="weather-night" size={20} color={colors.primary} />
+                        <View style={styles.rowTextGroup}>
+                            <Text style={styles.rowLabelInGroup}>{t("profilo.temaScuro")}</Text>
+                        </View>
+                        <Switch value={scuro} onValueChange={impostaScuro} />
+                    </View>
                 </View>
 
                 <Text style={styles.sectionLabel}>{t("profilo.sezioneDati")}</Text>

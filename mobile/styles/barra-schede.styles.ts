@@ -1,8 +1,9 @@
 import { StyleSheet } from "react-native";
-import { colors, floatingShadow } from "./tokens";
+import { type Colori, floatingShadow } from "./tokens";
 import { ALTEZZA_BARRA } from "@/utils/barraSchede";
 
-export const styles = StyleSheet.create({
+export const creaStili = (colors: Colori) =>
+  StyleSheet.create({
   //staccata dai bordi come una card: angoli, sfondo bianco e ombra marcata,
   //perche' galleggia sopra il contenuto che le scorre sotto
   barra: {
@@ -11,7 +12,7 @@ export const styles = StyleSheet.create({
     right: 16,
     height: ALTEZZA_BARRA,
     borderRadius: 24,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.tabBar,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 6,

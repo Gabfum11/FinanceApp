@@ -5,7 +5,11 @@
 // chiari quasi identici, sei grigi diversi per il testo secondario).
 // Da qui si cambia una volta e vale ovunque.
 
-export const colors = {
+// Due palette con gli stessi nomi: le schermate chiedono "colors.text" e
+// ricevono il colore del tema scelto (utils/tema.tsx). Per questo i fogli di
+// stile sono funzioni (creaStili) invece di oggetti fissi: un oggetto si
+// calcola una volta all'avvio e non potrebbe cambiare tema.
+const chiaro = {
   // --- marchio ---
   primary: "#2ECC71",
   primaryDark: "#1B4332",
@@ -71,7 +75,73 @@ export const colors = {
   // --- componenti disabilitati ---
   disabled: "#DCDCE0",
   disabledText: "#9A9AA0",
-} as const;
+
+  // --- singole schermate ---
+  /** cifre e icone del tastierino della spesa: blu, per non competere col verde */
+  keypad: "#1B3A6B",
+  /** fetta "disponibile" della ciambella nelle statistiche */
+  donutRemaining: "#E0E0E0",
+  /** sfondo della barra delle schede flottante */
+  tabBar: "#FFFFFF",
+};
+
+export type Colori = { [K in keyof typeof chiaro]: string };
+
+// Tema scuro: sfondo verde quasi nero invece del nero puro, cosi' l'app resta
+// riconoscibile; testo non bianco pieno, che su fondo scuro abbaglia.
+// Verde e giallo del marchio restano uguali; i colori usati come testo (verde
+// scuro, rosso, blu) diventano piu' chiari, altrimenti sul fondo scuro non si
+// leggerebbero.
+const scuro: Colori = {
+  primary: "#2ECC71",
+  primaryDark: "#7CE3A6",
+  primarySoft: "#1F3A2C",
+  accent: "#F5C518",
+
+  background: "#0E1411",
+  surface: "#18211D",
+  surfaceAlt: "#1B2520",
+
+  text: "#ECF0ED",
+  textSecondary: "#C3CBC6",
+  textMuted: "#8D9792",
+  textDisabled: "#5E6963",
+  //resta bianco: si usa sopra il verde e sopra le card scure, che non cambiano
+  textOnPrimary: "#FFFFFF",
+
+  border: "#26322C",
+  chevron: "#4A5650",
+
+  //le card scure restano uguali: erano gia' scure nel tema chiaro
+  surfaceDark: "#1B4332",
+  surfaceDarker: "#14201A",
+  textOnDark: "rgba(255,255,255,0.85)",
+  textOnDarkMuted: "rgba(255,255,255,0.6)",
+  overlayLight: "rgba(255,255,255,0.2)",
+  overlayMuted: "rgba(255,255,255,0.15)",
+  overlayFaint: "rgba(255,255,255,0.04)",
+
+  warning: "#F5C518",
+  warningSurface: "#2A2614",
+  warningBadge: "#4A3F14",
+  warningText: "#E8C25A",
+
+  link: "#6FA8E8",
+
+  danger: "#FF7A6B",
+  dangerDark: "#FF8F82",
+  dangerSoft: "#3A1F1C",
+  infoSoft: "#3A2E1C",
+
+  disabled: "#2A3530",
+  disabledText: "#6B756F",
+
+  keypad: "#9DB8E8",
+  donutRemaining: "#2A3530",
+  tabBar: "#1B2520",
+};
+
+export const palette = { chiaro, scuro };
 
 export const spacing = {
   xs: 4,

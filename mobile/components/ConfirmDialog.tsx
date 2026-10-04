@@ -1,7 +1,8 @@
 import { Button, Dialog, Portal, Text } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import { StyleSheet } from "react-native";
-import { colors, radius } from "@/styles/tokens";
+import { radius, type Colori } from "@/styles/tokens";
+import { useStili, useTema } from "@/utils/tema";
 
 // Un'unica conferma per tutta l'app.
 //
@@ -35,6 +36,8 @@ export function ConfirmDialog({
   onDismiss,
 }: Props) {
   const { t } = useTranslation();
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={onDismiss} style={styles.dialog}>
@@ -60,7 +63,8 @@ export function ConfirmDialog({
   );
 }
 
-const styles = StyleSheet.create({
+const creaStili = (colors: Colori) =>
+  StyleSheet.create({
   dialog: {
     backgroundColor: colors.surface,
     borderRadius: radius.xl,

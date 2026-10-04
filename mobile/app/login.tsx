@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Image } from "react-native";
 import { TextInput, Button, Text, Snackbar } from "react-native-paper";
-import {styles} from "../styles/auth.styles";
+import { creaStili } from "../styles/auth.styles";
 import { Link } from "expo-router";
 import { API_URL, PRIVACY_URL } from "@/config";
 import { salvaSessione } from "@/utils/session"; //salva i token in modo persistente al riavvio dell'app
@@ -13,9 +13,11 @@ import * as WebBrowser from "expo-web-browser";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { SelettoreLingua } from "@/components/SelettoreLingua";
 import { useTranslation } from "react-i18next";
+import { useStili } from "@/utils/tema";
 
 
 export default function LoginScreen() {
+  const styles = useStili(creaStili);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

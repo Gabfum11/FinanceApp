@@ -1,15 +1,16 @@
-import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { PaperProvider } from 'react-native-paper';
 
 
-import { theme } from '@/theme';
+import { creaTemaPaper } from '@/theme';
 import { InvitoHome } from '@/components/InvitoHome';
 import { PreferenzeProvider } from '@/utils/preferenze';
 import { View } from 'react-native';
 import { LARGHEZZA_MASSIMA } from '@/utils/layout';
-import { colors } from '@/styles/tokens';
+import { TemaProvider, useTema } from '@/utils/tema';
+import { useMemo } from 'react';
 //configura le traduzioni prima che si disegni qualsiasi schermata
 import '@/utils/i18n';
 
@@ -18,12 +19,28 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  return (
+    <TemaProvider>
+      <Contenuto />
+    </TemaProvider>
+  );
+}
+
+//separato da RootLayout: per leggere il tema deve stare dentro TemaProvider
+function Contenuto() {
+  const { colors, scuro } = useTema();
+  const temaPaper = useMemo(() => creaTemaPaper(colors, scuro), [colors, scuro]);
+  //lo sfondo delle schermate durante le animazioni di navigazione
+  const temaNavigazione = useMemo(() => {
+    const base = scuro ? DarkTheme : DefaultTheme;
+    return { ...base, colors: { ...base.colors, background: colors.background, card: colors.surface, text: colors.text, border: colors.border } };
+  }, [colors, scuro]);
 
   return (
-    <PaperProvider theme={theme}>
+    <PaperProvider theme={temaPaper}>
       {/* valuta e lingua dell'utente, per tutte le schermate */}
       <PreferenzeProvider>
-      <ThemeProvider value={DefaultTheme}>
+      <ThemeProvider value={temaNavigazione}>
         {/* su tablet e computer l'app resta una colonna centrata: card e pulsanti
             allungati per tutto lo schermo sarebbero scomodi da leggere e da toccare.
             Sui telefoni la colonna e' larga quanto lo schermo e non cambia niente */}
@@ -52,7 +69,8 @@ export default function RootLayout() {
         <InvitoHome />
         </View>
         </View>
-        <StatusBar style="auto" />
+        {/* icone della barra di stato scure sul tema chiaro, chiare sullo scuro */}
+        <StatusBar style={scuro ? "light" : "dark"} />
       </ThemeProvider>
       </PreferenzeProvider>
     </PaperProvider>

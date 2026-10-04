@@ -5,7 +5,7 @@ import { apiFetch } from "@/utils/apiFetch";
 import { usePreferenze } from "@/utils/preferenze";
 import { useCallback, useEffect, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
-import { styles } from "@/styles/budget.styles";
+import { creaStili } from "@/styles/budget.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "@/utils/i18n";
 import { nomeCategoria } from "@/utils/categorie";
 import { localeAttuale } from "@/utils/date";
+import { useStili, useTema } from "@/utils/tema";
 function getRenewal(next_date:string){
   const today= new Date();
   today.setHours(0, 0, 0, 0);
@@ -42,6 +43,8 @@ type ConfermaInAttesa =
   | { tipo: "pausa" | "riattiva" | "elimina"; subId: number };
 
 export default function BudgetScreen() {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
   const { importoIn } = usePreferenze();
   const { t } = useTranslation();
   //i messaggi in basso compaiono sopra la barra delle schede, non sotto
@@ -172,7 +175,7 @@ export default function BudgetScreen() {
         {activeSubscriptions.map((item) => (
           <View key={item.id} style={styles.subRow}>
             <View style={styles.subIconContainer}>
-              <MaterialCommunityIcons name="repeat" size={20} color="#2ECC71" />
+              <MaterialCommunityIcons name="repeat" size={20} color={colors.primary} />
             </View>
             <View style={styles.subInfo}>
               <Text style={styles.subDesc}>{item.description}</Text>
@@ -191,7 +194,7 @@ export default function BudgetScreen() {
             loadError ? null : <ActivityIndicator size="large" style={styles.loader} />
           ) : (
             <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="autorenew" size={40} color="#C7C7CC" />
+              <MaterialCommunityIcons name="autorenew" size={40} color={colors.chevron} />
               <Text style={styles.emptyTitle}>
                 {subscriptions.length === 0 ? t("abbonamenti.nessuno") : t("abbonamenti.nessunoAttivo")}
               </Text>
@@ -209,7 +212,7 @@ export default function BudgetScreen() {
             {pausedSubscriptions.map((item) => (
               <View key={item.id} style={styles.pausedRow}>
                 <View style={styles.pausedIconContainer}>
-                  <MaterialCommunityIcons name="pause" size={20} color="#999" />
+                  <MaterialCommunityIcons name="pause" size={20} color={colors.textMuted} />
                 </View>
                 <View style={styles.subInfo}>
                   <Text style={styles.subDesc}>{item.description}</Text>

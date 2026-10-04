@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
-import { colors, cardShadow } from "./tokens";
+import { type Colori, cardShadow } from "./tokens";
 
-export const styles = StyleSheet.create({
+export const creaStili = (colors: Colori) =>
+  StyleSheet.create({
     container: {
     flex: 1,
   },

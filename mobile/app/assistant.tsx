@@ -1,10 +1,9 @@
 import { KeyboardAvoidingView, View, FlatList, Platform, Pressable, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "../styles/tokens";
 import { Text, IconButton, TextInput, Button, Switch, Portal } from "react-native-paper";
 import { useCallback, useRef, useState } from "react";
 import { API_URL } from "@/config";
-import { styles } from "../styles/assistant.styles";
+import { creaStili } from "../styles/assistant.styles";
 import { useFocusEffect, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
@@ -19,8 +18,11 @@ import { nomeCategoria } from "@/utils/categorie";
 import { localeAttuale } from "@/utils/date";
 import { traduciErrore } from "@/utils/messaggioErrore";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useStili, useTema } from "@/utils/tema";
 
 export default function AssistantScreen() {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
   const { importoIn } = usePreferenze();
   const { t } = useTranslation();
   const frequenza = (f: string | null) => t(`frequenze.${f ?? "monthly"}`);
@@ -351,12 +353,12 @@ function handleDatePickerDismiss() {
             </Text>
           </View>
           <Pressable onPress={() => setShowPicker(true)} style={styles.dateRow}>
-            <MaterialCommunityIcons name="calendar-outline" size={18} color="#666" />
+            <MaterialCommunityIcons name="calendar-outline" size={18} color={colors.textMuted} />
             <Text style={styles.confirmationDetail}>
               {" "}{pendingExpense.recurring ? t("assistente.primoAddebito") : t("assistente.data")}:{" "}
               {fromDateString(pendingExpense.date).toLocaleDateString(localeAttuale())}
             </Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" style={styles.dateChevron} />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} style={styles.dateChevron} />
           </Pressable>
           {showPicker && (
             <SelettoreData

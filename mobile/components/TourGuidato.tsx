@@ -11,8 +11,9 @@ import Animated, {
   useReducedMotion,
 } from "react-native-reanimated";
 import { misuraBersaglio, type Rettangolo } from "@/utils/tour";
-import { styles, VELO } from "@/styles/tour.styles";
+import { creaStili, VELO } from "@/styles/tour.styles";
 import { useTranslation } from "react-i18next";
+import { useStili } from "@/utils/tema";
 
 type Passaggio = {
   bersaglio: string;
@@ -110,6 +111,7 @@ type Props = {
 
 //va montato solo quando serve: ogni apertura riparte dalla card di benvenuto
 export function TourGuidato({ onFine, dalProfilo = false }: Props) {
+  const styles = useStili(creaStili);
   const { t } = useTranslation();
   //-1 = card di benvenuto, poi gli indici di PASSAGGI
   const [indice, setIndice] = useState(-1);

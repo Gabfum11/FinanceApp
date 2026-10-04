@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Image } from "react-native";
 import { TextInput, Button, Text, Snackbar } from "react-native-paper";
-import {styles} from "../styles/auth.styles";
+import { creaStili } from "../styles/auth.styles";
 import { Link } from "expo-router";
 import { API_URL, PRIVACY_URL } from "@/config";
 import { router } from "expo-router";
@@ -12,8 +12,10 @@ import * as WebBrowser from "expo-web-browser";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useTranslation } from "react-i18next";
 import { usePreferenze } from "@/utils/preferenze";
+import { useStili } from "@/utils/tema";
 
 export default function RegisterScreen() {
+  const styles = useStili(creaStili);
     const { t } = useTranslation();
     //l'email con il codice parte subito: deve essere nella lingua scelta qui
     const { lingua } = usePreferenze();

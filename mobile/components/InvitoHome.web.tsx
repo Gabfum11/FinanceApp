@@ -4,9 +4,9 @@ import { Text, Button } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { puoAggiungereAllaHome } from "@/utils/aggiuntaHome";
-import { colors } from "@/styles/tokens";
-import { styles } from "@/styles/invito-home.styles";
+import { creaStili } from "@/styles/invito-home.styles";
 import { useTranslation } from "react-i18next";
+import { useStili, useTema } from "@/utils/tema";
 
 const CHIAVE = "invito_home_rimandato";
 const PAUSA_GIORNI = 14;
@@ -27,6 +27,8 @@ function rimandato(): boolean {
 // Subito e non dopo la registrazione: l'icona ha dati suoi, separati da Safari,
 // e chi si registra prima di aggiungerla dovrebbe poi accedere di nuovo.
 export function InvitoHome() {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   //il terzo argomento vale durante la build del sito, dove non c'e' un browser

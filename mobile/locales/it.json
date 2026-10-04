@@ -485,7 +485,8 @@
     "eliminaErrore": "Non è stato possibile eliminare l'account. Riprova.",
     "supportoTitolo": "Feedback e supporto",
     "supportoTesto": "Contattaci per qualsiasi domanda all'indirizzo",
-    "mandaEmail": "Manda email"
+    "mandaEmail": "Manda email",
+    "temaScuro": "Tema scuro"
   },
   "modificaProfilo": {
     "titolo": "Modifica profilo",

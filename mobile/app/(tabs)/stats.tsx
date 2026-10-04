@@ -9,12 +9,12 @@ import { useTranslation } from "react-i18next";
 import { nomeCategoria } from "@/utils/categorie";
 import { localeAttuale } from "@/utils/date";
 import { PieChart } from "react-native-gifted-charts";
-import { styles } from "@/styles/stats.styles";
-import { colors } from "@/styles/tokens";
+import { creaStili } from "@/styles/stats.styles";
 import { useFocusEffect, useRouter } from "expo-router";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
 import { useSchermoStretto } from "@/utils/layout";
+import { useStili, useTema } from "@/utils/tema";
 
 type CategoryStat = {
   category_name: string;
@@ -29,6 +29,8 @@ function formatCycleLabel(cycleStart: string, cycleEnd: string): string {
 }
 
 export default function StatsScreen() {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
   const { importo } = usePreferenze();
   const { t } = useTranslation();
   //i messaggi in basso compaiono sopra la barra delle schede, non sotto
@@ -104,7 +106,7 @@ export default function StatsScreen() {
       value: item.total,
       color: colori[index % colori.length],
     })),
-    ...(remaining > 0 ? [{ value: remaining, color: "#E0E0E0" }] : []),
+    ...(remaining > 0 ? [{ value: remaining, color: colors.donutRemaining }] : []),
   ];
 
   //la ciambella con il totale: sopra la legenda sugli schermi stretti, accanto sugli altri
@@ -115,6 +117,8 @@ export default function StatsScreen() {
         donut
         radius={75}
         innerRadius={60}
+        //il buco della ciambella e' un cerchio pieno, bianco se non si dice altro
+        innerCircleColor={colors.surface}
         centerLabelComponent={() => (
           <View style={{ alignItems: "center" }}>
             <Text style={styles.totalLabel}>{t("statistiche.speso")}</Text>
@@ -178,7 +182,7 @@ export default function StatsScreen() {
                 {remaining > 0 && (
                   <View style={styles.legendRow}>
                     <View style={styles.legendLeft}>
-                      <View style={[styles.legendDot, { backgroundColor: "#E0E0E0" }]} />
+                      <View style={[styles.legendDot, { backgroundColor: colors.donutRemaining }]} />
                       <Text style={styles.legendLabel} numberOfLines={1}>
                         {meseInCorso ? t("statistiche.disponibile") : t("statistiche.avanzato")}
                       </Text>

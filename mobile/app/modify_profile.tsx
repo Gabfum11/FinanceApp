@@ -4,14 +4,17 @@ import { TextInput, Text, Snackbar } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { apiFetch } from "@/utils/apiFetch";
-import { styles } from "@/styles/modify-profile.styles";
+import { creaStili } from "@/styles/modify-profile.styles";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useTranslation } from "react-i18next";
 import { traduciErrore } from "@/utils/messaggioErrore";
+import { useStili, useTema } from "@/utils/tema";
 
 export default function ModifyProfile() {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
     const { t } = useTranslation();
     const [nickname, setNickname] = useState("");
     const [email, setEmail] = useState("");
@@ -92,18 +95,18 @@ export default function ModifyProfile() {
                         editable={false}
                         mode="outlined"
                         style={styles.inputDisabled}
-                        textColor="#888"
-                        left={<TextInput.Icon icon="lock-outline" color="#aaa" />}
+                        textColor={colors.textMuted}
+                        left={<TextInput.Icon icon="lock-outline" color={colors.textDisabled} />}
                     />
                     <Text style={styles.helperText}>{t("modificaProfilo.emailFissa")}</Text>
                 </View>
                 <View>
                     <Pressable style={styles.settingsItem} onPress={() => router.push("/changePassw")}>
-                        <MaterialCommunityIcons name="lock-outline" size={20} color="#666" />
+                        <MaterialCommunityIcons name="lock-outline" size={20} color={colors.textMuted} />
                         <View style={styles.settingsInfo}>
                             <Text style={styles.settingsLabel}>{t("modificaProfilo.cambiaPassword")}</Text>
                         </View>
-                        <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
+                        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
                     </Pressable>
                 </View>
 

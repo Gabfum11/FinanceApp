@@ -5,8 +5,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button, Text, Snackbar, IconButton } from "react-native-paper";
 import { BarChart } from "react-native-gifted-charts";
 import { API_URL } from "@/config";
-import { styles } from "../../styles/home.styles";
-import { colors } from "../../styles/tokens";
+import { creaStili } from "../../styles/home.styles";
 import { apiFetch } from "@/utils/apiFetch";
 import { formatDataSpesa } from "@/utils/date";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -31,6 +30,7 @@ import Animated, {
   withDelay,
   useReducedMotion,
 } from "react-native-reanimated";
+import { useStili, useTema } from "@/utils/tema";
 type Expense = {
   id: number;
   description: string;
@@ -63,6 +63,8 @@ function formatCycleRange(cycleStart: string, cycleEnd: string): string {
 const CHIAVE_SALDO = "mostra_saldo";
 
 export default function HomeScreen() {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   //la colonna dell'app, non la finestra: su tablet e computer e' piu' stretta
@@ -417,7 +419,7 @@ export default function HomeScreen() {
       ))}
       {expensesLoaded && expenses.length === 0 && (
         <Pressable style={styles.emptyState} onPress={() => router.push("/add_expense")}>
-          <MaterialCommunityIcons name="receipt-text-outline" size={40} color="#C7C7CC" />
+          <MaterialCommunityIcons name="receipt-text-outline" size={40} color={colors.chevron} />
           <Text style={styles.emptyTitle}>{t("home.nessunaSpesa")}</Text>
           <Text style={styles.emptyHint}>
             {t("home.nessunaSpesaTesto")}

@@ -4,9 +4,10 @@ import {useEffect, useState } from "react"
 import { API_URL } from "@/config";
 import { router, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { styles } from "@/styles/reset-password.styles";
+import { creaStili } from "@/styles/reset-password.styles";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import { useTranslation } from "react-i18next";
+import { useStili, useTema } from "@/utils/tema";
 const num=[0,1,2,3,4,5]
 const formatTime =(totseconds:number)=>{
     const minutes=Math.floor(totseconds/60);
@@ -14,6 +15,8 @@ const formatTime =(totseconds:number)=>{
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 export default function ResetPassword(){
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
    const { t } = useTranslation();
    const [email,setEmail]=useState("");
    const [step, setStep]=useState<"email" | "typing" | "invalid" | "correct" | "saved">("email");
@@ -149,7 +152,7 @@ export default function ResetPassword(){
       <View>
         <IconButton
             icon="chevron-left"
-            iconColor="#000"
+            iconColor={colors.text}
             size={28}
             onPress={()=>router.back()}
             />

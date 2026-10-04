@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
-import { colors } from "./tokens";
+import { type Colori } from "./tokens";
 
-export const styles = StyleSheet.create({
+export const creaStili = (colors: Colori) =>
+  StyleSheet.create({
   container: {
     flex:1,
   },

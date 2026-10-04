@@ -485,7 +485,8 @@
     "eliminaErrore": "Couldn't delete the account. Please try again.",
     "supportoTitolo": "Feedback and support",
     "supportoTesto": "Contact us with any question at",
-    "mandaEmail": "Send email"
+    "mandaEmail": "Send email",
+    "temaScuro": "Dark theme"
   },
   "modificaProfilo": {
     "titolo": "Edit profile",
