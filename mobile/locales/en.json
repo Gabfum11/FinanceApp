@@ -331,7 +331,8 @@
     "cambioAbbonamento": "Exchange rate unavailable right now. Please try again shortly.",
     "cambioSpesa": "Exchange rate unavailable right now: enter how much you were charged in {{simbolo}}.",
     "erroreAbbonamento": "Couldn't save the subscription. Please try again.",
-    "erroreSpesa": "Couldn't save the expense. Please try again."
+    "erroreSpesa": "Couldn't save the expense. Please try again.",
+    "importoTroppoAlto": "The amount can be at most {{massimo}}"
   },
   "spese": {
     "titolo": "Transactions",
@@ -420,7 +421,8 @@
     "salva": "Save budget",
     "importoNonValido": "Enter a valid amount",
     "giornoNonValido": "The day must be between 1 and 31",
-    "erroreSalvataggio": "Couldn't save"
+    "erroreSalvataggio": "Couldn't save",
+    "importoTroppoAlto": "The budget can be at most {{massimo}}"
   },
   "statistiche": {
     "errore": "Couldn't load your stats",

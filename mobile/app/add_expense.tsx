@@ -19,7 +19,7 @@ import { fromDateString, toDateString } from "@/utils/date";
 import { styles, colors } from "../styles/add-expense.styles";
 import { iconaPerGruppo } from "@/utils/categoryIcons";
 import { usePreferenze } from "@/utils/preferenze";
-import { simbolo, eValuta, VALUTE, type Valuta } from "@/utils/formato";
+import { simbolo, eValuta, VALUTE, IMPORTO_MASSIMO, type Valuta } from "@/utils/formato";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { segnalaSalvataggio } from "@/utils/esitoAssistente";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -57,7 +57,7 @@ const CAMBIO_NON_DISPONIBILE = "Exchange rate unavailable";
 const MAX_DECIMALS = 2;
 
 export default function AddExpenseScreen() {
-  const { valuta, importo: formatta } = usePreferenze();
+  const { valuta, importo: formatta, importoIn } = usePreferenze();
   const { t } = useTranslation();
   const router = useRouter();
   // I parametri di rotta arrivano sempre come stringhe: li usa "Modifica"
@@ -107,6 +107,8 @@ export default function AddExpenseScreen() {
   );
   const valutaSpesa = valutaScelta ?? valuta;
   const estera = valutaSpesa !== valuta;
+  //il massimo nella valuta in cui si sta scrivendo l'importo
+  const formattaInValuta = (v: number) => importoIn(v, valutaSpesa);
   const [menuValuta, setMenuValuta] = useState(false);
   // Tasso per l'anteprima, legato a valuta e giorno per cui è stato chiesto:
   // cambiando l'una o l'altro, quello vecchio non si mostra più.
@@ -215,6 +217,15 @@ export default function AddExpenseScreen() {
 
   function handleKeyPress(key: string) {
     setError(null);
+    //un'altra cifra oltre il massimo non entra: si spiega perche', invece di
+    //lasciar scrivere un importo che il server rifiuterebbe
+    if (/^[0-9]$/.test(key)) {
+      const prossimo = amountRaw === "0" ? key : amountRaw + key;
+      if (parseFloat(prossimo.replace(",", ".")) > IMPORTO_MASSIMO) {
+        setError(t("spesa.importoTroppoAlto", { massimo: formattaInValuta(IMPORTO_MASSIMO) }));
+        return;
+      }
+    }
     setAmountRaw((prev) => {
       if (key === "backspace") {
         const next = prev.slice(0, -1);

@@ -8,6 +8,10 @@
 // (Hermes) non supporta tutte le opzioni di Intl, e un'opzione mancante
 // manderebbe in errore la schermata.
 
+//lo stesso tetto del server (le=1000000 in schemas.py) per spese, abbonamenti e
+//budget: controllandolo qui l'utente legge un messaggio preciso invece di un 422
+export const IMPORTO_MASSIMO = 1000000;
+
 export const VALUTE = ["EUR", "USD", "GBP", "CHF"] as const;
 export type Valuta = (typeof VALUTE)[number];
 

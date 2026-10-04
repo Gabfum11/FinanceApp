@@ -54,8 +54,8 @@ class ExpenseUpdate(BaseModel): #modifica parziale: i campi assenti restano inva
 
 
 class SubscriptionCreate(BaseModel):
-    description:str
-    amount: float
+    description:str = Field(..., min_length=1, max_length=200)
+    amount: float = Field(..., gt=0, le=1000000)
     frequency: Literal["monthly", "weekly", "yearly"]
     category_id: int | None = None
     start_date: date | None = None #se assente l'abbonamento parte da oggi
@@ -120,7 +120,7 @@ class CategoryGroupOut(BaseModel):
 class UserCreate(BaseModel):
     email: EmailStr #questo tipo valida automaticamente che la stringa abbia un formato email 
     password: str=Field(...,min_length=8, max_length=72)
-    nickname: str
+    nickname: str = Field(..., min_length=1, max_length=50)
     #la lingua scelta nell'app prima di avere un account: l'email con il codice
     #parte subito, e deve essere gia' in quella lingua
     language: Lingua = "it"
@@ -186,8 +186,8 @@ class WeeklyStatsOut(BaseModel):
     week_end: date
     days: list[DayStat]
 
-class BuddgetDate(BaseModel):
-    monthly_budget: float
+class BudgetData(BaseModel):
+    monthly_budget: float = Field(..., gt=0, le=1000000)  # Valore compreso tra 0 e 1 milione
     budget_start_day: int = Field(..., ge=1, le=31)  # Valore compreso tra 1 e 31
 
 class ChangePassword(BaseModel):
@@ -213,7 +213,7 @@ class UpdatePreferences(BaseModel):
     convert_history: bool = False
 
 class PushToken(BaseModel):
-    #solo il formato di Expo: qualsiasi altra stringa farebbe fallire ogni invio
+    #solo il formato token di Expo: qualsiasi altra stringa farebbe fallire ogni invio
     token: str = Field(..., max_length=200, pattern=r"^ExponentPushToken\[.+\]$")
     
 

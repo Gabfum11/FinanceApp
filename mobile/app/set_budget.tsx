@@ -3,7 +3,7 @@ import { Text, TextInput, Button, Snackbar, IconButton } from "react-native-pape
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { usePreferenze } from "@/utils/preferenze";
-import { simbolo } from "@/utils/formato";
+import { simbolo, IMPORTO_MASSIMO } from "@/utils/formato";
 import { router } from "expo-router";
 import { apiFetch } from "@/utils/apiFetch";
 import { messaggioErrore } from "@/utils/messaggioErrore";
@@ -13,7 +13,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function SetBudgetScreen() {
     const { t } = useTranslation();
-    const { valuta } = usePreferenze();
+    const { valuta, importo } = usePreferenze();
     const [amount, setAmount] = useState("");
     const [startDay, setStartDay] = useState("1");
     const [loading, setLoading] = useState(false);
@@ -22,11 +22,17 @@ export default function SetBudgetScreen() {
     const { lasciaUscire, dialogo } = useConfirmDiscard(amount !== "" || startDay !== "1");
 
     async function handleSave() {
-        const parsedAmount = parseFloat(amount);
+        //la tastiera italiana scrive la virgola: "1200,50" senza questo diventava 1200
+        const parsedAmount = parseFloat(amount.replace(",", "."));
         const parsedStartDay = parseInt(startDay, 10);
 
         if (!parsedAmount || parsedAmount <= 0) {
             setErrorMessage(t("budgetNuovo.importoNonValido"));
+            setSnackbarVisible(true);
+            return;
+        }
+        if (parsedAmount > IMPORTO_MASSIMO) {
+            setErrorMessage(t("budgetNuovo.importoTroppoAlto", { massimo: importo(IMPORTO_MASSIMO) }));
             setSnackbarVisible(true);
             return;
         }

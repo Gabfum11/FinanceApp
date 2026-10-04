@@ -32,12 +32,24 @@ export default function RegisterScreen() {
         },
     });
     async function handleRegister() {
+        //stesse regole del server (1-50 caratteri): senza, un nome troppo lungo
+        //mostrerebbe il messaggio sulla password, che porta fuori strada
+        if (nickname.trim() === "") {
+            setErrorMessage(t("modificaProfilo.nomeVuoto"));
+            setSnackbarVisible(true);
+            return;
+        }
+        if (nickname.trim().length > 50) {
+            setErrorMessage(t("modificaProfilo.nomeLungo"));
+            setSnackbarVisible(true);
+            return;
+        }
         try {
             setLoading(true)
             const response = await fetch(`${API_URL}/auth/register`, {
                 method:"POST",
                 headers: {"Content-Type": "application/json"},
-                body:JSON.stringify({nickname,email,password, language: lingua}),
+                body:JSON.stringify({nickname: nickname.trim(), email, password, language: lingua}),
             });
             if(!response.ok) {
                 const messaggio = await messaggioErrore(response, t("registrazione.datiErrati"));

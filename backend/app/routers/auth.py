@@ -301,8 +301,8 @@ async def resetPassword(passw:schemas.ResetPassword,db:Session=Depends(get_db),u
     return {"detail": "Password aggiornata con successo"}
 
 
-@router.patch("/updateBudget", response_model=schemas.BuddgetDate)
-def update_budget_settings(settings: schemas.BuddgetDate, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+@router.patch("/updateBudget", response_model=schemas.BudgetData)
+def update_budget_settings(settings: schemas.BudgetData, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
     current_user.monthly_budget = settings.monthly_budget
     current_user.budget_start_day = settings.budget_start_day
     db.commit()

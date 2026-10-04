@@ -331,7 +331,8 @@
     "cambioAbbonamento": "Cambio non disponibile in questo momento. Riprova tra poco.",
     "cambioSpesa": "Cambio non disponibile in questo momento: scrivi quanto ti è stato addebitato in {{simbolo}}.",
     "erroreAbbonamento": "Non è stato possibile salvare l'abbonamento. Riprova.",
-    "erroreSpesa": "Non è stato possibile salvare la spesa. Riprova."
+    "erroreSpesa": "Non è stato possibile salvare la spesa. Riprova.",
+    "importoTroppoAlto": "L'importo può essere al massimo {{massimo}}"
   },
   "spese": {
     "titolo": "Transazioni",
@@ -420,7 +421,8 @@
     "salva": "Salva budget",
     "importoNonValido": "Inserisci un importo valido",
     "giornoNonValido": "Il giorno deve essere tra 1 e 31",
-    "erroreSalvataggio": "Errore nel salvataggio"
+    "erroreSalvataggio": "Errore nel salvataggio",
+    "importoTroppoAlto": "Il budget può essere al massimo {{massimo}}"
   },
   "statistiche": {
     "errore": "Errore nel caricamento delle statistiche",
