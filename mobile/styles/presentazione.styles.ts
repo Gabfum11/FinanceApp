@@ -498,18 +498,6 @@ export const creaStili = (colors: Colori) =>
     fontSize: 14,
     color: colors.textOnDarkMuted,
   },
-  //le illustrazioni del budget sono scure: un riquadro chiaro le stacca dal verde
-  pcEroeIllustrazione: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 380,
-    maxWidth: 460,
-    padding: 16,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: colors.overlayLight,
-    backgroundColor: colors.overlayFaint,
-  },
   pcCorpo: {
     paddingTop: 48,
     paddingBottom: 64,

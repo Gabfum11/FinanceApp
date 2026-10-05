@@ -240,10 +240,6 @@ function BenvenutoComputer({ esci }: { esci: (destinazione: Href) => void }) {
               </Button>
               <Text style={styles.pcNota}>{t("presentazione.p5.testo")}</Text>
             </View>
-            {/* lo stesso budget della terza pagina del telefono */}
-            <View style={styles.pcEroeIllustrazione}>
-              <IllustrazioneBudget />
-            </View>
           </View>
         </View>
       </View>
