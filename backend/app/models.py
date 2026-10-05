@@ -129,6 +129,21 @@ class RefreshToken(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
     #valorizzato quando il token viene scambiato con uno nuovo: se torna
     #indietro un token gia' usato, qualcuno l'ha copiato
-    used_at = Column(DateTime(timezone=True), nullable=True)
+    used_at = Column(DateTime(timezone=True), nullable=True) #è il timestamp di quando il token è stato usato per ottenere un nuovo token. Se è null, il token non è mai stato usato
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     user = relationship("User")
+
+class BudgetHistory(Base):
+    #ogni budget mai impostato, con il giorno da cui vale. users.monthly_budget
+    #resta la copia di quello attuale; da qui si legge quello dei mesi passati,
+    #che cosi' non cambiano quando l'utente modifica il budget oggi
+    __tablename__ = "budget_history"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    #vuoto = da qui in poi nessun budget: serve a tenere fermo un periodo quando
+    #si corregge quello prima, se allora un budget non c'era
+    amount = Column(Float, nullable=True)
+    #un ciclo usa l'ultima riga con valid_from entro la sua fine: un budget
+    #cambiato a meta' mese vale per tutto quel mese, non per i precedenti
+    valid_from = Column(Date, nullable=False)

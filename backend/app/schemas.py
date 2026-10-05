@@ -175,6 +175,8 @@ class CategoryStat(BaseModel):
 class StatsOut(BaseModel):
     cycle_start: date
     cycle_end: date
+    #il budget che valeva in quel ciclo: None se non ce n'era ancora uno
+    budget: float | None = None
     categories: list[CategoryStat]
 
 class DayStat(BaseModel):
@@ -189,6 +191,12 @@ class WeeklyStatsOut(BaseModel):
 class BudgetData(BaseModel):
     monthly_budget: float = Field(..., gt=0, le=1000000)  # Valore compreso tra 0 e 1 milione
     budget_start_day: int = Field(..., ge=1, le=31)  # Valore compreso tra 1 e 31
+
+class BudgetPeriodo(BaseModel):
+    #quale periodo, come nelle statistiche: 0 quello in corso, -1 il precedente...
+    #Niente periodi futuri: non hanno ancora spese da confrontare
+    cycle_offset: int = Field(..., ge=-600, le=0)
+    amount: float = Field(..., gt=0, le=1000000)
 
 class ChangePassword(BaseModel):
     current_password:str

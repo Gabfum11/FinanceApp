@@ -422,17 +422,28 @@
     "importoNonValido": "Enter a valid amount",
     "giornoNonValido": "The day must be between 1 and 31",
     "erroreSalvataggio": "Couldn't save",
-    "importoTroppoAlto": "The budget can be at most {{massimo}}"
+    "importoTroppoAlto": "The budget can be at most {{massimo}}",
+    "ricalcolo": "Changing the day also recalculates past periods."
   },
   "statistiche": {
     "errore": "Couldn't load your stats",
     "nessunaMese": "No expenses this month",
-    "nessunaPeriodo": "No expenses in this period",
+    "nessunaPeriodo": "No expenses available",
     "compaiono": "Stats appear after your first expense. Tap + to add one.",
     "disponibile": "Available",
     "speso": "Spent",
     "impostaBudget": "Set a budget to see what's left",
-    "avanzato": "Left over"
+    "avanzato": "Left over",
+    "nessunaPeriodoDettaglio": "You didn't record any expenses in this period.",
+    "budget": "Budget",
+    "budgetNonImpostato": "Not set",
+    "modificaBudget": "Edit budget",
+    "mostraImporti": "Show amounts",
+    "mostraPercentuali": "Show percentages",
+    "budgetSoloPeriodo": "Changes only this period. The next one stays as it is.",
+    "budgetDaOra": "Applies from this period on, until you change it. Past periods stay as they are.",
+    "salva": "Save",
+    "erroreBudget": "Couldn't save the budget"
   },
   "valute": {
     "EUR": "Euro",

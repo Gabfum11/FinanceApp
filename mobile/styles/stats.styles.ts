@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori } from "./tokens";
+import { radius, type Colori } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -24,12 +24,88 @@ export const creaStili = (colors: Colori) =>
         marginBottom: 16,
     },
     card: {
-        flexDirection: "row",
-        alignItems: "center",
         backgroundColor: colors.surface,
         borderRadius: 20,
         padding: 20,
+        gap: 12,
+    },
+    //ciambella e legenda: affiancate, o una sopra l'altra su schermo stretto
+    cardCorpo: {
+        flexDirection: "row",
+        alignItems: "center",
         gap: 16,
+    },
+    //interruttore € / %: in alto a destra, non sposta il resto della card
+    cifreRiga: {
+        flexDirection: "row",
+        justifyContent: "flex-end",
+    },
+    cifre: {
+        flexDirection: "row",
+        padding: 3,
+        borderRadius: 999,
+        backgroundColor: colors.surfaceAlt,
+    },
+    cifraVoce: {
+        minWidth: 44,
+        height: 30,
+        paddingHorizontal: 12,
+        borderRadius: 999,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    cifraScelta: {
+        backgroundColor: colors.surface,
+    },
+    cifraTesto: {
+        fontSize: 13,
+        fontWeight: "bold",
+        color: colors.textMuted,
+    },
+    cifraTestoScelto: {
+        color: colors.text,
+    },
+    //il budget del periodo mostrato, con la matita per cambiarlo
+    budgetRiga: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        marginTop: 16,
+        paddingVertical: 4,
+        paddingLeft: 16,
+        paddingRight: 4,
+        borderRadius: 16,
+        backgroundColor: colors.surface,
+    },
+    budgetTesti: {
+        flex: 1,
+    },
+    budgetEtichetta: {
+        fontSize: 13,
+        color: colors.textMuted,
+    },
+    budgetValore: {
+        fontSize: 16,
+        fontWeight: "bold",
+    },
+    //stesso raggio di ConfirmDialog: quello di Paper, con il nostro roundness, e' troppo tondo
+    dialog: {
+        backgroundColor: colors.surface,
+        borderRadius: radius.xl,
+    },
+    dialogPeriodo: {
+        color: colors.textMuted,
+        marginTop: -8,
+        marginBottom: 12,
+    },
+    dialogSpiegazione: {
+        marginTop: 12,
+        color: colors.textSecondary,
+        lineHeight: 19,
+    },
+    dialogErrore: {
+        marginTop: 8,
+        color: colors.danger,
     },
     //schermo stretto: ciambella sopra e legenda sotto, a tutta larghezza
     cardColonna: {

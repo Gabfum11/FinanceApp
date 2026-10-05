@@ -101,6 +101,10 @@ export default function SetBudgetScreen() {
             <Text style={styles.helperText}>
                 {t("budgetNuovo.spiegazione")}
             </Text>
+            {/* i periodi si ritagliano tutti con il giorno attuale, anche quelli chiusi */}
+            <Text style={styles.helperText}>
+                {t("budgetNuovo.ricalcolo")}
+            </Text>
 
             <Button
                 mode="contained"

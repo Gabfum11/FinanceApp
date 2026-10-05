@@ -7,7 +7,7 @@ from app import models, schemas
 from app.business_logic import categorization
 from app.business_logic import security
 from datetime import date
-from app.business_logic.budget import get_budget_cycle
+from app.business_logic.budget import get_budget_cycle, budget_del_ciclo
 from app.routers.subscriptions import run_due_renewals
 from app.business_logic.cambi import CambioNonDisponibile
 from app.business_logic.valuta_estera import applica_importo
@@ -91,9 +91,13 @@ def get_stats(cycle_offset: int = 0, db: Session = Depends(get_db), current_user
         models.Expense.date <= cycle_end,
     ).group_by(gruppo).order_by(func.sum(models.Expense.amount).desc()).all()
 
+    #il ciclo in corso usa il budget attuale; quelli chiusi il loro, dallo storico
+    budget = current_user.monthly_budget if cycle_offset == 0 else budget_del_ciclo(db, current_user.id, cycle_end)
+
     return {
         "cycle_start": cycle_start,
         "cycle_end": cycle_end,
+        "budget": budget,
         "categories": [{"category_name": name, "total": total} for name, total in category_expense],
     }
 @router.get("/weekly-stats", response_model=schemas.WeeklyStatsOut)

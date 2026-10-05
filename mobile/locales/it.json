@@ -422,17 +422,28 @@
     "importoNonValido": "Inserisci un importo valido",
     "giornoNonValido": "Il giorno deve essere tra 1 e 31",
     "erroreSalvataggio": "Errore nel salvataggio",
-    "importoTroppoAlto": "Il budget può essere al massimo {{massimo}}"
+    "importoTroppoAlto": "Il budget può essere al massimo {{massimo}}",
+    "ricalcolo": "Cambiare il giorno ricalcola anche i periodi passati."
   },
   "statistiche": {
     "errore": "Errore nel caricamento delle statistiche",
     "nessunaMese": "Nessuna spesa in questo mese",
-    "nessunaPeriodo": "Nessuna spesa in questo periodo",
+    "nessunaPeriodo": "Nessuna spesa disponibile",
     "compaiono": "Le statistiche compaiono dopo la prima spesa. Tocca + per aggiungerla.",
     "disponibile": "Disponibile",
     "speso": "Speso",
     "impostaBudget": "Imposta un budget per vedere quanto ti resta",
-    "avanzato": "Avanzato"
+    "avanzato": "Avanzato",
+    "nessunaPeriodoDettaglio": "In questo periodo non hai registrato spese.",
+    "budget": "Budget",
+    "budgetNonImpostato": "Non impostato",
+    "modificaBudget": "Modifica il budget",
+    "mostraImporti": "Mostra gli importi",
+    "mostraPercentuali": "Mostra le percentuali",
+    "budgetSoloPeriodo": "Cambia solo questo periodo. Quello successivo resta com'è.",
+    "budgetDaOra": "Vale da questo periodo in poi, finché non lo cambi. I periodi passati non cambiano.",
+    "salva": "Salva",
+    "erroreBudget": "Non è stato possibile salvare il budget"
   },
   "valute": {
     "EUR": "Euro",

@@ -77,6 +77,7 @@ def converti_storico(db: Session, utente: models.User, nuova: str, oggi: date | 
     oggi = oggi or date.today()
     spese = db.query(models.Expense).filter(models.Expense.user_id == utente.id).all()
     abbonamenti = db.query(models.Subscriptions).filter(models.Subscriptions.user_id == utente.id).all()
+    storico_budget = db.query(models.BudgetHistory).filter(models.BudgetHistory.user_id == utente.id).all()
 
     #prima tutti i tassi, una richiesta per valuta di partenza: se ne manca uno
     #ci si ferma qui, con il database ancora intatto
@@ -85,7 +86,7 @@ def converti_storico(db: Session, utente: models.User, nuova: str, oggi: date | 
         partenza = spesa.original_currency or vecchia
         if partenza != nuova:
             giorni_per_valuta.setdefault(partenza, set()).add(spesa.date)
-    if utente.monthly_budget:
+    if utente.monthly_budget or storico_budget:
         giorni_per_valuta.setdefault(vecchia, set()).add(oggi)
     for partenza, giorni in giorni_per_valuta.items():
         precarica(partenza, nuova, giorni)
@@ -98,6 +99,11 @@ def converti_storico(db: Session, utente: models.User, nuova: str, oggi: date | 
     if utente.monthly_budget:
         #il budget e' un obiettivo per i mesi a venire: vale il cambio di oggi
         utente.monthly_budget = converti(utente.monthly_budget, vecchia, nuova, oggi)[0]
+    #anche i budget dei mesi passati, con lo stesso tasso: l'avanzo di un mese
+    #e' budget meno spese, e le due cifre devono stare nella stessa valuta
+    for riga in storico_budget:
+        if riga.amount is not None:
+            riga.amount = converti(riga.amount, vecchia, nuova, oggi)[0]
     for sub in abbonamenti:
         prezzo_in = sub.currency or vecchia
         sub.currency = None if prezzo_in == nuova else prezzo_in

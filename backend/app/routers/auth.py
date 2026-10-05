@@ -7,6 +7,7 @@ from app.state import limiter
 from app.business_logic import security, email_service, google_auth, valuta_estera
 from app.business_logic.cambi import CambioNonDisponibile
 from app.business_logic.oggi import oggi
+from app.business_logic.budget import get_budget_cycle, registra_budget
 from datetime import date
 from app.logging_config import get_logger
 
@@ -41,6 +42,7 @@ async def register(request:Request, user: schemas.UserCreate, db: Session = Depe
             raise HTTPException(status_code=400, detail="Email already registered")
         else:
             db.query(models.OtpCode).filter(models.OtpCode.user_id==existing_user.id).delete()
+            db.query(models.BudgetHistory).filter(models.BudgetHistory.user_id==existing_user.id).delete()
             db.delete(existing_user)
             db.commit()
 
@@ -253,6 +255,7 @@ def delete_me(request: Request, payload: schemas.DeleteAccount, db: Session = De
     security.revoke_all_refresh_tokens(db, user_id)
     db.query(models.Subscriptions).filter(models.Subscriptions.user_id == user_id).delete()
     db.query(models.Expense).filter(models.Expense.user_id == user_id).delete()
+    db.query(models.BudgetHistory).filter(models.BudgetHistory.user_id == user_id).delete()
     #rileggiamo l'utente da questa sessione: current_user puo' arrivare da un'altra
     db.query(models.User).filter(models.User.id == user_id).delete()
     db.commit()
@@ -302,9 +305,12 @@ async def resetPassword(passw:schemas.ResetPassword,db:Session=Depends(get_db),u
 
 
 @router.patch("/updateBudget", response_model=schemas.BudgetData)
-def update_budget_settings(settings: schemas.BudgetData, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+def update_budget_settings(settings: schemas.BudgetData, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
     current_user.monthly_budget = settings.monthly_budget
     current_user.budget_start_day = settings.budget_start_day
+    #anche nello storico: i mesi gia' chiusi restano con il budget che avevano
+    cycle_start, _ = get_budget_cycle(giorno, settings.budget_start_day)
+    registra_budget(db, current_user.id, settings.monthly_budget, giorno, cycle_start)
     db.commit()
     return {"monthly_budget": current_user.monthly_budget, "budget_start_day": current_user.budget_start_day}
 
