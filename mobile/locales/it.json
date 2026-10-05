@@ -283,14 +283,18 @@
     }
   },
   "invitoHome": {
-    "titolo": "Aggiungi TrackIt alla Home",
-    "testo": "Si apre come un'app, a schermo intero.",
+    "titolo": "Usa TrackIt come un'app",
+    "istruzioni": "Apri il menu del browser (<b>···</b> o <b>⋮</b>) e scegli <b>Aggiungi alla schermata Home</b> o <b>Installa app</b>. Su iPhone la voce è dentro <b>Condividi</b>.",
     "tocca": "Tocca ",
+    "puntini": "···",
+    "inBassoADestra": " in basso a destra",
     "condividi": " Condividi",
+    "altro": "Altro",
     "scegli": "Scegli ",
     "voce": "Aggiungi alla schermata Home",
     "nonOra": "Non ora",
-    "hoCapito": "Ho capito"
+    "hoCapito": "Ho capito",
+    "installa": "Installa"
   },
   "frequenze": {
     "monthly": "Mensile",

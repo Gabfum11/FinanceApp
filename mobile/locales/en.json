@@ -283,14 +283,18 @@
     }
   },
   "invitoHome": {
-    "titolo": "Add TrackIt to your Home Screen",
-    "testo": "It opens like an app, full screen.",
+    "titolo": "Use TrackIt as an app",
+    "istruzioni": "Open the browser menu (<b>···</b> or <b>⋮</b>) and choose <b>Add to Home Screen</b> or <b>Install app</b>. On iPhone it's inside <b>Share</b>.",
     "tocca": "Tap ",
+    "puntini": "···",
+    "inBassoADestra": " at the bottom right",
     "condividi": " Share",
+    "altro": "More",
     "scegli": "Choose ",
     "voce": "Add to Home Screen",
     "nonOra": "Not now",
-    "hoCapito": "Got it"
+    "hoCapito": "Got it",
+    "installa": "Install"
   },
   "frequenze": {
     "monthly": "Monthly",

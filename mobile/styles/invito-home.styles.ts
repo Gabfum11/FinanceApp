@@ -3,7 +3,7 @@ import { type Colori, floatingShadow } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
-  //sopra tutto, in basso: su iPhone il pulsante Condividi di Safari e' li' sotto
+  //sopra tutto, in basso, vicino alla barra del browser dove si trova il menu
   card: {
     position: "absolute",
     left: 16,
@@ -14,11 +14,23 @@ export const creaStili = (colors: Colori) =>
     backgroundColor: colors.surface,
     ...floatingShadow,
   },
+  //icona di TrackIt e titolo: si capisce subito di cosa parla
+  intestazione: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 12,
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+  },
   titolo: {
+    flex: 1,
     fontSize: 17,
     fontWeight: "bold",
     color: colors.text,
-    marginBottom: 4,
   },
   testo: {
     fontSize: 14,
@@ -26,7 +38,14 @@ export const creaStili = (colors: Colori) =>
   },
   passi: {
     gap: 10,
-    marginTop: 14,
+  },
+  //il messaggio per tutti, in un riquadro come i passi di Safari
+  istruzioni: {
+    lineHeight: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceAlt,
   },
   passo: {
     flexDirection: "row",
@@ -55,17 +74,5 @@ export const creaStili = (colors: Colori) =>
     flexDirection: "row",
     justifyContent: "flex-end",
     marginTop: 10,
-  },
-  //quadrato ruotato che sporge per meta' sotto la card, come nel tour
-  punta: {
-    position: "absolute",
-    bottom: -7,
-    left: "50%",
-    marginLeft: -7,
-    width: 14,
-    height: 14,
-    borderRadius: 2,
-    backgroundColor: colors.surface,
-    transform: [{ rotate: "45deg" }],
   },
 });
