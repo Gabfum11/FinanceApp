@@ -16,7 +16,7 @@ import { creaStili } from "@/styles/stats.styles";
 import { useFocusEffect, useRouter } from "expo-router";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
-import { useSchermoStretto } from "@/utils/layout";
+import { useSchermoLargo, useSchermoStretto } from "@/utils/layout";
 import { useStili, useTema } from "@/utils/tema";
 
 type CategoryStat = {
@@ -45,6 +45,8 @@ export default function StatsScreen() {
   //su uno schermo stretto ciambella e legenda affiancate non ci stanno:
   //la ciambella va sopra e la legenda sotto, a tutta larghezza
   const stretto = useSchermoStretto();
+  //sul computer: ciambella grande, importi e percentuali insieme, budget di lato
+  const largo = useSchermoLargo();
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -182,8 +184,8 @@ export default function StatsScreen() {
       <PieChart
         data={pieData}
         donut
-        radius={75}
-        innerRadius={60}
+        radius={largo ? 110 : 75}
+        innerRadius={largo ? 86 : 60}
         //il buco della ciambella e' un cerchio pieno, bianco se non si dice altro
         innerCircleColor={colors.surface}
         centerLabelComponent={() => (
@@ -208,8 +210,10 @@ export default function StatsScreen() {
             disabled={cycleOffset >= 0}
           />
         </View>
-        <View style={styles.card}>
-          {!loading && stats.length > 0 && (
+        <View style={largo ? styles.rigaLarga : undefined}>
+        <View style={[styles.card, largo && styles.cardLarga]}>
+          {/* sul computer c'e' posto per importi e percentuali insieme: l'interruttore non serve */}
+          {!loading && stats.length > 0 && !largo && (
             <View style={styles.cifreRiga}>
               <View style={styles.cifre}>
                 <Pressable
@@ -254,8 +258,15 @@ export default function StatsScreen() {
             </Pressable>
           ) : (
             <>
-              {stretto && ciambella}
+              {(stretto || largo) && ciambella}
               <View style={[styles.legendContainer, stretto && styles.legendaColonna]}>
+                {largo && (
+                  <View style={styles.legendRow}>
+                    <Text style={[styles.intestazioneColonna, styles.legendLeft]}>{t("statistiche.categoria")}</Text>
+                    <Text style={[styles.intestazioneColonna, styles.colonnaImporto]}>{t("statistiche.importo")}</Text>
+                    <Text style={[styles.intestazioneColonna, styles.colonnaPercentuale]}>%</Text>
+                  </View>
+                )}
                 {stats.map((item) => {
                   return (
                     <View key={item.category_name} style={styles.legendRow}>
@@ -263,7 +274,14 @@ export default function StatsScreen() {
                         <View style={[styles.legendDot, { backgroundColor: colorePerGruppo(item.category_name) }]} />
                         <Text style={styles.legendLabel} numberOfLines={1}>{nomeCategoria(item.category_name)}</Text>
                       </View>
-                      <Text style={styles.legendPercentage}>{cifra(item.total)}</Text>
+                      {largo ? (
+                        <>
+                          <Text style={[styles.legendPercentage, styles.colonnaImporto]}>{importo(item.total)}</Text>
+                          <Text style={styles.colonnaPercentuale}>{percentuale(item.total)}%</Text>
+                        </>
+                      ) : (
+                        <Text style={styles.legendPercentage}>{cifra(item.total)}</Text>
+                      )}
                     </View>
                   );
                 })}
@@ -275,11 +293,18 @@ export default function StatsScreen() {
                         {meseInCorso ? t("statistiche.disponibile") : t("statistiche.avanzato")}
                       </Text>
                     </View>
-                    <Text style={styles.legendPercentage}>{cifra(remaining)}</Text>
+                    {largo ? (
+                      <>
+                        <Text style={[styles.legendPercentage, styles.colonnaImporto]}>{importo(remaining)}</Text>
+                        <Text style={styles.colonnaPercentuale}>{percentuale(remaining)}%</Text>
+                      </>
+                    ) : (
+                      <Text style={styles.legendPercentage}>{cifra(remaining)}</Text>
+                    )}
                   </View>
                 )}
               </View>
-              {!stretto && ciambella}
+              {!stretto && !largo && ciambella}
             </>
           )}
           </View>
@@ -288,8 +313,9 @@ export default function StatsScreen() {
         {/* il budget del periodo mostrato. Senza spese non si mostra: non c'e'
             niente da confrontare. Nel periodo in corso senza budget resta l'invito
             qui sotto, che porta alla schermata completa con il giorno di inizio */}
+        <View style={largo ? styles.colonnaLaterale : undefined}>
         {!loading && stats.length > 0 && (cycleOffset < 0 || budgetMensile != null) && (
-          <View style={styles.budgetRiga}>
+          <View style={[styles.budgetRiga, largo && styles.senzaMargine]}>
             <MaterialCommunityIcons name="cash" size={20} color={colors.primary} />
             <View style={styles.budgetTesti}>
               <Text style={styles.budgetEtichetta}>{t("statistiche.budget")}</Text>
@@ -300,6 +326,20 @@ export default function StatsScreen() {
             <IconButton icon="pencil-outline" onPress={apriModificaBudget} accessibilityLabel={t("statistiche.modificaBudget")} />
           </View>
         )}
+        {/* sul computer, accanto: quanto resta, la domanda che segue la ciambella */}
+        {largo && !loading && stats.length > 0 && budgetMensile != null && (
+          <View style={styles.riquadroResto}>
+            <Text style={styles.budgetEtichetta}>
+              {meseInCorso ? t("statistiche.disponibile") : t("statistiche.avanzato")}
+            </Text>
+            <Text style={styles.restoValore}>{importo(remaining)}</Text>
+            <Text style={styles.restoTesto}>
+              {t("statistiche.usato", { percentuale: Math.round((total / budgetMensile) * 100) })}
+            </Text>
+          </View>
+        )}
+        </View>
+        </View>
 
         {/* solo nel mese in corso: per i mesi passati il budget di allora non si ricostruisce */}
         {!loading && cycleOffset === 0 && stats.length > 0 && budgetImpostato === false && (

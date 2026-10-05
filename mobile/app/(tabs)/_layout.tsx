@@ -3,11 +3,15 @@ import { AppState } from "react-native";
 import { useEffect } from "react";
 import { rinnovaSeInScadenza } from "@/utils/session";
 import { BarraSchede } from "@/components/BarraSchede";
+import { BarraLaterale } from "@/components/BarraLaterale";
+import { useSchermoLargo } from "@/utils/layout";
 import { sincronizzaDispositivo } from "@/utils/notifications";
 import { useTranslation } from "react-i18next";
 
 export default function TabsLayout() {
   const { t } = useTranslation();
+  //sul computer la barra va a sinistra, sempre aperta
+  const largo = useSchermoLargo();
 
   //un'app lasciata in background non passa da index.tsx: al rientro in primo
   //piano il token di accesso è quasi sempre scaduto, e conviene rinnovarlo
@@ -27,7 +31,10 @@ export default function TabsLayout() {
   return (
     //la barra la disegna BarraSchede: staccata dai bordi, con il "+" in mezzo.
     //Qui restano solo i nomi delle schede, che lei legge da options.title
-    <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <BarraSchede {...props} />}>
+    <Tabs
+      screenOptions={{ headerShown: false, tabBarPosition: largo ? "left" : "bottom" }}
+      tabBar={(props) => (largo ? <BarraLaterale {...props} /> : <BarraSchede {...props} />)}
+    >
       <Tabs.Screen name="home" options={{ title: t("schede.home") }} />
       <Tabs.Screen name="stats" options={{ title: t("schede.statistiche") }} />
       <Tabs.Screen name="add-placeholder" options={{ title: t("schede.aggiungi") }} />

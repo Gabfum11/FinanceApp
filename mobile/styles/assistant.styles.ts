@@ -7,6 +7,27 @@ export const creaStili = (colors: Colori) =>
         flex: 1,
         backgroundColor: colors.background,
     },
+    pieno: {
+        flex: 1,
+    },
+    //sul computer: la pagina a sinistra, appena scurita, e il pannello a destra
+    rigaPannello: {
+        flex: 1,
+        flexDirection: "row",
+    },
+    fuoriPannello: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.2)",
+    },
+    //non "flex: 0": sul web vuol dire base zero, e il pannello sarebbe largo zero
+    pannello: {
+        flexGrow: 0,
+        flexShrink: 0,
+        flexBasis: "auto",
+        width: 440,
+        borderLeftWidth: 1,
+        borderLeftColor: colors.border,
+    },
     // intestazione: dice dove si è e dà un modo esplicito per chiudere il modale
     header: {
         flexDirection: "row",

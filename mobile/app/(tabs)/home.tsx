@@ -3,7 +3,7 @@ import { View, ScrollView, Pressable, BackHandler, useWindowDimensions } from "r
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button, Text, Snackbar, IconButton } from "react-native-paper";
-import { BarChart } from "react-native-gifted-charts";
+import { BarChart, PieChart } from "react-native-gifted-charts";
 import { API_URL } from "@/config";
 import { creaStili } from "../../styles/home.styles";
 import { apiFetch } from "@/utils/apiFetch";
@@ -18,7 +18,8 @@ import { bersaglio } from "@/utils/tour";
 import { usePreferenze } from "@/utils/preferenze";
 import { useTranslation } from "react-i18next";
 import { useSpazioBarra } from "@/utils/barraSchede";
-import { useSchermoStretto, LARGHEZZA_MASSIMA, SCHERMO_MOLTO_STRETTO } from "@/utils/layout";
+import { useSchermoStretto, useSchermoLargo, LARGHEZZA_MASSIMA, LARGHEZZA_CONTENUTO, SCHERMO_MOLTO_STRETTO } from "@/utils/layout";
+import { colorePerGruppo } from "@/utils/categoryIcons";
 import { nomeCategoria } from "@/utils/categorie";
 import { localeAttuale } from "@/utils/date";
 import Animated, {
@@ -49,6 +50,10 @@ type DayStat = {
   total: number;
 };
 
+//per i riquadri che la home mostra solo sul computer
+type CategoriaStat = { category_name: string; total: number };
+type Rinnovo = { id: number; description: string; amount: number; next_date: string; is_active: boolean; currency?: string | null };
+
 
 //date string ->data della spesa (anno,mese,giorno)
 //created at -> timestamp completo
@@ -69,6 +74,12 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   //la colonna dell'app, non la finestra: su tablet e computer e' piu' stretta
   const larghezzaSchermo = Math.min(useWindowDimensions().width, LARGHEZZA_MASSIMA);
+  //sul computer la home e' un cruscotto: blocchi affiancati e due riquadri in piu'
+  const largo = useSchermoLargo();
+  //sul computer il grafico misura la sua card, che non dipende dallo schermo
+  const [larghezzaSettimana, setLarghezzaSettimana] = useState(0);
+  const [categorie, setCategorie] = useState<CategoriaStat[]>([]);
+  const [rinnovi, setRinnovi] = useState<Rinnovo[]>([]);
   //loadAll puo' partire due volte di fila (focus e riprova): il tour va aperto una volta sola
   const benvenutoAperto = useRef(false);
   const [tourVisibile, setTourVisibile] = useState(false);
@@ -164,10 +175,22 @@ export default function HomeScreen() {
       setWeeklyStats(data.days);
     } else throw new Error(`${response.status}`);
   }
+  async function loadCategorie() {
+    const response = await apiFetch("/expenses/stats?cycle_offset=0");
+    if (response.ok) setCategorie((await response.json()).categories);
+    else throw new Error(`${response.status}`);
+  }
+  async function loadRinnovi() {
+    const response = await apiFetch("/subscriptions/");
+    if (!response.ok) throw new Error(`${response.status}`);
+    const tutti: Rinnovo[] = await response.json();
+    //i tre piu' vicini tra quelli attivi
+    setRinnovi(tutti.filter((sub) => sub.is_active).sort((a, b) => a.next_date.localeCompare(b.next_date)).slice(0, 3));
+  }
   async function loadAll() {
     setLoadError(false);
     try {
-      await Promise.all([loadExpenses(), loadBudget(), loadWeeklyStats()]);
+      await Promise.all([loadExpenses(), loadBudget(), loadWeeklyStats(), ...(largo ? [loadCategorie(), loadRinnovi()] : [])]);
     } catch {
       setLoadError(true);
     }
@@ -175,7 +198,8 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(()=>{
       loadAll();
-    },[])
+      //passando al computer servono anche i dati dei riquadri in piu'
+    },[largo])
   )
 
   //su Android il tasto indietro dalla Home chiuderebbe l'app di colpo:
@@ -265,17 +289,23 @@ export default function HomeScreen() {
   //usciva dal riquadro. Si parte dallo spazio vero (schermo meno i margini
   //della pagina e della card) e le barre si stringono quanto serve
   const SPAZIO_BARRE = 8;
-  const spazioGrafico = larghezzaSchermo - 2 * 24 - 2 * 20 - 2 * SPAZIO_BARRE;
+  const spazioGrafico = largo
+    ? larghezzaSettimana - 2 * 20 - 2 * SPAZIO_BARRE
+    : larghezzaSchermo - 2 * 24 - 2 * 20 - 2 * SPAZIO_BARRE;
   const larghezzaBarra = Math.max(
     16,
-    Math.min(35, (spazioGrafico - SPAZIO_BARRE * (GIORNI_SETTIMANA.length - 1)) / GIORNI_SETTIMANA.length)
+    Math.min(largo ? 44 : 35, (spazioGrafico - SPAZIO_BARRE * (GIORNI_SETTIMANA.length - 1)) / GIORNI_SETTIMANA.length)
   );
 
-  return (
-    <View style={styles.screen}>
-      {/* la pagina scorre: con schermi bassi o caratteri di sistema grandi
-          i blocchi superavano l'altezza e le transazioni finivano sotto la barra */}
-      <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 16, paddingBottom: spazioBarra }]}>
+  //riassunto delle categorie, solo sul computer: la ciambella piccola e le prime quattro
+  const spesoCategorie = categorie.reduce((somma, c) => somma + c.total, 0);
+  const restoBudget = budgetStatus?.budget != null ? Math.max(budgetStatus.remaining ?? 0, 0) : 0;
+  const datiCiambella = [
+    ...categorie.map((c) => ({ value: c.total, color: colorePerGruppo(c.category_name) })),
+    ...(restoBudget > 0 ? [{ value: restoBudget, color: colors.donutRemaining }] : []),
+  ];
+
+  const saluto = (
       <View style={styles.titleRow}>
         {/* una riga sola: con un nome lungo il testo si rimpicciolisce invece di
             andare a capo o finire sotto la pillola */}
@@ -301,7 +331,9 @@ export default function HomeScreen() {
           {!stretto && <Text style={styles.assistantButtonLabel}>{t("home.assistente")}</Text>}
         </Pressable>
       </View>
-      <View>
+  );
+
+  const intestazioneBudget = (
         <View style={styles.headerRow}>
           <Text variant="titleMedium">{t("home.budget")}</Text>
           <View style={styles.headerActions}>
@@ -330,6 +362,10 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
+  );
+
+  const cardBudget = (
+      <>
         {/* solo a caricamento finito, se no lampeggerebbe a ogni apertura */}
         {budgetStatus && budgetStatus.budget == null && (
           <Pressable style={styles.emptyState} onPress={() => router.push("/set_budget")}>
@@ -341,7 +377,7 @@ export default function HomeScreen() {
           </Pressable>
         )}
         {budgetStatus?.budget != null && (
-          <View style={styles.budgetCard}>
+          <View style={[styles.budgetCard, largo && styles.cardInRiga]}>
             <View style={styles.budgetDecorCircle} />
             <View style={styles.budgetLabelRow}>
               <Text style={styles.budgetLabel}>{t("home.libero")}</Text>
@@ -350,7 +386,7 @@ export default function HomeScreen() {
               </Text>
             </View>
             <View style={styles.budgetAmountRow}>
-              <Text style={styles.budgetRemaining}>{importo(budgetStatus.remaining ?? 0)}</Text>
+              <Text style={[styles.budgetRemaining, largo && styles.budgetRemainingLargo]}>{importo(budgetStatus.remaining ?? 0)}</Text>
               <Text style={styles.budgetOf}>{t("home.di", { totale: importo(budgetStatus.budget) })}</Text>
             </View>
             <View style={styles.progressBarBackground}>
@@ -364,12 +400,18 @@ export default function HomeScreen() {
             </View>
           </View>
         )}
-      </View>
+      </>
+  );
 
-      {weeklyChartData.length > 0 && (
-        <View style={styles.weeklyCard}>
+  const cardSettimana = weeklyChartData.length > 0 && (
+        <View
+          style={[styles.weeklyCard, largo && styles.cardInRiga]}
+          onLayout={(e) => setLarghezzaSettimana(e.nativeEvent.layout.width)}
+        >
           <Text style={styles.weeklyTitle}>{t("home.settimana")}</Text>
           <View style={styles.weeklyChartWrapper}>
+            {/* sul computer si disegna solo quando si conosce la larghezza della card */}
+            {(!largo || larghezzaSettimana > 0) && (
             <BarChart
               data={weeklyChartData}
               barWidth={larghezzaBarra}
@@ -389,11 +431,14 @@ export default function HomeScreen() {
               barStyle={{ overflow: "visible" }}
               topLabelContainerStyle={styles.weeklyBarLabelContainer}
             />
+            )}
           </View>
         </View>
-      )}
+  );
 
-        <Text variant="titleMedium" style={styles.sectionTitle}>
+  const spese = (
+      <>
+        <Text variant="titleMedium" style={[styles.sectionTitle, largo && styles.sectionTitleLargo]}>
           {t("home.ultime")}
         </Text>
         {expenses.length > 0 && (
@@ -401,9 +446,9 @@ export default function HomeScreen() {
             <Text style={styles.linkExpenses}>{t("home.vediTutte")}</Text>
           </Link>
         )}
-      {/* due righe al massimo: un semplice elenco, perche' una FlatList
-          dentro uno ScrollView che scorre nello stesso verso da' problemi */}
-      {expenses.slice(0, 2).map((item) => (
+      {/* due righe sul telefono, cinque sul computer: un semplice elenco, perche'
+          una FlatList dentro uno ScrollView che scorre nello stesso verso da' problemi */}
+      {expenses.slice(0, largo ? 5 : 2).map((item) => (
         <View key={item.id} style={styles.expenseRow}>
           <View style={styles.expenseInfo}>
             <Text style={styles.expenseDescription}>{item.description}</Text>
@@ -425,6 +470,107 @@ export default function HomeScreen() {
             {t("home.nessunaSpesaTesto")}
           </Text>
         </Pressable>
+      )}
+      </>
+  );
+
+  //solo sul computer: sul telefono stanno nelle loro schede
+  const riquadroCategorie = (
+      <View style={styles.riquadro}>
+        <View style={styles.riquadroTesta}>
+          <Text style={styles.riquadroTitolo}>{t("home.doveVanno")}</Text>
+          <Link href="/stats" asChild>
+            <Text style={styles.linkExpenses}>{t("home.statistiche")}</Text>
+          </Link>
+        </View>
+        {categorie.length === 0 ? (
+          <Text style={styles.emptyHint}>{t("home.nessunaCategoria")}</Text>
+        ) : (
+          <View style={styles.miniStatistiche}>
+            <PieChart
+              data={datiCiambella}
+              donut
+              radius={56}
+              innerRadius={44}
+              innerCircleColor={colors.surface}
+              centerLabelComponent={() => (
+                <Text style={styles.miniTotale}>{importo(spesoCategorie)}</Text>
+              )}
+            />
+            <View style={styles.miniLegenda}>
+              {categorie.slice(0, 4).map((c) => (
+                <View key={c.category_name} style={styles.miniRiga}>
+                  <View style={[styles.budgetLegendDot, { backgroundColor: colorePerGruppo(c.category_name) }]} />
+                  <Text style={styles.miniNome} numberOfLines={1}>{nomeCategoria(c.category_name)}</Text>
+                  <Text style={styles.miniImporto}>{importo(c.total)}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+      </View>
+  );
+
+  const riquadroRinnovi = (
+      <View style={styles.riquadro}>
+        <View style={styles.riquadroTesta}>
+          <Text style={styles.riquadroTitolo}>{t("home.prossimiRinnovi")}</Text>
+          <Link href="/budget" asChild>
+            <Text style={styles.linkExpenses}>{t("home.abbonamenti")}</Text>
+          </Link>
+        </View>
+        {rinnovi.length === 0 ? (
+          <Text style={styles.emptyHint}>{t("home.nessunRinnovo")}</Text>
+        ) : (
+          rinnovi.map((sub) => (
+            <View key={sub.id} style={styles.miniRiga}>
+              <MaterialCommunityIcons name="autorenew" size={18} color={colors.primary} />
+              <Text style={styles.miniNome} numberOfLines={1}>{sub.description}</Text>
+              <Text style={styles.rinnovoData}>{formatDataSpesa(sub.next_date)}</Text>
+              <Text style={styles.miniImporto}>{saldoVisibile ? importoIn(sub.amount, sub.currency) : nascosto}</Text>
+            </View>
+          ))
+        )}
+      </View>
+  );
+
+  return (
+    <View style={styles.screen}>
+      {/* la pagina scorre: con schermi bassi o caratteri di sistema grandi
+          i blocchi superavano l'altezza e le transazioni finivano sotto la barra */}
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          { paddingTop: insets.top + 16, paddingBottom: spazioBarra },
+          largo && styles.containerLargo,
+          largo && { maxWidth: LARGHEZZA_CONTENUTO + 80 },
+        ]}
+      >
+      {saluto}
+      {largo ? (
+        <>
+          {intestazioneBudget}
+          <View style={styles.rigaLarga}>
+            <View style={styles.colonnaPrincipale}>{cardBudget}</View>
+            <View style={styles.colonnaLaterale}>{cardSettimana}</View>
+          </View>
+          <View style={[styles.rigaLarga, styles.rigaLargaDistanziata]}>
+            <View style={styles.colonnaPrincipale}>{spese}</View>
+            <View style={styles.colonnaLaterale}>
+              {riquadroCategorie}
+              {riquadroRinnovi}
+            </View>
+          </View>
+        </>
+      ) : (
+        <>
+          <View>
+            {intestazioneBudget}
+            {cardBudget}
+          </View>
+          {cardSettimana}
+          {spese}
+        </>
       )}
       </ScrollView>
 

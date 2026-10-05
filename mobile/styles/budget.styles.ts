@@ -9,6 +9,17 @@ export const creaStili = (colors: Colori) =>
     content:{
         paddingBottom: 48,
     },
+    //sul computer: card affiancate, due per riga sulle finestre comuni
+    griglia: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        marginBottom: 16,
+    },
+    cella: {
+        flexGrow: 1,
+        flexBasis: 440,
+        maxWidth: 560,
+    },
     subRow:{
         flexDirection:"row",
         alignItems: "center",

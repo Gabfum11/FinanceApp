@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, type StyleProp, type ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSpazioBarra } from "@/utils/barraSchede";
+import { LARGHEZZA_CONTENUTO, useSchermoLargo } from "@/utils/layout";
 
 type Props = {
   children: ReactNode;
@@ -21,10 +22,17 @@ type Props = {
 export function PaginaScorrevole({ children, style, tastiera = false, sopraBarra = false }: Props) {
   const insets = useSafeAreaInsets();
   const spazioBarra = useSpazioBarra();
+  //sul computer il contenuto sta in una colonna centrata, con margini piu' ampi
+  const largo = useSchermoLargo();
 
   const pagina = (
     <ScrollView
-      contentContainerStyle={[style, { paddingTop: insets.top + 16 }, sopraBarra && { paddingBottom: spazioBarra }]}
+      contentContainerStyle={[
+        style,
+        { paddingTop: insets.top + 16 },
+        sopraBarra && { paddingBottom: spazioBarra },
+        largo && { width: "100%", maxWidth: LARGHEZZA_CONTENUTO + 80, alignSelf: "center", paddingHorizontal: 40, paddingTop: 32 },
+      ]}
       keyboardShouldPersistTaps="handled"
     >
       {children}

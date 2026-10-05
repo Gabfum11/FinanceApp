@@ -1,4 +1,5 @@
 import { KeyboardAvoidingView, View, FlatList, Platform, Pressable, Image } from "react-native";
+import { useSchermoLargo } from "@/utils/layout";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, IconButton, TextInput, Button, Switch, Portal } from "react-native-paper";
 import { useCallback, useRef, useState } from "react";
@@ -48,6 +49,8 @@ export default function AssistantScreen() {
   };
 
   const router = useRouter();
+  //sul computer: pannello a destra, con la pagina visibile accanto
+  const largo = useSchermoLargo();
 
   const [expenseText, setExpenseText] = useState(""); //stato collegato al campo di testo dove l'utente scrive
   const [pendingExpense, setPendingExpense] = useState<ExpenseConfirmation | null>(null); //rappresenta la card in attesa di decisione dell'utente
@@ -248,8 +251,11 @@ function handleDatePickerDismiss() {
     //i dialoghi vanno disegnati dentro la modale: con l'host globale, su iOS
     //finirebbero sotto la schermata presentata
     <Portal.Host>
+    <View style={largo ? styles.rigaPannello : styles.pieno}>
+    {/* sul computer un clic sulla pagina accanto chiude il pannello */}
+    {largo && <Pressable style={styles.fuoriPannello} onPress={() => router.back()} accessibilityLabel={t("comune.chiudi")} />}
     {/* senza safe area il benvenuto finiva sotto la barra di stato e l'input sotto i tasti di navigazione */}
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.container, largo && styles.pannello]} edges={["top", "bottom"]}>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"} //height fa si che su android, quando appare la tastiera, il contenitore si ridimensiona spingendo il campo input verso l'alto
@@ -418,6 +424,7 @@ function handleDatePickerDismiss() {
       cancelLabel={t("assistente.resta")}
     />
     </SafeAreaView>
+    </View>
     </Portal.Host>
   );
 }

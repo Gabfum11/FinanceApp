@@ -30,6 +30,36 @@ export const creaStili = (tokens: Colori) => {
     flex: 1,
     backgroundColor: colors.background,
   },
+  pieno: {
+    flex: 1,
+  },
+  //sul computer: la pagina resta dietro, scurita, e la spesa e' una finestra al centro
+  velo: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: scrim,
+  },
+  sfondoVelo: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  //non "flex: 0": sul web vuol dire base zero, e la finestra sparirebbe
+  finestra: {
+    flexGrow: 0,
+    flexShrink: 1,
+    flexBasis: "auto",
+    width: "100%",
+    maxWidth: 560,
+    maxHeight: "92%",
+    borderRadius: 24,
+    overflow: "hidden",
+    ...cardShadow,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",

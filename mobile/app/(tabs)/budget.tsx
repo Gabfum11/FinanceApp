@@ -14,6 +14,7 @@ import i18n from "@/utils/i18n";
 import { nomeCategoria } from "@/utils/categorie";
 import { localeAttuale } from "@/utils/date";
 import { useStili, useTema } from "@/utils/tema";
+import { useSchermoLargo } from "@/utils/layout";
 function getRenewal(next_date:string){
   const today= new Date();
   today.setHours(0, 0, 0, 0);
@@ -49,6 +50,8 @@ export default function BudgetScreen() {
   const { t } = useTranslation();
   //i messaggi in basso compaiono sopra la barra delle schede, non sotto
   const spazioBarra = useSpazioBarra();
+  //sul computer gli abbonamenti si dispongono in due colonne di card
+  const largo = useSchermoLargo();
   const [subscriptions, setSubscriptions]=useState<Subscription[]>([]);
   const [conferma, setConferma] = useState<ConfermaInAttesa | null>(null);
   //ogni conferma registra una spesa: un doppio tocco ne creerebbe due
@@ -172,8 +175,9 @@ export default function BudgetScreen() {
     <View style={styles.container}>
       <PaginaScorrevole style={styles.content} sopraBarra>
         <Text variant="headlineMedium">{t("abbonamenti.attivi")}</Text>
+        <View style={largo ? styles.griglia : undefined}>
         {activeSubscriptions.map((item) => (
-          <View key={item.id} style={styles.subRow}>
+          <View key={item.id} style={[styles.subRow, largo && styles.cella]}>
             <View style={styles.subIconContainer}>
               <MaterialCommunityIcons name="repeat" size={20} color={colors.primary} />
             </View>
@@ -189,6 +193,7 @@ export default function BudgetScreen() {
             <IconButton icon="pause" size={18} onPress={()=>confirmToggle(item.id, true)} accessibilityLabel={t("abbonamenti.mettiInPausa")} />
           </View>
         ))}
+        </View>
         {activeSubscriptions.length === 0 && (
           !loaded ? (
             loadError ? null : <ActivityIndicator size="large" style={styles.loader} />
@@ -209,8 +214,9 @@ export default function BudgetScreen() {
         {pausedSubscriptions.length > 0 && (
           <>
             <Text variant="headlineMedium">{t("abbonamenti.inPausa")}</Text>
+            <View style={largo ? styles.griglia : undefined}>
             {pausedSubscriptions.map((item) => (
-              <View key={item.id} style={styles.pausedRow}>
+              <View key={item.id} style={[styles.pausedRow, largo && styles.cella]}>
                 <View style={styles.pausedIconContainer}>
                   <MaterialCommunityIcons name="pause" size={20} color={colors.textMuted} />
                 </View>
@@ -222,14 +228,16 @@ export default function BudgetScreen() {
                 <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} accessibilityLabel={t("abbonamenti.eliminaTitolo")} />
               </View>
             ))}
+            </View>
           </>
         )}
 
         {dueForRenewal.length > 0 && (
           <>
             <Text variant="headlineMedium">{t("abbonamenti.daRinnovare")}</Text>
+            <View style={largo ? styles.griglia : undefined}>
             {dueForRenewal.map((item) => (
-              <View key={item.id} style={styles.dueCard}>
+              <View key={item.id} style={[styles.dueCard, largo && styles.cella]}>
                 <View style={styles.dueHeader}>
                   <View style={styles.subInfo}>
                     <Text style={styles.subDesc}>{item.description}</Text>
@@ -256,6 +264,7 @@ export default function BudgetScreen() {
                 </View>
               </View>
             ))}
+            </View>
           </>
         )}
       </PaginaScorrevole>

@@ -44,6 +44,29 @@ export const creaStili = (colors: Colori) =>
         fontWeight: "600",
         color: colors.danger,
     },
+    dueColonne: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: spacing.xl,
+    },
+    colonnaAccount: {
+        width: 340,
+        gap: spacing.md,
+    },
+    colonnaImpostazioni: {
+        flex: 1,
+        minWidth: 0,
+    },
+    //la prima sezione parte in alto, alla stessa altezza della card dell'account
+    primaSezioneLarga: {
+        marginTop: 0,
+    },
+    //sul computer la card dell'account e' una colonna: nome sotto l'iniziale
+    profCardLarga: {
+        flexDirection: "column",
+        alignItems: "center",
+        paddingVertical: spacing.xl,
+    },
     profCard: {
         flexDirection: "row",
         alignItems: "center",

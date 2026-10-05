@@ -211,7 +211,8 @@
     "statistiche": "Statistiche",
     "abbonamenti": "Abbonamenti",
     "profilo": "Profilo",
-    "aggiungi": "Aggiungi una spesa"
+    "aggiungi": "Aggiungi una spesa",
+    "nuovaSpesa": "Nuova spesa"
   },
   "scarta": {
     "titolo": "Scartare le modifiche?",
@@ -240,7 +241,13 @@
     "nessunaSpesaTesto": "Tocca il pulsante + in basso per aggiungere la tua prima spesa",
     "esciTitolo": "Esci dall'app",
     "esciTesto": "Vuoi chiudere l'app?",
-    "erroreCaricamento": "Impossibile caricare i dati. Controlla la connessione."
+    "erroreCaricamento": "Impossibile caricare i dati. Controlla la connessione.",
+    "doveVanno": "Dove vanno i soldi",
+    "statistiche": "Statistiche",
+    "prossimiRinnovi": "Prossimi rinnovi",
+    "abbonamenti": "Abbonamenti",
+    "nessunRinnovo": "Nessun abbonamento attivo",
+    "nessunaCategoria": "Ancora nessuna spesa in questo periodo"
   },
   "tour": {
     "conteggio": "{{n}} DI {{totale}}",
@@ -351,7 +358,13 @@
     "cambiaFiltri": "Prova a cambiare ricerca o filtri",
     "nessunaSpesa": "Nessuna spesa registrata",
     "eliminaTitolo": "Elimina spesa",
-    "eliminaTesto": "Sei sicuro di voler eliminare questa spesa?"
+    "eliminaTesto": "Sei sicuro di voler eliminare questa spesa?",
+    "colonnaDescrizione": "Descrizione",
+    "colonnaCategoria": "Categoria",
+    "colonnaData": "Data",
+    "colonnaImporto": "Importo",
+    "modifica": "Modifica",
+    "elimina": "Elimina"
   },
   "assistente": {
     "titolo": "Assistente",
@@ -447,7 +460,10 @@
     "budgetSoloPeriodo": "Cambia solo questo periodo. Quello successivo resta com'è.",
     "budgetDaOra": "Vale da questo periodo in poi, finché non lo cambi. I periodi passati non cambiano.",
     "salva": "Salva",
-    "erroreBudget": "Non è stato possibile salvare il budget"
+    "erroreBudget": "Non è stato possibile salvare il budget",
+    "usato": "Hai usato il {{percentuale}}% del budget.",
+    "categoria": "Categoria",
+    "importo": "Importo"
   },
   "valute": {
     "EUR": "Euro",

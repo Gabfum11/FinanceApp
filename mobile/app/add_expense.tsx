@@ -9,6 +9,7 @@ import {
   TextInput as RNTextInput,
   View,
 } from "react-native";
+import { useSchermoLargo } from "@/utils/layout";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, IconButton, ActivityIndicator, Portal, Switch, Menu } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -64,6 +65,8 @@ export default function AddExpenseScreen() {
   const { valuta, importo: formatta, importoIn } = usePreferenze();
   const { t } = useTranslation();
   const router = useRouter();
+  //sul computer: finestra al centro della pagina, importo scritto con la tastiera
+  const largo = useSchermoLargo();
   // I parametri di rotta arrivano sempre come stringhe: li usa "Modifica"
   // dell'assistente per precompilare il form con i dati estratti.
   const params = useLocalSearchParams<{
@@ -245,6 +248,30 @@ export default function AddExpenseScreen() {
     });
   }
 
+  //sul computer c'e' la tastiera vera: le cifre passano dalla stessa logica
+  //del tastierino, Invio salva ed Esc chiude. Nei campi di testo (descrizione,
+  //importo convertito) i tasti restano a loro, tranne Esc
+  useEffect(() => {
+    if (!largo || typeof window === "undefined") return;
+    function tasto(evento: KeyboardEvent) {
+      if (evento.key === "Escape") {
+        if (showCategoryPicker) setShowCategoryPicker(false);
+        else router.back();
+        return;
+      }
+      const elemento = (evento.target as HTMLElement | null)?.tagName;
+      if (elemento === "INPUT" || elemento === "TEXTAREA") return;
+      if (evento.key === "Enter") handleSave();
+      else if (/^[0-9]$/.test(evento.key)) handleKeyPress(evento.key);
+      else if (evento.key === "," || evento.key === ".") handleKeyPress(",");
+      else if (evento.key === "Backspace") handleKeyPress("backspace");
+      else return;
+      evento.preventDefault();
+    }
+    window.addEventListener("keydown", tasto);
+    return () => window.removeEventListener("keydown", tasto);
+  });
+
   function handleDateSelected(event: any, selectedDate: Date) {
     setShowDatePicker(false);
     setDate(selectedDate);
@@ -346,7 +373,10 @@ export default function AddExpenseScreen() {
     // i dialoghi vanno disegnati dentro la modale: con l'host globale, su iOS
     // finirebbero sotto la schermata presentata
     <Portal.Host>
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <View style={largo ? styles.velo : styles.pieno}>
+    {/* sul computer un clic fuori dalla finestra la chiude, come Esc */}
+    {largo && <Pressable style={styles.sfondoVelo} onPress={() => router.back()} accessibilityLabel={t("comune.annulla")} />}
+    <SafeAreaView style={[styles.container, largo && styles.finestra]} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <IconButton icon="chevron-left" size={28} onPress={() => router.back()} />
         <Text variant="titleMedium" style={styles.headerTitle}>
@@ -599,7 +629,8 @@ export default function AddExpenseScreen() {
         {error && <Text style={styles.errorText}>{error}</Text>}
       </ScrollView>
 
-      {isAmountFocused && (
+      {/* sul computer si scrive con la tastiera vera: il tastierino non serve */}
+      {isAmountFocused && !largo && (
       <View style={styles.keypad}>
         {KEYS.map((key) => (
           <Pressable
@@ -686,6 +717,7 @@ export default function AddExpenseScreen() {
       </Modal>
       <ConfirmDialog {...dialogo} />
     </SafeAreaView>
+    </View>
     </Portal.Host>
   );
 }

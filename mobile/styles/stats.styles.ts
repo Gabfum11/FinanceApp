@@ -67,6 +67,56 @@ export const creaStili = (colors: Colori) =>
     cifraTestoScelto: {
         color: colors.primaryDark,
     },
+    //sul computer: card a sinistra, budget e resto in una colonna a destra
+    rigaLarga: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: 20,
+    },
+    cardLarga: {
+        flex: 3,
+        minWidth: 0,
+        padding: 28,
+    },
+    colonnaLaterale: {
+        flex: 1,
+        minWidth: 240,
+        gap: 20,
+    },
+    senzaMargine: {
+        marginTop: 0,
+    },
+    intestazioneColonna: {
+        fontSize: 12,
+        fontWeight: "bold",
+        letterSpacing: 0.4,
+        color: colors.textMuted,
+        textTransform: "uppercase",
+    },
+    colonnaImporto: {
+        width: 100,
+        textAlign: "right",
+    },
+    colonnaPercentuale: {
+        width: 48,
+        textAlign: "right",
+        color: colors.textMuted,
+    },
+    riquadroResto: {
+        padding: 20,
+        gap: 8,
+        borderRadius: 16,
+        backgroundColor: colors.surface,
+    },
+    restoValore: {
+        fontSize: 28,
+        fontWeight: "bold",
+        color: colors.primaryDark,
+    },
+    restoTesto: {
+        fontSize: 14,
+        color: colors.textSecondary,
+    },
     //il budget del periodo mostrato, con la matita per cambiarlo
     budgetRiga: {
         flexDirection: "row",

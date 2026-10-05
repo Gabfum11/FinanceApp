@@ -12,6 +12,92 @@ export const creaStili = (colors: Colori) =>
     padding: 24,
     paddingBottom: 48,
   },
+  //sul computer: colonna centrata con margini piu' ampi
+  containerLargo: {
+    width: "100%",
+    alignSelf: "center",
+    paddingHorizontal: 40,
+    paddingTop: 32,
+  },
+  //blocchi affiancati: a sinistra il principale, a destra quello di supporto
+  rigaLarga: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 20,
+  },
+  rigaLargaDistanziata: {
+    marginTop: 8,
+  },
+  colonnaPrincipale: {
+    flex: 3,
+    minWidth: 0,
+  },
+  colonnaLaterale: {
+    flex: 2,
+    minWidth: 0,
+    gap: 20,
+  },
+  //nella riga le due card stanno alla stessa altezza, senza margini propri
+  cardInRiga: {
+    marginTop: 0,
+    marginBottom: 0,
+    minHeight: 190,
+  },
+  budgetRemainingLargo: {
+    fontSize: 42,
+  },
+  sectionTitleLargo: {
+    marginTop: 8,
+  },
+  //riquadri bianchi della colonna laterale: categorie e rinnovi
+  riquadro: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 20,
+    gap: 12,
+  },
+  riquadroTesta: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  riquadroTitolo: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  miniStatistiche: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 20,
+  },
+  miniTotale: {
+    fontSize: 13,
+    fontWeight: "bold",
+  },
+  miniLegenda: {
+    flex: 1,
+    minWidth: 0,
+    gap: 8,
+  },
+  miniRiga: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  miniNome: {
+    flex: 1,
+    fontSize: 14,
+  },
+  miniImporto: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  rinnovoData: {
+    fontSize: 13,
+    color: colors.textMuted,
+  },
   // il margine sta sulla riga, così il saluto e l'icona restano allineati
   titleRow: {
     flexDirection: "row",

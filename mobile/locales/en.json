@@ -211,7 +211,8 @@
     "statistiche": "Stats",
     "abbonamenti": "Subscriptions",
     "profilo": "Profile",
-    "aggiungi": "Add an expense"
+    "aggiungi": "Add an expense",
+    "nuovaSpesa": "New expense"
   },
   "scarta": {
     "titolo": "Discard changes?",
@@ -240,7 +241,13 @@
     "nessunaSpesaTesto": "Tap the + button below to add your first expense",
     "esciTitolo": "Quit the app",
     "esciTesto": "Do you want to close the app?",
-    "erroreCaricamento": "Couldn't load your data. Check your connection."
+    "erroreCaricamento": "Couldn't load your data. Check your connection.",
+    "doveVanno": "Where your money goes",
+    "statistiche": "Stats",
+    "prossimiRinnovi": "Upcoming renewals",
+    "abbonamenti": "Subscriptions",
+    "nessunRinnovo": "No active subscriptions",
+    "nessunaCategoria": "No expenses in this period yet"
   },
   "tour": {
     "conteggio": "{{n}} OF {{totale}}",
@@ -351,7 +358,13 @@
     "cambiaFiltri": "Try a different search or filter",
     "nessunaSpesa": "No expenses yet",
     "eliminaTitolo": "Delete expense",
-    "eliminaTesto": "Are you sure you want to delete this expense?"
+    "eliminaTesto": "Are you sure you want to delete this expense?",
+    "colonnaDescrizione": "Description",
+    "colonnaCategoria": "Category",
+    "colonnaData": "Date",
+    "colonnaImporto": "Amount",
+    "modifica": "Edit",
+    "elimina": "Delete"
   },
   "assistente": {
     "titolo": "Assistant",
@@ -447,7 +460,10 @@
     "budgetSoloPeriodo": "Changes only this period. The next one stays as it is.",
     "budgetDaOra": "Applies from this period on, until you change it. Past periods stay as they are.",
     "salva": "Save",
-    "erroreBudget": "Couldn't save the budget"
+    "erroreBudget": "Couldn't save the budget",
+    "usato": "You've used {{percentuale}}% of your budget.",
+    "categoria": "Category",
+    "importo": "Amount"
   },
   "valute": {
     "EUR": "Euro",

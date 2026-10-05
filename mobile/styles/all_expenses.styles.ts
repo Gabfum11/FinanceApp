@@ -6,6 +6,62 @@ export const creaStili = (colors: Colori) =>
     container: {
     flex: 1,
   },
+  //sul computer: colonna centrata, la tabella non si allunga per tutto il monitor
+  containerLargo: {
+    width: "100%",
+    alignSelf: "center",
+    paddingHorizontal: 24,
+  },
+  intestazioneTabella: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  intestazioneColonna: {
+    fontSize: 12,
+    fontWeight: "bold",
+    letterSpacing: 0.4,
+    color: colors.textMuted,
+    textTransform: "uppercase",
+  },
+  rigaTabella: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    marginBottom: 6,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+  },
+  colonnaIcona: {
+    width: 38,
+    marginRight: 0,
+  },
+  colonnaDescrizione: {
+    flex: 2,
+    minWidth: 0,
+  },
+  colonnaCategoria: {
+    flex: 1.5,
+    minWidth: 0,
+  },
+  colonnaData: {
+    width: 110,
+  },
+  colonnaImporto: {
+    width: 120,
+    textAlign: "right",
+  },
+  colonnaAzioni: {
+    width: 96,
+  },
+  azioni: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",

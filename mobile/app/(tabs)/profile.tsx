@@ -18,12 +18,15 @@ import { usePreferenze } from "@/utils/preferenze";
 import { VALUTE, LINGUE, simbolo, type Valuta, type Lingua } from "@/utils/formato";
 import { useTranslation } from "react-i18next";
 import { useStili, useTema } from "@/utils/tema";
+import { useSchermoLargo } from "@/utils/layout";
 
 
 
 export default function ProfileScreen() {
   const styles = useStili(creaStili);
   const { colors, scuro, impostaScuro } = useTema();
+  //sul computer: account a sinistra, impostazioni a destra
+  const largo = useSchermoLargo();
     const router = useRouter();
     const [nickname, setNickname] = useState("");
     const [email, setEmail] = useState("");
@@ -216,6 +219,32 @@ export default function ProfileScreen() {
         router.replace("/login");
     }
 
+    //disconnetti ed elimina: sotto le sezioni sul telefono, sotto l'account sul computer
+    const azioniAccount = (
+        <>
+        {/* cancellare il token dal telefono non basta: quello emesso resta
+            valido fino a 30 giorni, e un dispositivo perso resterebbe dentro */}
+        <Button
+            mode="text"
+            onPress={confirmLogoutAll}
+            loading={isLoggingOutAll}
+            disabled={isLoggingOutAll}
+            style={styles.logoutAllButton}
+        >
+            {t("profilo.disconnettiTutti")}
+        </Button>
+
+        <Button
+            mode="text"
+            textColor={colors.dangerDark}
+            onPress={() => setShowDeleteDialog(true)}
+            style={styles.deleteButton}
+        >
+            {t("profilo.eliminaAccount")}
+        </Button>
+        </>
+    );
+
     return (
         <View style={styles.container}>
             <PaginaScorrevole style={styles.content} sopraBarra>
@@ -234,7 +263,10 @@ export default function ProfileScreen() {
                     </Pressable>
                 </View>
 
-                <View style={styles.profCard}>
+                {/* sul computer: account a sinistra, impostazioni a destra */}
+                <View style={largo ? styles.dueColonne : undefined}>
+                <View style={largo ? styles.colonnaAccount : undefined}>
+                <View style={[styles.profCard, largo && styles.profCardLarga]}>
                     <View style={styles.avatarCircle}>
                         <Text style={styles.avatarInitials}>{initials}</Text>
                     </View>
@@ -247,8 +279,11 @@ export default function ProfileScreen() {
                     </Button>
                     <View></View>
                 </View>
+                {largo && azioniAccount}
+                </View>
 
-                <Text style={styles.sectionLabel}>{t("profilo.sezioneApp")}</Text>
+                <View style={largo ? styles.colonnaImpostazioni : undefined}>
+                <Text style={[styles.sectionLabel, largo && styles.primaSezioneLarga]}>{t("profilo.sezioneApp")}</Text>
                 <View style={styles.sectionCard}>
                     {/* in Expo Go il modulo delle notifiche non esiste: uno switch
                         che non puo' funzionare e' peggio di una voce assente */}
@@ -347,26 +382,9 @@ export default function ProfileScreen() {
                     </Pressable>
                 </View>
 
-                {/* cancellare il token dal telefono non basta: quello emesso resta
-                    valido fino a 30 giorni, e un dispositivo perso resterebbe dentro */}
-                <Button
-                    mode="text"
-                    onPress={confirmLogoutAll}
-                    loading={isLoggingOutAll}
-                    disabled={isLoggingOutAll}
-                    style={styles.logoutAllButton}
-                >
-                    {t("profilo.disconnettiTutti")}
-                </Button>
-
-                <Button
-                    mode="text"
-                    textColor={colors.dangerDark}
-                    onPress={() => setShowDeleteDialog(true)}
-                    style={styles.deleteButton}
-                >
-                    {t("profilo.eliminaAccount")}
-                </Button>
+                {!largo && azioniAccount}
+                </View>
+                </View>
 
             </PaginaScorrevole>
 

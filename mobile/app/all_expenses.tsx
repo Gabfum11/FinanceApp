@@ -14,6 +14,7 @@ import { usePreferenze } from "@/utils/preferenze";
 import { useTranslation } from "react-i18next";
 import { nomeCategoria } from "@/utils/categorie";
 import { useStili } from "@/utils/tema";
+import { LARGHEZZA_CONTENUTO, useSchermoLargo } from "@/utils/layout";
 
 type Expense = {
   id: number;
@@ -56,6 +57,8 @@ export default function ExpenseList() {
   const { importo, importoIn } = usePreferenze();
   const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+    //sul computer le spese diventano una tabella, in una colonna centrata
+    const largo = useSchermoLargo();
     const [expenses, setExpenses]=useState<Expense[]>([]);
     const [expensesLoaded, setExpensesLoaded] = useState(false);
     const [query, setQuery] = useState("");
@@ -174,7 +177,7 @@ export default function ExpenseList() {
         
     }
     return (
-       <View style={styles.container}>
+       <View style={[styles.container, largo && styles.containerLargo, largo && { maxWidth: LARGHEZZA_CONTENUTO + 80 }]}>
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
             <IconButton icon="chevron-left" onPress={()=>router.back()} />
             <Text variant="titleMedium">{t("spese.titolo")}</Text>
@@ -262,7 +265,45 @@ export default function ExpenseList() {
         style={styles.list} //senza flex la lista si adatta al contenuto e il layout si riassesta a ogni filtro
         data={filtered} //array che si vuole trasformare in una lista visibile
         keyExtractor={(item)=>item.id.toString()} //dice a React come identificare ogni elemento dell'array in modo univoco
-        renderItem={({item})=>(
+        ListHeaderComponent={largo && filtered.length > 0 ? (
+            <View style={styles.intestazioneTabella}>
+                <View style={styles.colonnaIcona} />
+                <Text style={[styles.intestazioneColonna, styles.colonnaDescrizione]}>{t("spese.colonnaDescrizione")}</Text>
+                <Text style={[styles.intestazioneColonna, styles.colonnaCategoria]}>{t("spese.colonnaCategoria")}</Text>
+                <Text style={[styles.intestazioneColonna, styles.colonnaData]}>{t("spese.colonnaData")}</Text>
+                <Text style={[styles.intestazioneColonna, styles.colonnaImporto]}>{t("spese.colonnaImporto")}</Text>
+                <View style={styles.colonnaAzioni} />
+            </View>
+        ) : null}
+        renderItem={({item})=> largo ? (
+            //sul computer: una riga di tabella, ogni dato nella sua colonna
+            <View style={styles.rigaTabella}>
+                <View style={[styles.expenseIcon, styles.colonnaIcona]}>
+                    <MaterialCommunityIcons
+                        name={iconaPerGruppo(
+                            item.category_id !== null
+                                ? gruppoDiCategoria.get(item.category_id)?.name
+                                : null
+                        ) as any}
+                        size={18}
+                        color="#2ECC71"
+                    />
+                </View>
+                <Text style={[styles.expenseDescription, styles.colonnaDescrizione]} numberOfLines={1}>{item.description}</Text>
+                <Text style={[styles.expenseMeta, styles.colonnaCategoria]} numberOfLines={1}>{nomeCategoria(item.category_name)}</Text>
+                <Text style={[styles.expenseMeta, styles.colonnaData]}>{formatDataSpesa(item.date)}</Text>
+                <View style={[styles.amountColumn, styles.colonnaImporto]}>
+                    <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
+                    {item.original_currency && item.original_amount != null && (
+                        <Text style={styles.expenseOriginal}>{importoIn(item.original_amount, item.original_currency)}</Text>
+                    )}
+                </View>
+                <View style={[styles.azioni, styles.colonnaAzioni]}>
+                    <IconButton icon="pencil-outline" size={18} onPress={() => openEdit(item)} accessibilityLabel={t("spese.modifica")} />
+                    <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} accessibilityLabel={t("spese.elimina")} />
+                </View>
+            </View>
+        ) : (
             <View style={styles.expenseRow}>
                 {/* l'icona è del gruppo: rende la lista scansionabile senza leggere */}
                 <View style={styles.expenseIcon}>

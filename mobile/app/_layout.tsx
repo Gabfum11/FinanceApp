@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { PaperProvider } from 'react-native-paper';
@@ -8,7 +8,7 @@ import { creaTemaPaper } from '@/theme';
 import { InvitoHome } from '@/components/InvitoHome';
 import { PreferenzeProvider } from '@/utils/preferenze';
 import { View } from 'react-native';
-import { LARGHEZZA_MASSIMA } from '@/utils/layout';
+import { LARGHEZZA_MASSIMA, PAGINE_LARGHE, useSchermoLargo } from '@/utils/layout';
 import { TemaProvider, useTema } from '@/utils/tema';
 import { useMemo } from 'react';
 //configura le traduzioni prima che si disegni qualsiasi schermata
@@ -29,6 +29,11 @@ export default function RootLayout() {
 //separato da RootLayout: per leggere il tema deve stare dentro TemaProvider
 function Contenuto() {
   const { colors, scuro } = useTema();
+  //sul computer le schermate gia' adattate prendono tutta la finestra, le altre
+  //restano nella colonna centrata. Il percorso decide quale delle due
+  const largo = useSchermoLargo();
+  const percorso = usePathname();
+  const tuttaLarghezza = largo && PAGINE_LARGHE.includes(percorso);
   const temaPaper = useMemo(() => creaTemaPaper(colors, scuro), [colors, scuro]);
   //lo sfondo delle schermate durante le animazioni di navigazione
   const temaNavigazione = useMemo(() => {
@@ -45,7 +50,7 @@ function Contenuto() {
             allungati per tutto lo schermo sarebbero scomodi da leggere e da toccare.
             Sui telefoni la colonna e' larga quanto lo schermo e non cambia niente */}
         <View style={{ flex: 1, backgroundColor: colors.surfaceAlt }}>
-        <View style={{ flex: 1, width: "100%", maxWidth: LARGHEZZA_MASSIMA, alignSelf: "center" }}>
+        <View style={{ flex: 1, width: "100%", maxWidth: tuttaLarghezza ? undefined : LARGHEZZA_MASSIMA, alignSelf: "center" }}>
         <Stack>
           {/*
             stack.screen registra una schermata presso il sistema di navigazione dicendo a expo router
@@ -56,8 +61,9 @@ function Contenuto() {
           <Stack.Screen name="presentazione" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="register" options={{headerShown:false}} />
-          <Stack.Screen name="add_expense" options={{ presentation: "modal", headerShown: false }} />
-          <Stack.Screen name="assistant" options={{ presentation: "modal", headerShown: false }} />
+          {/* sul computer si aprono sopra la pagina, che resta visibile dietro */}
+          <Stack.Screen name="add_expense" options={{ presentation: largo ? "transparentModal" : "modal", headerShown: false }} />
+          <Stack.Screen name="assistant" options={{ presentation: largo ? "transparentModal" : "modal", headerShown: false }} />
           <Stack.Screen name="verify_email" options={{ headerShown: false }} />
           <Stack.Screen name="resetPassword" options={{ headerShown: false }} />
           <Stack.Screen name="all_expenses" options={{ headerShown: false }} />
