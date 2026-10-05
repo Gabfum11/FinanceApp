@@ -8,6 +8,7 @@ import { creaStili } from "@/styles/reset-password.styles";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import { useTranslation } from "react-i18next";
 import { useStili, useTema } from "@/utils/tema";
+import { PaginaDivisa } from "@/components/PaginaDivisa";
 const num=[0,1,2,3,4,5]
 const formatTime =(totseconds:number)=>{
     const minutes=Math.floor(totseconds/60);
@@ -149,6 +150,7 @@ export default function ResetPassword(){
         }
    }
    return(
+      <PaginaDivisa>
       <View>
         <IconButton
             icon="chevron-left"
@@ -291,5 +293,6 @@ export default function ResetPassword(){
     {errorMessage}
 </Snackbar>
    </View>
+   </PaginaDivisa>
 ); 
 }

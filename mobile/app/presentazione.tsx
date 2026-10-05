@@ -25,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import { SelettoreLingua } from "@/components/SelettoreLingua";
 import { creaStili } from "@/styles/presentazione.styles";
 import { useStili, useTema } from "@/utils/tema";
+import { LARGHEZZA_CONTENUTO, useSchermoLargo } from "@/utils/layout";
 
 const LOGO = require("../assets/images/logo/trackit-icon-rounded-180.png");
 const PAGINE = [0, 1, 2, 3, 4];
@@ -191,6 +192,75 @@ function IllustrazioneAbbonamenti() {
   );
 }
 
+// Sul computer il carosello non serve: c'e' spazio per mostrare tutto insieme.
+// In alto la domanda e il pulsante per registrarsi, sotto le tre cose che fa
+// TrackIt affiancate, con le stesse illustrazioni delle pagine del telefono.
+function BenvenutoComputer({ esci }: { esci: (destinazione: Href) => void }) {
+  const styles = useStili(creaStili);
+  const { t } = useTranslation();
+
+  function riquadro(titolo: string, testo: string, illustrazione: ReactNode) {
+    return (
+      <View style={styles.pcRiquadro}>
+        <View style={styles.pcIllustrazione}>{illustrazione}</View>
+        <Text style={styles.pcRiquadroTitolo}>{titolo}</Text>
+        <Text style={styles.pcRiquadroTesto}>{testo}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.pcPagina}>
+      <StatusBar style="light" />
+      <View style={styles.pcTesta}>
+        <View style={[styles.pcColonna, { maxWidth: LARGHEZZA_CONTENUTO + 80 }]}>
+          <View style={styles.pcNavigazione}>
+            <View style={styles.pcMarchio}>
+              <Image source={LOGO} style={styles.pcLogo} accessibilityIgnoresInvertColors />
+              <Text style={styles.pcNomeApp}>TrackIt</Text>
+            </View>
+            <View style={styles.pcAzioni}>
+              <SelettoreLingua scuro />
+              <Button mode="outlined" textColor={styles.pcNomeApp.color} style={styles.pcAccedi} onPress={() => esci("/login")}>
+                {t("presentazione.p1.hoAccount")}
+              </Button>
+            </View>
+          </View>
+          <View style={styles.pcEroe}>
+            <View style={styles.pcEroeTesti}>
+              <Text style={styles.pcTitolo}>{t("presentazione.p1.titolo")}</Text>
+              <Text style={styles.pcSottotitolo}>{t("presentazione.p1.testo")}</Text>
+              <Button
+                mode="contained"
+                onPress={() => esci("/register")}
+                style={styles.pcCrea}
+                labelStyle={styles.buttonLabel}
+              >
+                {t("presentazione.p5.crea")}
+              </Button>
+              <Text style={styles.pcNota}>{t("presentazione.p5.testo")}</Text>
+            </View>
+            {/* lo stesso budget della terza pagina del telefono */}
+            <View style={styles.pcEroeIllustrazione}>
+              <IllustrazioneBudget />
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <View style={[styles.pcColonna, styles.pcCorpo, { maxWidth: LARGHEZZA_CONTENUTO + 80 }]}>
+        <Text style={styles.pcSezione}>{t("presentazione.cosaFa")}</Text>
+        <View style={styles.pcRiquadri}>
+          {riquadro(t("presentazione.p2.titolo"), t("presentazione.p2.testo"), <IllustrazioneSpese />)}
+          {riquadro(t("presentazione.p3.titolo"), t("presentazione.p3.testo"), <IllustrazioneBudget />)}
+          {/* nel browser niente notifiche: vale il testo che non le promette */}
+          {riquadro(t("presentazione.p4.titolo"), t("presentazione.p4.testoWeb"), <IllustrazioneAbbonamenti />)}
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
+
 export default function Presentazione() {
   const styles = useStili(creaStili);
   const { colors } = useTema();
@@ -207,6 +277,8 @@ export default function Presentazione() {
   const { t } = useTranslation();
   //le pagine sono elementi di una lista: senza, cambiando lingua resterebbero com'erano
   const { lingua } = usePreferenze();
+  //sul computer una pagina sola al posto del carosello
+  const largo = useSchermoLargo();
 
   //da qui in poi l'utente ha scelto: la presentazione non ricompare
   const esci = useCallback(
@@ -393,6 +465,8 @@ export default function Presentazione() {
         );
     }
   }
+
+  if (largo) return <BenvenutoComputer esci={esci} />;
 
   return (
     <View style={styles.container} onLayout={(e) => setSpazio({ width: e.nativeEvent.layout.width, altezza: e.nativeEvent.layout.height })}>

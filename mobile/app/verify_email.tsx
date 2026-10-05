@@ -9,6 +9,7 @@ import { creaStili } from "@/styles/verify-email.styles";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import { useTranslation } from "react-i18next";
 import { useStili } from "@/utils/tema";
+import { PaginaDivisa } from "@/components/PaginaDivisa";
 const num=[0,1,2,3,4,5]
 const formatTime =(totseconds:number)=>{
     const minutes=Math.floor(totseconds/60);
@@ -93,6 +94,7 @@ export default function VerifyEmail(){
 
     }
     return(
+        <PaginaDivisa>
         <View style={styles.container}>
             {step==="typing" ? (
             <>
@@ -162,6 +164,7 @@ export default function VerifyEmail(){
                 {errorMessage}
             </Snackbar>
         </View>
+        </PaginaDivisa>
 
 
 

@@ -13,9 +13,13 @@ import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useTranslation } from "react-i18next";
 import { usePreferenze } from "@/utils/preferenze";
 import { useStili } from "@/utils/tema";
+import { PaginaDivisa } from "@/components/PaginaDivisa";
+import { useSchermoLargo } from "@/utils/layout";
 
 export default function RegisterScreen() {
   const styles = useStili(creaStili);
+  //sul computer il logo sta nel pannello verde della pagina divisa
+  const largo = useSchermoLargo();
     const { t } = useTranslation();
     //l'email con il codice parte subito: deve essere nella lingua scelta qui
     const { lingua } = usePreferenze();
@@ -74,12 +78,15 @@ export default function RegisterScreen() {
         }
     }
     return (
+        <PaginaDivisa>
         <View style={styles.container}>
-            <PaginaScorrevole style={styles.content} tastiera>
+            <PaginaScorrevole style={styles.content} tastiera centrata>
+                {!largo && (
                 <View style={styles.logoContainer}>
                     <Image source={require("../assets/images/logo/trackit-icon-rounded-180.png")} style={styles.logo} />
                     <Text style={styles.logoLabel}>TrackIt</Text>
                 </View>
+                )}
                 <Text variant="headlineMedium" style={styles.title}>
                     {t("registrazione.titolo")}
                 </Text>
@@ -165,5 +172,6 @@ export default function RegisterScreen() {
                 {errorMessage}
             </Snackbar>
         </View>
+        </PaginaDivisa>
     );
 }

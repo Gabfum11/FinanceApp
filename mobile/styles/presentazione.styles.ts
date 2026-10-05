@@ -419,4 +419,137 @@ export const creaStili = (colors: Colori) =>
     color: colors.primary,
     fontWeight: "bold",
   },
+  // --- computer: pagina unica di benvenuto ---
+  pcPagina: {
+    flexGrow: 1,
+    backgroundColor: colors.background,
+  },
+  pcTesta: {
+    backgroundColor: colors.surfaceDark,
+    paddingTop: 28,
+    paddingBottom: 64,
+  },
+  pcColonna: {
+    width: "100%",
+    alignSelf: "center",
+    paddingHorizontal: 40,
+  },
+  pcNavigazione: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 16,
+    marginBottom: 56,
+  },
+  pcMarchio: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  pcLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+  },
+  pcNomeApp: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: colors.textOnPrimary,
+  },
+  pcAzioni: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  pcAccedi: {
+    borderColor: colors.overlayLight,
+  },
+  pcEroe: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 48,
+  },
+  pcEroeTesti: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 420,
+    gap: 18,
+  },
+  pcTitolo: {
+    fontSize: 52,
+    lineHeight: 58,
+    fontWeight: "bold",
+    color: colors.textOnPrimary,
+  },
+  pcSottotitolo: {
+    fontSize: 19,
+    lineHeight: 28,
+    maxWidth: 480,
+    color: colors.textOnDark,
+  },
+  pcCrea: {
+    alignSelf: "flex-start",
+    marginTop: 8,
+    paddingHorizontal: 16,
+  },
+  pcNota: {
+    fontSize: 14,
+    color: colors.textOnDarkMuted,
+  },
+  //le illustrazioni del budget sono scure: un riquadro chiaro le stacca dal verde
+  pcEroeIllustrazione: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 380,
+    maxWidth: 460,
+    padding: 16,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.overlayLight,
+    backgroundColor: colors.overlayFaint,
+  },
+  pcCorpo: {
+    paddingTop: 48,
+    paddingBottom: 64,
+    gap: 28,
+  },
+  pcSezione: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: colors.text,
+  },
+  pcRiquadri: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 20,
+  },
+  pcRiquadro: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 300,
+    padding: 24,
+    gap: 14,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  pcIllustrazione: {
+    padding: 16,
+    borderRadius: 18,
+    backgroundColor: colors.background,
+    gap: 10,
+  },
+  pcRiquadroTitolo: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: colors.text,
+  },
+  pcRiquadroTesto: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.textSecondary,
+  },
 });

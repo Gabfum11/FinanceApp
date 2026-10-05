@@ -141,7 +141,8 @@
       "titolo": "Salva le tue spese",
       "testo": "Account gratuito. I dati restano tuoi: esportali o cancellali quando vuoi.",
       "crea": "Crea un account"
-    }
+    },
+    "cosaFa": "Cosa fa TrackIt"
   },
   "categorie": {
     "nonAssegnata": "Non assegnata",

@@ -22,7 +22,9 @@ export const LARGHEZZA_CONTENUTO = 1120;
 //nella colonna stretta, dove un campo largo tutto lo schermo sarebbe scomodo
 export const PAGINE_LARGHE = ["/home", "/stats", "/budget", "/profile", "/all_expenses", "/add_expense", "/assistant",
   //moduli brevi: sul computer sono card sopra la pagina, che deve restare larga dietro
-  "/set_budget", "/modify_profile", "/changePassw"];
+  "/set_budget", "/modify_profile", "/changePassw",
+  //prima dell'accesso: pagina unica di benvenuto e pagine divise per i moduli
+  "/presentazione", "/login", "/register", "/verify_email", "/resetPassword"];
 
 //le finestre di dialogo di Paper occupano tutta la larghezza meno un margine:
 //sul telefono va bene, su un monitor diventano strisce lunghe un metro

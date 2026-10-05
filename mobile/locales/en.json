@@ -141,7 +141,8 @@
       "titolo": "Save your expenses",
       "testo": "Free account. Your data stays yours: export or delete it anytime.",
       "crea": "Create an account"
-    }
+    },
+    "cosaFa": "What TrackIt does"
   },
   "categorie": {
     "nonAssegnata": "Uncategorized",

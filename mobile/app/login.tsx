@@ -14,10 +14,14 @@ import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { SelettoreLingua } from "@/components/SelettoreLingua";
 import { useTranslation } from "react-i18next";
 import { useStili } from "@/utils/tema";
+import { PaginaDivisa } from "@/components/PaginaDivisa";
+import { useSchermoLargo } from "@/utils/layout";
 
 
 export default function LoginScreen() {
   const styles = useStili(creaStili);
+  //sul computer logo e lingua stanno nel pannello verde della pagina divisa
+  const largo = useSchermoLargo();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -64,14 +68,17 @@ export default function LoginScreen() {
 }
 
   return (
+    <PaginaDivisa>
     <View style={styles.container}>{/*container di tutta la schermata*/}
-      <PaginaScorrevole style={styles.content} tastiera>
+      <PaginaScorrevole style={styles.content} tastiera centrata>
         {/* per chi ha saltato la presentazione o torna dopo un logout */}
-        <SelettoreLingua />
+        {!largo && <SelettoreLingua />}
+        {!largo && (
         <View style={styles.logoContainer}>
           <Image source={require("../assets/images/logo/trackit-icon-rounded-180.png")} style={styles.logo} />
           <Text style={styles.logoLabel}>TrackIt</Text>
         </View>
+        )}
         <Text variant="headlineMedium" style={styles.title}>
           {t("login.titolo")}
         </Text>
@@ -152,5 +159,6 @@ export default function LoginScreen() {
         
       
     </View>
+    </PaginaDivisa>
   );
 }
