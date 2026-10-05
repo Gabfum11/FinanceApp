@@ -9,6 +9,7 @@ import { simbolo, IMPORTO_MASSIMO } from "@/utils/formato";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import { useTranslation } from "react-i18next";
 import { nomeCategoria } from "@/utils/categorie";
+import { colorePerGruppo } from "@/utils/categoryIcons";
 import { localeAttuale } from "@/utils/date";
 import { PieChart } from "react-native-gifted-charts";
 import { creaStili } from "@/styles/stats.styles";
@@ -64,7 +65,6 @@ export default function StatsScreen() {
   const [nuovoBudget, setNuovoBudget] = useState("");
   const [erroreBudget, setErroreBudget] = useState("");
   const [salvataggio, setSalvataggio] = useState(false);
-  const colori = ["#2ECC71", "#F5C518", "#3498DB", "#E74C3C", "#BDC3C7", "#9B59B6", "#1ABC9C", "#E67E22"];
 
   async function loadStats() {
     try {
@@ -169,9 +169,9 @@ export default function StatsScreen() {
   const cifra = (valore: number) => (cifre === "importi" ? importo(valore) : `${percentuale(valore)}%`);
   const periodo = cycleStart && cycleEnd ? formatCycleLabel(cycleStart, cycleEnd) : "";
   const pieData = [
-    ...stats.map((item, index) => ({
+    ...stats.map((item) => ({
       value: item.total,
-      color: colori[index % colori.length],
+      color: colorePerGruppo(item.category_name),
     })),
     ...(remaining > 0 ? [{ value: remaining, color: colors.donutRemaining }] : []),
   ];
@@ -256,11 +256,11 @@ export default function StatsScreen() {
             <>
               {stretto && ciambella}
               <View style={[styles.legendContainer, stretto && styles.legendaColonna]}>
-                {stats.map((item, index) => {
+                {stats.map((item) => {
                   return (
                     <View key={item.category_name} style={styles.legendRow}>
                       <View style={styles.legendLeft}>
-                        <View style={[styles.legendDot, { backgroundColor: colori[index % colori.length] }]} />
+                        <View style={[styles.legendDot, { backgroundColor: colorePerGruppo(item.category_name) }]} />
                         <Text style={styles.legendLabel} numberOfLines={1}>{nomeCategoria(item.category_name)}</Text>
                       </View>
                       <Text style={styles.legendPercentage}>{cifra(item.total)}</Text>

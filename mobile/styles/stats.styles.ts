@@ -54,8 +54,10 @@ export const creaStili = (colors: Colori) =>
         alignItems: "center",
         justifyContent: "center",
     },
+    //come la pillola della scheda attiva: si vede anche nel tema scuro, dove
+    //due grigi vicini si confonderebbero
     cifraScelta: {
-        backgroundColor: colors.surface,
+        backgroundColor: colors.primarySoft,
     },
     cifraTesto: {
         fontSize: 13,
@@ -63,7 +65,7 @@ export const creaStili = (colors: Colori) =>
         color: colors.textMuted,
     },
     cifraTestoScelto: {
-        color: colors.text,
+        color: colors.primaryDark,
     },
     //il budget del periodo mostrato, con la matita per cambiarlo
     budgetRiga: {
