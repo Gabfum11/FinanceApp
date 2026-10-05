@@ -18,7 +18,7 @@ import { usePreferenze } from "@/utils/preferenze";
 import { VALUTE, LINGUE, simbolo, type Valuta, type Lingua } from "@/utils/formato";
 import { useTranslation } from "react-i18next";
 import { useStili, useTema } from "@/utils/tema";
-import { useSchermoLargo } from "@/utils/layout";
+import { DIALOGO_LARGO, useSchermoLargo } from "@/utils/layout";
 
 
 
@@ -389,7 +389,7 @@ export default function ProfileScreen() {
             </PaginaScorrevole>
 
             <Portal>
-                <Dialog visible={showValutaDialog} onDismiss={() => setShowValutaDialog(false)} style={styles.dialog}>
+                <Dialog visible={showValutaDialog} onDismiss={() => setShowValutaDialog(false)} style={[styles.dialog, largo && DIALOGO_LARGO]}>
                     <Dialog.Title style={styles.dialogTitle}>{t("profilo.valuta")}</Dialog.Title>
                     <Dialog.Content>
                         <RadioButton.Group onValueChange={scegliValuta} value={valuta}>
@@ -408,7 +408,7 @@ export default function ProfileScreen() {
             </Portal>
 
             <Portal>
-                <Dialog visible={showLinguaDialog} onDismiss={() => setShowLinguaDialog(false)} style={styles.dialog}>
+                <Dialog visible={showLinguaDialog} onDismiss={() => setShowLinguaDialog(false)} style={[styles.dialog, largo && DIALOGO_LARGO]}>
                     <Dialog.Title style={styles.dialogTitle}>{t("lingua.titolo")}</Dialog.Title>
                     <Dialog.Content>
                         <RadioButton.Group
@@ -431,7 +431,7 @@ export default function ProfileScreen() {
             </Portal>
 
             <Portal>
-                <Dialog visible={valutaNuova !== null} onDismiss={() => !valutaInCorso && setValutaNuova(null)} style={styles.dialog}>
+                <Dialog visible={valutaNuova !== null} onDismiss={() => !valutaInCorso && setValutaNuova(null)} style={[styles.dialog, largo && DIALOGO_LARGO]}>
                     <Dialog.Title style={styles.dialogTitle}>
                         {valutaNuova ? t("profilo.passareA", { valuta: `${nomeValuta(valutaNuova)} (${simbolo(valutaNuova)})` }) : ""}
                     </Dialog.Title>
@@ -492,7 +492,7 @@ export default function ProfileScreen() {
             />
 
             <Portal>
-                <Dialog visible={showDeleteDialog} onDismiss={closeDeleteDialog} style={styles.dialog}>
+                <Dialog visible={showDeleteDialog} onDismiss={closeDeleteDialog} style={[styles.dialog, largo && DIALOGO_LARGO]}>
                     <Dialog.Title style={styles.dialogTitle}>{t("profilo.eliminaAccount")}</Dialog.Title>
                     <Dialog.Content>
                         <Text style={styles.deleteWarning}>
@@ -532,7 +532,7 @@ export default function ProfileScreen() {
                 <Dialog
                     visible={showSupportDialog}
                     onDismiss={() => setShowSupportDialog(false)}
-                    style={styles.dialog}
+                    style={[styles.dialog, largo && DIALOGO_LARGO]}
                 >
                     <Dialog.Title style={styles.dialogTitle}>{t("profilo.supportoTitolo")}</Dialog.Title>
                     <Dialog.Content>

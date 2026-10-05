@@ -285,6 +285,10 @@
     "occhio": {
       "titolo": "Hide amounts",
       "testo": "Handy in public. Your choice is kept when you reopen the app."
+    },
+    "aggiungiComputer": {
+      "titolo": "Add an expense",
+      "testo": "Click New expense to add one by hand, subscriptions too."
     }
   },
   "invitoHome": {

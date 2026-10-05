@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { StyleSheet } from "react-native";
 import { radius, type Colori } from "@/styles/tokens";
 import { useStili, useTema } from "@/utils/tema";
+import { DIALOGO_LARGO, useSchermoLargo } from "@/utils/layout";
 
 // Un'unica conferma per tutta l'app.
 //
@@ -38,9 +39,10 @@ export function ConfirmDialog({
   const { t } = useTranslation();
   const styles = useStili(creaStili);
   const { colors } = useTema();
+  const largo = useSchermoLargo();
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={onDismiss} style={styles.dialog}>
+      <Dialog visible={visible} onDismiss={onDismiss} style={[styles.dialog, largo && DIALOGO_LARGO]}>
         <Dialog.Title style={styles.title}>{title}</Dialog.Title>
         <Dialog.Content>
           <Text style={styles.message}>{message}</Text>

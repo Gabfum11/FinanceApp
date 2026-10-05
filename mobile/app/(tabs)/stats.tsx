@@ -16,7 +16,7 @@ import { creaStili } from "@/styles/stats.styles";
 import { useFocusEffect, useRouter } from "expo-router";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
-import { useSchermoLargo, useSchermoStretto } from "@/utils/layout";
+import { DIALOGO_LARGO, useSchermoLargo, useSchermoStretto } from "@/utils/layout";
 import { useStili, useTema } from "@/utils/tema";
 
 type CategoryStat = {
@@ -351,7 +351,7 @@ export default function StatsScreen() {
       </PaginaScorrevole>
 
       <Portal>
-        <Dialog visible={modificaBudget} onDismiss={() => setModificaBudget(false)} style={styles.dialog}>
+        <Dialog visible={modificaBudget} onDismiss={() => setModificaBudget(false)} style={[styles.dialog, largo && DIALOGO_LARGO]}>
           <Dialog.Title>{t("statistiche.budget")}</Dialog.Title>
           <Dialog.Content>
             <Text style={styles.dialogPeriodo}>{periodo}</Text>

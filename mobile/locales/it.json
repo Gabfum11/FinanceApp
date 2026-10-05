@@ -285,6 +285,10 @@
     "occhio": {
       "titolo": "Nascondi gli importi",
       "testo": "Utile in pubblico. La scelta resta anche quando riapri l'app."
+    },
+    "aggiungiComputer": {
+      "titolo": "Aggiungi una spesa",
+      "testo": "Premi Nuova spesa per inserirla a mano, anche gli abbonamenti."
     }
   },
   "invitoHome": {

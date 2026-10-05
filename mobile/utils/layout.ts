@@ -24,6 +24,10 @@ export const PAGINE_LARGHE = ["/home", "/stats", "/budget", "/profile", "/all_ex
   //moduli brevi: sul computer sono card sopra la pagina, che deve restare larga dietro
   "/set_budget", "/modify_profile", "/changePassw"];
 
+//le finestre di dialogo di Paper occupano tutta la larghezza meno un margine:
+//sul telefono va bene, su un monitor diventano strisce lunghe un metro
+export const DIALOGO_LARGO = { width: 440, maxWidth: "90%", alignSelf: "center" } as const;
+
 export function useSchermoLargo(): boolean {
   const { width } = useWindowDimensions();
   return Platform.OS === "web" && width >= SCHERMO_LARGO;

@@ -661,12 +661,12 @@ export default function AddExpenseScreen() {
       <Modal
         visible={showCategoryPicker}
         transparent
-        animationType="slide"
+        animationType={largo ? "fade" : "slide"}
         onRequestClose={() => setShowCategoryPicker(false)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setShowCategoryPicker(false)}>
+        <Pressable style={[styles.modalOverlay, largo && styles.modalOverlayLargo]} onPress={() => setShowCategoryPicker(false)}>
           {/* il Pressable interno intercetta il tap così non chiude il foglio */}
-          <Pressable style={styles.modalSheet} onPress={() => {}}>
+          <Pressable style={[styles.modalSheet, largo && styles.modalSheetLargo]} onPress={() => {}}>
             <Text variant="titleMedium" style={styles.modalTitle}>
               {t("spesa.selezionaCategoria")}
             </Text>

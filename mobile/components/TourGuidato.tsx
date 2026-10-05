@@ -14,6 +14,12 @@ import { misuraBersaglio, type Rettangolo } from "@/utils/tour";
 import { creaStili, VELO } from "@/styles/tour.styles";
 import { useTranslation } from "react-i18next";
 import { useStili } from "@/utils/tema";
+import { useSchermoLargo } from "@/utils/layout";
+
+//sul computer i fumetti hanno una larghezza fissa e stanno accanto al pulsante:
+//larghi quanto la finestra sarebbero strisce lontane da quello che indicano
+const LARGHEZZA_FUMETTO = 360;
+const LARGHEZZA_INTRO = 420;
 
 type Passaggio = {
   bersaglio: string;
@@ -113,6 +119,7 @@ type Props = {
 export function TourGuidato({ onFine, dalProfilo = false }: Props) {
   const styles = useStili(creaStili);
   const { t } = useTranslation();
+  const largo = useSchermoLargo();
   //-1 = card di benvenuto, poi gli indici di PASSAGGI
   const [indice, setIndice] = useState(-1);
   const [schermo, setSchermo] = useState<Rettangolo | null>(null);
@@ -186,8 +193,19 @@ export function TourGuidato({ onFine, dalProfilo = false }: Props) {
   const avanti = () => (ultimo ? onFine("completato") : setIndice(indice + 1));
   //il fumetto va dalla parte dello schermo dove c'e' piu' spazio
   const sotto = buco && schermo ? buco.y + buco.h / 2 < schermo.h / 2 : true;
+  //sul computer il fumetto si centra sul pulsante, senza uscire dalla finestra
+  const fumettoX =
+    largo && buco && schermo
+      ? Math.max(12, Math.min(buco.x + buco.w / 2 - LARGHEZZA_FUMETTO / 2, schermo.w - LARGHEZZA_FUMETTO - 12))
+      : 12;
+  const larghezzaFumetto = largo ? LARGHEZZA_FUMETTO : schermo ? schermo.w - 24 : 0;
   const frecciaX =
-    buco && schermo ? Math.max(18, Math.min(buco.x + buco.w / 2 - 12 - 7, schermo.w - 24 - 32)) : 0;
+    buco && schermo ? Math.max(18, Math.min(buco.x + buco.w / 2 - fumettoX - 7, larghezzaFumetto - 32)) : 0;
+  //sul computer "+" non c'e': c'e' il pulsante Nuova spesa nella barra laterale
+  const testiPassaggio =
+    passaggio && largo && passaggio.bersaglio === "aggiungi"
+      ? { titolo: "tour.aggiungiComputer.titolo", testo: "tour.aggiungiComputer.testo" }
+      : passaggio;
 
   return (
     <Portal>
@@ -225,6 +243,7 @@ export function TourGuidato({ onFine, dalProfilo = false }: Props) {
               accessibilityViewIsModal
               style={[
                 styles.tip,
+                largo && { left: fumettoX, right: undefined, width: LARGHEZZA_FUMETTO },
                 sotto ? { top: buco.y + buco.h + 14 } : { bottom: schermo.h - buco.y + 14 },
               ]}
             >
@@ -232,8 +251,8 @@ export function TourGuidato({ onFine, dalProfilo = false }: Props) {
               <Text style={styles.count}>
                 {t("tour.conteggio", { n: indice + 1, totale: PASSAGGI.length })}
               </Text>
-              <Text style={styles.tipTitle}>{t(passaggio.titolo)}</Text>
-              <Text style={styles.tipText}>{t(passaggio.testo)}</Text>
+              <Text style={styles.tipTitle}>{t(testiPassaggio!.titolo)}</Text>
+              <Text style={styles.tipText}>{t(testiPassaggio!.testo)}</Text>
               <View style={styles.tipFooter}>
                 <View style={styles.pips}>
                   {PASSAGGI.map((p, i) => (
@@ -257,7 +276,11 @@ export function TourGuidato({ onFine, dalProfilo = false }: Props) {
           <Animated.View
             entering={FadeIn.duration(220)}
             accessibilityViewIsModal
-            style={[styles.introCard, { top: schermo.h / 2 - 150 }]}
+            style={[
+              styles.introCard,
+              { top: schermo.h / 2 - 150 },
+              largo && { left: (schermo.w - LARGHEZZA_INTRO) / 2, right: undefined, width: LARGHEZZA_INTRO },
+            ]}
           >
             <Image source={ICONA_APP} style={styles.introLogo} />
             <Text variant="titleLarge" style={styles.introTitle}>

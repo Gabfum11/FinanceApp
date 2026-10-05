@@ -291,6 +291,18 @@ export const creaStili = (tokens: Colori) => {
     paddingBottom: 28,
     maxHeight: "75%", //con 59 voci un foglio basso obbligherebbe a scorrere troppo
   },
+  modalOverlayLargo: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalSheetLargo: {
+    width: "100%",
+    maxWidth: 480,
+    maxHeight: "80%",
+    borderRadius: 20,
+    paddingBottom: 12,
+  },
   modalTitle: {
     fontWeight: "700",
     paddingHorizontal: 20,
