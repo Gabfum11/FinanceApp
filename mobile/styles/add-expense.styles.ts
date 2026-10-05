@@ -40,6 +40,7 @@ export const creaStili = (tokens: Colori) => {
     justifyContent: "center",
     padding: 24,
     backgroundColor: scrim,
+    backdropFilter: "blur(6px)",
   },
   sfondoVelo: {
     position: "absolute",

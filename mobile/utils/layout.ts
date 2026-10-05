@@ -20,7 +20,9 @@ export const SCHERMO_LARGO = 1024;
 export const LARGHEZZA_CONTENUTO = 1120;
 //le schermate gia' pensate per il computer: le altre (login, moduli) restano
 //nella colonna stretta, dove un campo largo tutto lo schermo sarebbe scomodo
-export const PAGINE_LARGHE = ["/home", "/stats", "/budget", "/profile", "/all_expenses", "/add_expense", "/assistant"];
+export const PAGINE_LARGHE = ["/home", "/stats", "/budget", "/profile", "/all_expenses", "/add_expense", "/assistant",
+  //moduli brevi: sul computer sono card sopra la pagina, che deve restare larga dietro
+  "/set_budget", "/modify_profile", "/changePassw"];
 
 export function useSchermoLargo(): boolean {
   const { width } = useWindowDimensions();

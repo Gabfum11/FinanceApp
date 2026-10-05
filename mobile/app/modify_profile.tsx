@@ -11,11 +11,15 @@ import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useTranslation } from "react-i18next";
 import { traduciErrore } from "@/utils/messaggioErrore";
 import { useStili, useTema } from "@/utils/tema";
+import { FinestraComputer, contenutoInFinestra } from "@/components/FinestraComputer";
+import { useSchermoLargo } from "@/utils/layout";
 
 export default function ModifyProfile() {
   const styles = useStili(creaStili);
   const { colors } = useTema();
     const { t } = useTranslation();
+    //sul computer il modulo e' una card sopra la pagina di partenza
+    const largo = useSchermoLargo();
     const [nickname, setNickname] = useState("");
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
@@ -77,7 +81,8 @@ export default function ModifyProfile() {
     }
 
     return (
-        <View style={styles.container}>
+        <FinestraComputer onInvio={handleSave} conChiudi={false}>
+        <View style={[styles.container, largo && contenutoInFinestra]}>
             <PaginaScorrevole style={styles.content} tastiera>
                 <View style={styles.header}>
                     <Text onPress={() => router.back()} style={styles.headerAction}>{t("comune.annulla")}</Text>
@@ -118,5 +123,6 @@ export default function ModifyProfile() {
 
             <ConfirmDialog {...dialogo} />
         </View>
+        </FinestraComputer>
     );
 }

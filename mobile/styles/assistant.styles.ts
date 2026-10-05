@@ -18,6 +18,7 @@ export const creaStili = (colors: Colori) =>
     fuoriPannello: {
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.2)",
+        backdropFilter: "blur(4px)",
     },
     //non "flex: 0": sul web vuol dire base zero, e il pannello sarebbe largo zero
     pannello: {

@@ -10,9 +10,13 @@ import { messaggioErrore } from "@/utils/messaggioErrore";
 import { styles } from "@/styles/set-budget.styles";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { FinestraComputer, contenutoInFinestra } from "@/components/FinestraComputer";
+import { useSchermoLargo } from "@/utils/layout";
 
 export default function SetBudgetScreen() {
     const { t } = useTranslation();
+    //sul computer il modulo e' una card sopra la pagina di partenza
+    const largo = useSchermoLargo();
     const { valuta, importo } = usePreferenze();
     const [amount, setAmount] = useState("");
     const [startDay, setStartDay] = useState("1");
@@ -69,8 +73,10 @@ export default function SetBudgetScreen() {
     }
 
     return (
-        <View style={styles.container}>
-            <IconButton icon="chevron-left" onPress={() => router.back()} />
+        <FinestraComputer onInvio={handleSave}>
+        <View style={[styles.container, largo && contenutoInFinestra, largo && { paddingTop: 28 }]}>
+            {/* sul computer chiude la ✕ della finestra */}
+            {!largo && <IconButton icon="chevron-left" onPress={() => router.back()} />}
             <Text variant="headlineMedium" style={styles.title}>{t("budgetNuovo.titolo")}</Text>
             <Text variant="bodyMedium" style={styles.subtitle}>
                 {t("budgetNuovo.sottotitolo")}
@@ -123,5 +129,6 @@ export default function SetBudgetScreen() {
 
             <ConfirmDialog {...dialogo} />
         </View>
+        </FinestraComputer>
     );
 }

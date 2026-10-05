@@ -479,9 +479,6 @@ export default function HomeScreen() {
       <View style={styles.riquadro}>
         <View style={styles.riquadroTesta}>
           <Text style={styles.riquadroTitolo}>{t("home.doveVanno")}</Text>
-          <Link href="/stats" asChild>
-            <Text style={styles.linkExpenses}>{t("home.statistiche")}</Text>
-          </Link>
         </View>
         {categorie.length === 0 ? (
           <Text style={styles.emptyHint}>{t("home.nessunaCategoria")}</Text>
@@ -515,9 +512,6 @@ export default function HomeScreen() {
       <View style={styles.riquadro}>
         <View style={styles.riquadroTesta}>
           <Text style={styles.riquadroTitolo}>{t("home.prossimiRinnovi")}</Text>
-          <Link href="/budget" asChild>
-            <Text style={styles.linkExpenses}>{t("home.abbonamenti")}</Text>
-          </Link>
         </View>
         {rinnovi.length === 0 ? (
           <Text style={styles.emptyHint}>{t("home.nessunRinnovo")}</Text>

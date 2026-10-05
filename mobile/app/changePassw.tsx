@@ -10,9 +10,13 @@ import { router } from "expo-router";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
+import { FinestraComputer, contenutoInFinestra } from "@/components/FinestraComputer";
+import { useSchermoLargo } from "@/utils/layout";
 
 export default function ChangePassword() {
     const { t } = useTranslation();
+    //sul computer il modulo e' una card sopra la pagina di partenza
+    const largo = useSchermoLargo();
     const [pass, setPass] = useState("");
     const [newPass, setNewPass] = useState("");
     const [loading, setLoading] = useState(false);
@@ -49,9 +53,11 @@ export default function ChangePassword() {
     }
 
     return (
-        <View style={styles.container}>
+        <FinestraComputer onInvio={handleModPass}>
+        <View style={[styles.container, largo && contenutoInFinestra]}>
             <PaginaScorrevole style={styles.content} tastiera>
-                <IconButton icon="chevron-left" onPress={() => router.back()} />
+                {/* sul computer chiude la ✕ della finestra */}
+                {!largo && <IconButton icon="chevron-left" onPress={() => router.back()} />}
                 <Text variant="headlineMedium" style={styles.title}>{t("cambiaPassword.titolo")}</Text>
                 <Text variant="bodyMedium" style={styles.subtitle}>
                     {t("cambiaPassword.sottotitolo")}
@@ -109,5 +115,6 @@ export default function ChangePassword() {
 
             <ConfirmDialog {...dialogo} />
         </View>
+        </FinestraComputer>
     );
 }
