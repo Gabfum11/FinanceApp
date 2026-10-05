@@ -36,13 +36,24 @@ def user_or_ip(request: Request) -> str:
 
     L'IP da solo non basta: dietro la stessa rete (casa, ufficio, rete mobile)
     utenti diversi condividerebbero il contatore, e un solo account potrebbe
-    consumare la quota di tutti. Il token identifica il singolo account.
+    consumare la quota di tutti.
+
+    La chiave e' l'id dell'account scritto nel token, non il token stesso: il
+    token cambia ogni 15 minuti e ogni dispositivo ha il suo, quindi contando
+    per token il limite ripartirebbe a ogni rinnovo e varrebbe per dispositivo.
+    La firma va verificata: senza, chiunque potrebbe scriverci un id inventato.
+    Un token non valido ricade sull'IP, come una richiesta senza login.
     """
+    #importato qui: security legge la configurazione del database, che a chi
+    #importa solo il limiter (main.py all'avvio) non serve ancora
+    from app.business_logic.security import decode_access_token
+
     auth = request.headers.get("Authorization", "")
     if auth.startswith("Bearer "):
-        token = auth[7:].strip()
-        if token:
-            return f"token:{token}"
+        payload = decode_access_token(auth[7:].strip())
+        #i token per reimpostare la password hanno "purpose": non sono un accesso
+        if payload and payload.get("sub") and payload.get("purpose") is None:
+            return f"utente:{payload['sub']}"
     return client_ip(request)
 
 

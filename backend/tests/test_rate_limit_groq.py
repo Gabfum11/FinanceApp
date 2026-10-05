@@ -10,6 +10,7 @@ import pytest
 
 from app import models
 from app.business_logic import categorization
+from app.business_logic import security
 
 ESTRAZIONE_FINTA = {
     "description": "Pizza", "amount": 15.0, "date": None,
@@ -75,9 +76,12 @@ class TestLimiteGlobale:
             #tre utenti, 4 richieste ciascuno: sotto il limite individuale di 5,
             #ma insieme superano gli 8 globali
             for i in range(3):
-                login_as(make_user(email=f"u{i}@example.com"))
+                user_id = make_user(email=f"u{i}@example.com")
+                login_as(user_id)
+                #token veri, firmati: il limite per utente legge l'id dal token
+                token = security.create_access_token({"sub": str(user_id), "ver": 0})
                 for _ in range(4):
-                    codici.append(chiedi(client, token=f"Bearer tok{i}").status_code)
+                    codici.append(chiedi(client, token=f"Bearer {token}").status_code)
 
         assert codici.count(200) == 8, "il tetto globale ferma a 8"
         assert 429 in codici
