@@ -290,7 +290,7 @@ export default function StatsScreen() {
             qui sotto, che porta alla schermata completa con il giorno di inizio */}
         {!loading && stats.length > 0 && (cycleOffset < 0 || budgetMensile != null) && (
           <View style={styles.budgetRiga}>
-            <MaterialCommunityIcons name="wallet-outline" size={20} color={colors.primary} />
+            <MaterialCommunityIcons name="currency-usd" size={20} color={colors.primary} />
             <View style={styles.budgetTesti}>
               <Text style={styles.budgetEtichetta}>{t("statistiche.budget")}</Text>
               <Text style={styles.budgetValore}>
