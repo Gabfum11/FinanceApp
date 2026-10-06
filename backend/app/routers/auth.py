@@ -302,7 +302,7 @@ async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=De
 
 @router.post("/resetPassword")
 @limiter.limit("10/hour")
-async def resetPassword(passw:schemas.ResetPassword,db:Session=Depends(get_db),user:str=Depends(security.get_reset_password_user)):
+async def resetPassword(request: Request, passw:schemas.ResetPassword,db:Session=Depends(get_db),user:str=Depends(security.get_reset_password_user)):
     user.hashed_password=security.hash_password(passw.new_password)
     #chi ha chiesto il reset ha perso l'accesso: ogni sessione aperta va chiusa
     security.revoke_all_refresh_tokens(db, user.id)
