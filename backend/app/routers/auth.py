@@ -112,6 +112,10 @@ def login(request: Request, credentials: schemas.UserLogin, db: Session=Depends(
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not security.verify_password(credentials.password, auth_user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    #dopo la password, non prima: chi non la conosce non deve sapere che
+    #l'account esiste ed e' disattivato. Come nell'accesso con Google
+    if not auth_user.is_active:
+        raise HTTPException(status_code=403, detail="User not active")
     if not auth_user.is_verified:
         raise HTTPException(status_code=403,detail="User not verified")
     return _session_tokens(db, auth_user)
@@ -170,6 +174,8 @@ def login_for_swagger(request: Request, form_data: OAuth2PasswordRequestForm = D
     auth_user = db.query(models.User).filter(models.User.email == normalized_email).first()
     if auth_user is None or not security.verify_password(form_data.password, auth_user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not auth_user.is_active:
+        raise HTTPException(status_code=403, detail="User not active")
     if not auth_user.is_verified:
         raise HTTPException(status_code=403, detail="User not verified")
 

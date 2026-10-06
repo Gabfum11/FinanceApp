@@ -62,7 +62,7 @@ def hash_password(password: str):
     return pwd_context.hash(password)
 
 
-def verify_password(plain_password: str, hashed_password: str): #plain_password è la password che l'utente ha inserito, hashed_password è quella salvata nel db
+def verify_password(plain_password: str, hashed_password: str): #plain_password è la password in chiaro che l'utente ha inserito, hashed_password è quella salvata nel db
     return pwd_context.verify(plain_password, hashed_password) #verifica se la password inserita corrisponde a quella salvata nel db, restituendo True o False
 
 def create_access_token(data: dict, expire_minutes:int=ACCESS_TOKEN_EXPIRE_MINUTES):
@@ -166,8 +166,8 @@ def rotate_refresh_token(db: Session, token: str) -> tuple[models.User, str]:
         raise refresh_exception
 
     user = db.query(models.User).filter(models.User.id == row.user_id).first()
-    if user is None or not user.is_active:
-        db.rollback()
+    if user is None or not user.is_active: 
+        db.rollback() #annulla tutte le modifiche fatte nella sessione dell'ultimo commit
         raise refresh_exception
     return user, create_refresh_token(db, user)
 
@@ -183,12 +183,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token") #schema che sa estra
 
 
 """
-get_current_user fa cinque controlli:
+get_current_user fa sei controlli:
 1. Il token e' valido (firma corretta, non scaduto)
 2. Il token e' di tipo access (non password_reset)
 3. Il token contiene un id utente , questo perchè alcuni token potrebbero non avere un id utente (es. token di reset password)
 4. L'utente esiste nel db
-5. La versione del token corrisponde a quella dell'utente (revoca)
+5. L'account e' attivo (non disattivato)
+6. La versione del token corrisponde a quella dell'utente (revoca)
 """
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> models.User:
     credentials_exception = HTTPException(status_code=401, detail="Could not validate credentials")
@@ -204,7 +205,9 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
 
     user = db.query(models.User).filter(models.User.id == int(user_id)).first()
-    if user is None:
+    #un account disattivato e' fuori subito, alla prima richiesta: senza questo
+    #controllo il suo token continuerebbe a valere fino alla scadenza
+    if user is None or not user.is_active:
         raise credentials_exception
 
     #il confronto avviene qui, dove l'utente e' gia' stato letto: non costa
@@ -230,7 +233,7 @@ def get_reset_password_user(token:str = Depends(oauth2_scheme), db:Session=Depen
     if user_id is None:
         raise password_exception
     user = db.query(models.User).filter(models.User.id == int(user_id)).first()
-    if user is None:
+    if user is None or not user.is_active:
         raise password_exception
     #il reset incrementa la versione: un token gia' usato non corrisponde piu',
     #e resta rifiutato anche se non e' ancora scaduto
