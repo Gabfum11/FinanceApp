@@ -81,6 +81,12 @@ class Expense(Base):
     original_currency = Column(String(3), nullable=True)
     exchange_rate = Column(Float, nullable=True)
 
+    #l'abbonamento che ha generato la spesa, se viene da un rinnovo: rinominando
+    #l'abbonamento (o cambiandone la categoria) si aggiornano anche queste spese.
+    #Eliminando l'abbonamento le spese restano, scollegate (SET NULL)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id", ondelete="SET NULL"), nullable=True, index=True)
+    subscription = relationship("Subscriptions")
+
     owner = relationship("User", back_populates="expenses") #permette facilmente di ottenere il proprietario partendo da una spesa
     category = relationship("Category", back_populates="expenses") #se aggiungi una spesa, sqlalchemy aggiorna automaticamente la lista di spese della categoria, e viceversa
 

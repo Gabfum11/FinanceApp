@@ -53,6 +53,9 @@ def spesa_da_abbonamento(sub: models.Subscriptions, giorno: date, valuta_utente:
         date=giorno,
         category_id=sub.category_id,
         user_id=sub.user_id,
+        #la relazione e non l'id: alla creazione l'abbonamento non ne ha ancora
+        #uno, e SQLAlchemy lo riempie da solo al salvataggio
+        subscription=sub,
     )
     applica_importo(spesa, sub.amount, sub.currency, valuta_utente)
     return spesa

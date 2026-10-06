@@ -204,6 +204,16 @@ def update_subscription(subscription_id: int, changes: schemas.SubscriptionUpdat
     for field, value in updates.items():
         setattr(sub, field, value)
 
+    #nome e categoria valgono anche per le spese gia' registrate da questo
+    #abbonamento: chi rinomina di solito sta correggendo. Importo e date no:
+    #i mesi gia' pagati restano con la cifra di allora
+    collegate = {campo: updates[campo] for campo in ("description", "category_id") if campo in updates}
+    if collegate:
+        db.query(models.Expense).filter(
+            models.Expense.subscription_id == sub.id,
+            models.Expense.user_id == current_user.id,
+        ).update(collegate, synchronize_session=False)
+
     #cambiando periodo la vecchia next_date non e' piu' coerente: la ricalcoliamo
     #da oggi, senza toccare le spese gia' generate. Se pero' l'utente ha indicato
     #anche una data esplicita, e' quella a valere
@@ -224,6 +234,11 @@ def delete_subscription(subscription_id: int, db: Session = Depends(get_db), cur
     ).first()
     if sub is None:
         raise HTTPException(status_code=404, detail="Subscription not found")
+    #le spese restano: sono soldi gia' spesi. Si scollegano qui e non solo con
+    #il SET NULL del database, che SQLite (nei test) non applica
+    db.query(models.Expense).filter(models.Expense.subscription_id == sub.id).update(
+        {"subscription_id": None}, synchronize_session=False
+    )
     db.delete(sub)
     db.commit()
     return {"detail": "Abbonamento eliminato"}
