@@ -269,7 +269,7 @@ def delete_me(request: Request, payload: schemas.DeleteAccount, db: Session = De
 
 
 @router.post("/resendOTP")
-@limiter.limit("3/5minutes")
+@limiter.limit("3/5minutes") #significa che un utente puo' richiedere al massimo 3 codici OTP ogni 5 minuti, per impedire abusi
 async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=Depends(get_db)):
     auth_user=db.query(models.User).filter(models.User.email==payload.email).first()
     if auth_user is not None:
@@ -301,6 +301,7 @@ async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=De
     return{"detail":"Se l'account esiste, ricevereai un codice via mail"}
 
 @router.post("/resetPassword")
+@limiter.limit("10/hour")
 async def resetPassword(passw:schemas.ResetPassword,db:Session=Depends(get_db),user:str=Depends(security.get_reset_password_user)):
     user.hashed_password=security.hash_password(passw.new_password)
     #chi ha chiesto il reset ha perso l'accesso: ogni sessione aperta va chiusa
