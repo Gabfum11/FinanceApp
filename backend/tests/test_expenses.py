@@ -282,6 +282,11 @@ class TestHealth:
         assert r.status_code == 200
         assert r.json()["status"] == "ok"
 
+    def test_risponde_anche_a_head(self, client):
+        #i monitor chiedono spesso solo le intestazioni: deve rispondere 200, non 405
+        r = client.head("/health")
+        assert r.status_code == 200
+
     def test_database_irraggiungibile(self, client, db_session):
         from app.database import get_db
         from app.main import app

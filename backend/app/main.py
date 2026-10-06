@@ -148,7 +148,7 @@ def privacy_policy():
     return FileResponse(PRIVACY_PAGE, media_type="text/html; charset=utf-8")
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health_check(response: Response, db: Session = Depends(get_db)):
     """Dice se l'app e' davvero utilizzabile, non solo se il processo risponde.
 
