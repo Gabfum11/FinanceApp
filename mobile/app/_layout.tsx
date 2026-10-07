@@ -10,7 +10,8 @@ import { PreferenzeProvider } from '@/utils/preferenze';
 import { View } from 'react-native';
 import { LARGHEZZA_MASSIMA, PAGINE_LARGHE, useSchermoLargo } from '@/utils/layout';
 import { TemaProvider, useTema } from '@/utils/tema';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { segnaPaginaPronta } from '@/utils/avvio';
 //configura le traduzioni prima che si disegni qualsiasi schermata
 import '@/utils/i18n';
 
@@ -33,7 +34,14 @@ function Contenuto() {
   //restano nella colonna centrata. Il percorso decide quale delle due
   const largo = useSchermoLargo();
   const percorso = usePathname();
-  const tuttaLarghezza = largo && PAGINE_LARGHE.includes(percorso);
+  //la landing ("/") e' sempre a tutta larghezza, anche sul telefono: viene
+  //generata durante la build, quando la larghezza della finestra non si conosce
+  const tuttaLarghezza = percorso === "/" || (largo && PAGINE_LARGHE.includes(percorso));
+  //fuori dalla pagina principale non c'e' niente da tenere nascosto: la
+  //landing la conferma da se' (app/index.tsx), le altre schermate qui
+  useEffect(() => {
+    if (percorso !== "/") segnaPaginaPronta();
+  }, [percorso]);
   const temaPaper = useMemo(() => creaTemaPaper(colors, scuro), [colors, scuro]);
   //lo sfondo delle schermate durante le animazioni di navigazione
   const temaNavigazione = useMemo(() => {

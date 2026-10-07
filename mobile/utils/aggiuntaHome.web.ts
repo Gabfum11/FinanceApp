@@ -8,6 +8,8 @@
 //Il sito viene anche pre-generato durante la build, dove navigator e window
 //non esistono: ogni controllo li verifica prima di usarli.
 
+import { apertaDallaHome } from "@/utils/avvio";
+
 /** Come spiegare l'aggiunta: passi di Safari nuovo o vecchio, oppure il messaggio per tutti. */
 export type Procedura = "safari26" | "safari" | "generica";
 
@@ -26,16 +28,8 @@ function suTelefonoOTablet(): boolean {
 }
 
 //aperta dall'icona sulla Home: non c'e' piu' niente da aggiungere
-function giaAggiunta(): boolean {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia?.("(display-mode: standalone)").matches ||
-    (navigator as Navigator & { standalone?: boolean }).standalone === true
-  );
-}
-
 export function puoAggiungereAllaHome(): boolean {
-  return suTelefonoOTablet() && !giaAggiunta();
+  return suTelefonoOTablet() && !apertaDallaHome();
 }
 
 /** I passi da mostrare. Gli altri browser per iPhone (Chrome, Firefox) hanno

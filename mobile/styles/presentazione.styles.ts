@@ -419,7 +419,10 @@ export const creaStili = (colors: Colori) =>
     color: colors.primary,
     fontWeight: "bold",
   },
-  // --- computer: pagina unica di benvenuto ---
+  // --- landing: pagina unica di benvenuto (browser e computer) ---
+  //niente misure che dipendono dalla finestra: la pagina viene generata
+  //durante la build, dove la finestra non c'e'. Quello che deve adattarsi al
+  //telefono lo fa con flexWrap o con le unita' del CSS
   pcPagina: {
     flexGrow: 1,
     backgroundColor: colors.background,
@@ -432,7 +435,7 @@ export const creaStili = (colors: Colori) =>
   pcColonna: {
     width: "100%",
     alignSelf: "center",
-    paddingHorizontal: 40,
+    paddingHorizontal: 24,
   },
   pcNavigazione: {
     flexDirection: "row",
@@ -478,8 +481,10 @@ export const creaStili = (colors: Colori) =>
     gap: 18,
   },
   pcTitolo: {
-    fontSize: 52,
-    lineHeight: 58,
+    //da 34 sul telefono a 52 sul computer, seguendo la larghezza della
+    //finestra: e' CSS, quindi funziona anche nella pagina generata in anticipo
+    fontSize: "clamp(34px, 6vw, 52px)" as unknown as number,
+    lineHeight: "1.12" as unknown as number,
     fontWeight: "bold",
     color: colors.textOnPrimary,
   },
@@ -539,5 +544,34 @@ export const creaStili = (colors: Colori) =>
     fontSize: 15,
     lineHeight: 22,
     color: colors.textSecondary,
+  },
+  // --- piè di pagina della landing ---
+  piede: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  piedeRiga: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
+    rowGap: 12,
+    columnGap: 24,
+    paddingTop: 24,
+    paddingBottom: 32,
+  },
+  piedeLink: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 8,
+    columnGap: 20,
+  },
+  piedeVoce: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  piedeCopyright: {
+    fontSize: 14,
+    color: colors.textMuted,
   },
 });

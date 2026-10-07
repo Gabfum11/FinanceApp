@@ -1,21 +1,31 @@
-import { Redirect } from "expo-router";
+import { Redirect, useRouter, type Href } from "expo-router";
 import { useEffect, useState } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Platform } from "react-native";
 import { haSessione, rinnovaSeInScadenza } from "@/utils/session";
 import { presentazioneVista } from "@/utils/presentazione";
+import { apertaDallaHome, segnaPaginaPronta } from "@/utils/avvio";
+import { Landing } from "@/components/Landing";
+
+// La porta d'ingresso: chi ha una sessione va alla home, gli altri vedono
+// - nel browser: la landing, ogni volta (e' anche la pagina che legge Google)
+// - nell'app installata (telefono o icona sulla Home): la presentazione la
+//   prima volta, poi il login. Aprendo l'app ogni giorno una landing darebbe
+//   solo fastidio
+const NEL_BROWSER = Platform.OS === "web";
 
 export default function Index() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasToken, setHasToken] = useState(false);
-  const [vista, setVista] = useState(true);
+  const router = useRouter();
+  //null finche' non si sa dove andare; "landing" per restare qui
+  const [destinazione, setDestinazione] = useState<Href | "landing" | null>(null);
 
   useEffect(() => {
-    async function checkToken() {
-      const sessione = await haSessione(); //asincrono:richiede un breve momento per leggere dal disco del telefono
-      setHasToken(sessione);
-      //chi ha gia' una sessione non deve rivedere la presentazione: si legge solo senza
-      if (!sessione) setVista(await presentazioneVista());
-      setIsLoading(false);
+    async function decidi() {
+      const sessione = await haSessione(); //asincrono: sul telefono legge dall'archivio cifrato
+
+      if (sessione) setDestinazione("/(tabs)/home");
+      else if (NEL_BROWSER && !apertaDallaHome()) setDestinazione("landing");
+      //chi ha gia' visto la presentazione non deve rivederla
+      else setDestinazione((await presentazioneVista()) ? "/login" : "/presentazione");
 
       //il rinnovo parte DOPO aver deciso dove andare: verificare il token prima
       //significava tenere l'utente sullo spinner in attesa della rete, e senza
@@ -24,18 +34,25 @@ export default function Index() {
       //reindirizza al login da sé.
       if (sessione) rinnovaSeInScadenza();
     }
-    checkToken();
+    decidi();
   }, []);
 
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        {/*rotellina di caricamento */}
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
+  //la landing e' confermata: se +html.tsx l'aveva nascosta (tema scuro), ora puo' comparire
+  useEffect(() => {
+    if (destinazione === "landing") segnaPaginaPronta();
+  }, [destinazione]);
 
-  if (hasToken) return <Redirect href="/(tabs)/home" />;
-  return <Redirect href={vista ? "/login" : "/presentazione"} />;
+  if (destinazione && destinazione !== "landing") return <Redirect href={destinazione} />;
+
+  //nel browser la landing c'e' gia' durante il controllo: e' quella scritta
+  //nell'HTML, e chi deve andare altrove non la vede perche' +html.tsx la nasconde.
+  //push e non replace: "indietro" nel browser dal login riporta qui
+  if (NEL_BROWSER) return <Landing vai={(pagina) => router.push(pagina)} />;
+
+  return (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      {/*rotellina di caricamento */}
+      <ActivityIndicator size="large" />
+    </View>
+  );
 }

@@ -113,7 +113,7 @@
     },
     "p2": {
       "titolo": "Type expenses the way you'd say them",
-      "testo": "TrackIt does the rest: amount, date and category.",
+      "testo": "TrackIt does the rest: amount, date and category. You check and confirm.",
       "esempio": "Groceries 40 yesterday",
       "aggiunta": "Expense added",
       "descrizione": "Groceries",
@@ -130,7 +130,7 @@
     "p4": {
       "titolo": "No surprise renewals",
       "testo": "We remind you the day before. Cancel what you no longer use in time.",
-      "testoWeb": "Every renewal is logged automatically. Cancel what you no longer use in time.",
+      "testoWeb": "See when each subscription is due, and automatic ones are logged on their own. Cancel what you no longer use in time.",
       "notifica": "Gym renews tomorrow",
       "attivi": "Active subscriptions",
       "palestra": "Gym",
@@ -139,10 +139,14 @@
     },
     "p5": {
       "titolo": "Save your expenses",
-      "testo": "Free account. Your data stays yours: export or delete it anytime.",
+      "testo": "Free account. All you need is an email and a password, or your Google account.",
       "crea": "Create an account"
     },
-    "cosaFa": "What TrackIt does"
+    "cosaFa": "What TrackIt does",
+    "piede": {
+      "privacy": "Privacy policy",
+      "copyright": "© {{anno}} TrackIt"
+    }
   },
   "categorie": {
     "nonAssegnata": "Uncategorized",

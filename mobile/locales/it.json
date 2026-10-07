@@ -113,7 +113,7 @@
     },
     "p2": {
       "titolo": "Scrivi la spesa come la diresti",
-      "testo": "Al resto pensa TrackIt: importo, data e categoria.",
+      "testo": "Al resto pensa TrackIt: importo, data e categoria. Tu controlli e confermi.",
       "esempio": "40 euro supermercato ieri",
       "aggiunta": "Spesa aggiunta",
       "descrizione": "Supermercato",
@@ -130,7 +130,7 @@
     "p4": {
       "titolo": "Niente rinnovi a sorpresa",
       "testo": "Ti avvisiamo il giorno prima. Disdici in tempo ciò che non usi più.",
-      "testoWeb": "Ogni rinnovo si registra da solo. Disdici in tempo ciò che non usi più.",
+      "testoWeb": "Vedi quando scade ogni abbonamento, e quelli automatici si registrano da soli. Disdici in tempo ciò che non usi più.",
       "notifica": "Palestra si rinnova domani",
       "attivi": "Abbonamenti attivi",
       "palestra": "Palestra",
@@ -139,10 +139,14 @@
     },
     "p5": {
       "titolo": "Salva le tue spese",
-      "testo": "Account gratuito. I dati restano tuoi: esportali o cancellali quando vuoi.",
+      "testo": "Account gratuito. Bastano un'email e una password, o il tuo account Google.",
       "crea": "Crea un account"
     },
-    "cosaFa": "Cosa fa TrackIt"
+    "cosaFa": "Cosa fa TrackIt",
+    "piede": {
+      "privacy": "Informativa privacy",
+      "copyright": "© {{anno}} TrackIt"
+    }
   },
   "categorie": {
     "nonAssegnata": "Non assegnata",
