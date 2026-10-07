@@ -36,6 +36,8 @@ jobs:
       - run: npx expo export --platform web
         env:
           EXPO_PUBLIC_API_URL: https://financeapp-vt0o.onrender.com
+          # non e' un segreto (sta gia' in eas.json): senza, il pulsante Google non compare
+          EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: 927557604432-7amto0tovrub15bm31l2i8o4isobs0u6.apps.googleusercontent.com
       - uses: actions/upload-pages-artifact@v3
         with:
           path: mobile/dist

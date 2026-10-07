@@ -1,23 +1,19 @@
 import { useEffect, useState } from "react";
-import { Platform } from "react-native";
 import Constants from "expo-constants";
-import { salvaSessione } from "@/utils/session";
-import { API_URL } from "@/config";
 import i18n from "@/utils/i18n";
-import { traduciErrore } from "@/utils/messaggioErrore";
+import { scambiaTokenGoogle } from "@/utils/scambioGoogle";
 
 // Il modulo nativo non esiste in Expo Go: importarlo in cima farebbe fallire
 // il caricamento della schermata di login, non solo del pulsante Google.
 // Con require() dentro un try, in Expo Go l'app parte e il pulsante resta
 // nascosto; in una build vera funziona normalmente.
+// Nel browser si usa useGoogleLogin.web.ts: questa libreria li' funziona solo
+// per chi la sponsorizza.
 const IN_EXPO_GO = Constants.appOwnership === "expo";
-//nel browser la libreria funziona solo per chi la sponsorizza: senza modulo
-//il pulsante non compare, e si entra con email e password
-const SUL_WEB = Platform.OS === "web";
 
 let GoogleSignin: any = null;
 let statusCodes: any = {};
-if (!IN_EXPO_GO && !SUL_WEB) {
+if (!IN_EXPO_GO) {
   try {
     const modulo = require("@react-native-google-signin/google-signin");
     GoogleSignin = modulo.GoogleSignin;
@@ -99,28 +95,9 @@ export function useGoogleLogin({ onSuccess, onError }: Options) {
   }
 
   async function exchangeToken(idToken: string) {
-    try {
-      // il token di Google non è il nostro: lo scambiamo con un token dell'app
-      const res = await fetch(`${API_URL}/auth/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id_token: idToken, remember_me: true }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        console.error("[google] scambio token rifiutato:", res.status, body);
-        onError(traduciErrore(typeof body?.detail === "string" ? body.detail : null, i18n.t("google.nonRiuscito")));
-        return;
-      }
-
-      const data = await res.json();
-      await salvaSessione(data);
-      onSuccess();
-    } catch (errore) {
-      console.error("[google] rete non raggiungibile:", API_URL, errore);
-      onError(i18n.t("errori.rete"));
-    }
+    const errore = await scambiaTokenGoogle(idToken);
+    if (errore) onError(errore);
+    else onSuccess();
   }
 
   return {
