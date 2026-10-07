@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -109,9 +109,11 @@ async def verify_otp(request: Request, verify: schemas.VerifyEmail, db: Session=
 def login(request: Request, credentials: schemas.UserLogin, db: Session=Depends(get_db)):
     normalized_email=credentials.email.strip().lower()
     auth_user=db.query(models.User).filter(models.User.email==normalized_email).first()
-    if auth_user is None:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    if not security.verify_password(credentials.password, auth_user.hashed_password):
+    #la verifica gira anche se l'utente non esiste: con None passlib confronta
+    #con un hash finto. Senza, la risposta arriverebbe prima e il tempo
+    #rivelerebbe quali email sono registrate
+    hash_salvato = auth_user.hashed_password if auth_user is not None else None
+    if not security.verify_password(credentials.password, hash_salvato) or auth_user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     #dopo la password, non prima: chi non la conosce non deve sapere che
     #l'account esiste ed e' disattivato. Come nell'accesso con Google
@@ -184,7 +186,8 @@ def login_with_google(request: Request, payload: schemas.GoogleLogin, db: Sessio
 def login_for_swagger(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     normalized_email=form_data.username.strip().lower()
     auth_user = db.query(models.User).filter(models.User.email == normalized_email).first()
-    if auth_user is None or not security.verify_password(form_data.password, auth_user.hashed_password):
+    hash_salvato = auth_user.hashed_password if auth_user is not None else None #come in /login: niente scorciatoie sui tempi
+    if not security.verify_password(form_data.password, hash_salvato) or auth_user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not auth_user.is_active:
         raise HTTPException(status_code=403, detail="User not active")
@@ -282,7 +285,7 @@ def delete_me(request: Request, payload: schemas.DeleteAccount, db: Session = De
 
 @router.post("/resendOTP")
 @limiter.limit("3/5minutes") #significa che un utente puo' richiedere al massimo 3 codici OTP ogni 5 minuti, per impedire abusi
-async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=Depends(get_db)):
+async def resendOTP(request: Request, payload: schemas.ResendOtp, background_tasks: BackgroundTasks, db: Session=Depends(get_db)):
     risposta = {"detail":"Se l'account esiste, ricevereai un codice via mail"}
     auth_user=db.query(models.User).filter(models.User.email==payload.email).first()
     if auth_user is not None:
@@ -317,17 +320,25 @@ async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=De
         db.add(new_otp)
         db.commit()
         db.refresh(new_otp)
-        try:
-            await email_service.send_otp_email(payload.email,otp_code, purpose=payload.purpose, lingua=auth_user.language)
-        except Exception:
-            #si registra l'id, non l'email: e' un dato personale e i log di
-            #Render restano leggibili per giorni. logger.exception include
-            #da solo il dettaglio dell'errore
-            logger.exception(
-                "invio del codice OTP non riuscito",
-                extra={"user_id": auth_user.id, "purpose": payload.purpose},
-            )
+        #l'email parte dopo la risposta: aspettare Brevo solo per gli account
+        #esistenti renderebbe la risposta piu' lenta, e il tempo li rivelerebbe
+        background_tasks.add_task(
+            _invia_otp, payload.email, otp_code, payload.purpose, auth_user.language, auth_user.id
+        )
     return risposta
+
+
+async def _invia_otp(email: str, codice: str, purpose: str, lingua: str | None, user_id: int):
+    try:
+        await email_service.send_otp_email(email, codice, purpose=purpose, lingua=lingua)
+    except Exception:
+        #si registra l'id, non l'email: e' un dato personale e i log di
+        #Render restano leggibili per giorni. logger.exception include
+        #da solo il dettaglio dell'errore
+        logger.exception(
+            "invio del codice OTP non riuscito",
+            extra={"user_id": user_id, "purpose": purpose},
+        )
 
 @router.post("/resetPassword")
 @limiter.limit("10/hour")

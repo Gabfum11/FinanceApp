@@ -6,6 +6,7 @@ i log di Render diventano filtrabili invece di essere frasi sciolte.
 Il livello si regola con la variabile LOG_LEVEL (default INFO). In sviluppo
 DEBUG mostra tutto, in produzione WARNING riduce il rumore.
 """
+import json
 import logging
 import os
 import sys
@@ -19,6 +20,21 @@ _CAMPI_STANDARD = {
     "created", "msecs", "relativeCreated", "thread", "threadName",
     "processName", "process", "taskName", "message", "asctime",
 }
+
+
+def _valore_sicuro(valore) -> str:
+    """Il valore cosi' com'e' se e' una parola semplice, altrimenti tra virgolette.
+
+    Alcuni valori arrivano dal client (es. il percorso della richiesta): con
+    spazi e "=" potrebbero aggiungere alla riga campi finti come user_id=42, e
+    con caratteri di controllo sporcare il terminale. json.dumps li mette tra
+    virgolette e trasforma i caratteri invisibili in sequenze leggibili
+    (ESC diventa la scritta u001b preceduta dalla barra rovesciata).
+    """
+    testo = str(valore)
+    if testo and testo.isprintable() and not any(c in testo for c in ' ="'):
+        return testo
+    return json.dumps(testo)
 
 
 class ContextFormatter(logging.Formatter):
@@ -36,7 +52,7 @@ class ContextFormatter(logging.Formatter):
             if chiave not in _CAMPI_STANDARD and not chiave.startswith("_")
         }
         if contesto:
-            coppie = " ".join(f"{k}={v}" for k, v in contesto.items())
+            coppie = " ".join(f"{k}={_valore_sicuro(v)}" for k, v in contesto.items())
             return f"{base}  {coppie}"
         return base
 
