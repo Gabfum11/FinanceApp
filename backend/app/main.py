@@ -148,6 +148,24 @@ def privacy_policy():
     return FileResponse(PRIVACY_PAGE, media_type="text/html; charset=utf-8")
 
 
+#TEMPORANEO: mostra come arrivano gli indirizzi dietro il proxy di Render, per
+#scegliere la voce giusta di X-Forwarded-For. Restituisce solo dati del
+#chiamante stesso. Da rimuovere appena verificato
+@app.get("/debug-ip", include_in_schema=False)
+def debug_ip(request: Request):
+    import app.state as state
+    return {
+        "x_forwarded_for": request.headers.get("x-forwarded-for"),
+        "connessione": request.client.host if request.client else None,
+        "cf_connecting_ip": request.headers.get("cf-connecting-ip"),
+        "true_client_ip": request.headers.get("true-client-ip"),
+        "x_real_ip": request.headers.get("x-real-ip"),
+        "trust_proxy_headers": state.TRUST_PROXY_HEADERS,
+        "trusted_proxy_hops": state.TRUSTED_PROXY_HOPS,
+        "chiave_limite": state.client_ip(request),
+    }
+
+
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health_check(response: Response, db: Session = Depends(get_db)):
     """Dice se l'app e' davvero utilizzabile, non solo se il processo risponde.
