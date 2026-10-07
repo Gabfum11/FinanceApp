@@ -220,6 +220,10 @@ def extract_expense_from_text(
                         'tra "today", "yesterday", "day before yesterday", i giorni della settimana '
                         '("monday"... "sunday", anche con "last" davanti) o una data come "3 September" o "September 3". '
                         'Anche "description" resta nella lingua del testo. '
+                        '"description" dice solo cosa e\' stato comprato o dove: togli importo, valuta, '
+                        'data ed espressioni di frequenza, che vanno nei rispettivi campi. '
+                        'Esempio: "Conad 7,55 4 ottobre" -> "description": "Conad"; '
+                        '"Calcetto 6 euro" -> "description": "Calcetto". '
                         "Se il giorno e' seguito da \"scorso\" usa comunque solo il nome del giorno: "
                         '"sabato scorso" -> "date_expr": "sabato". '
                         "se il testo non dice quando, o usa un'espressione diversa da queste, "
