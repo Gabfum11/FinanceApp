@@ -119,9 +119,12 @@ nome e identificativo del tuo account.
 
 Se scrivi una frase nell'assistente (per esempio "pizza 15 euro"), **il testo
 viene inviato a Groq**, negli Stati Uniti, per estrarre importo, descrizione e
-categoria. È l'unico caso in cui dati che scrivi tu escono dall'Unione Europea,
-e **solo se usi l'assistente**: se inserisci le spese con il modulo manuale,
-a Groq non viene inviato nulla.
+categoria. Se invece fai una domanda sulle tue spese (per esempio "quanto ho
+speso a settembre?"), a Groq arrivano anche i dati che servono a rispondere:
+i totali calcolati dal nostro server e, solo quando la domanda le riguarda,
+le singole spese (data, descrizione, importo, categoria). È l'unico caso in cui
+dati che scrivi tu escono dall'Unione Europea, e **solo se usi l'assistente**:
+se inserisci le spese con il modulo manuale, a Groq non viene inviato nulla.
 
 Groq agisce come responsabile del trattamento in base al proprio Data
 Processing Addendum, e il trasferimento extra-UE è coperto dalle Clausole

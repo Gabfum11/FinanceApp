@@ -12,7 +12,7 @@ from app.routers.subscriptions import run_due_renewals
 from app.business_logic.cambi import CambioNonDisponibile
 from app.business_logic.valuta_estera import applica_importo
 from app.business_logic.oggi import oggi
-from app.state import limiter, user_or_ip
+from app.state import limiter, user_or_ip, chiave_groq_globale, GROQ_AL_MINUTO, GROQ_AMBITO
 from dateutil.relativedelta import relativedelta, MO
 from datetime import timedelta
 router = APIRouter(prefix="/expenses", tags=["expenses"]) #creazione del router
@@ -180,20 +180,48 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user:
     db.commit()
     return {"detail": "Expense deleted"}
 
+def limiti_groq(endpoint):
+    """I limiti degli endpoint che chiamano Groq, un servizio a pagamento.
+
+    Senza tetto, un client in loop puo' esaurire la quota. Il limite e' per
+    account, non per IP, cosi' utenti dietro la stessa rete non si bloccano a
+    vicenda. I contatori sono condivisi (shared_limit) tra questo endpoint e
+    /assistant/message: con contatori separati si potrebbe usarli entrambi e
+    raddoppiare la quota.
+    """
+    #un limite per utente piu' alto di quello globale lascerebbe saturare
+    #Groq a un solo utente, facendo fallire le richieste altrui
+    endpoint = limiter.shared_limit("5/minute", scope="groq-utente", key_func=user_or_ip)(endpoint)
+    endpoint = limiter.shared_limit("200/day", scope="groq-utente-giorno", key_func=user_or_ip)(endpoint)
+    #tetto complessivo: senza, bastano due utenti attivi insieme per superare
+    #il limite di Groq e ricevere 429 invece di una risposta
+    return limiter.shared_limit(GROQ_AL_MINUTO, scope=GROQ_AMBITO, key_func=chiave_groq_globale)(endpoint)
+
+
 @router.post("/extract-preview")
-#unico endpoint che chiama un servizio a pagamento (Groq): senza tetto, un client
-#in loop puo' esaurire la quota. Il limite e' per account, non per IP, cosi' utenti
-#dietro la stessa rete non si bloccano a vicenda
-#il piano gratuito di Groq concede ~8000 token al minuto: con un prompt da ~940
-#token sono circa 8 richieste. Un limite per utente piu' alto di quello globale
-#lascerebbe saturare Groq a un solo utente, facendo fallire le richieste altrui
-@limiter.limit("5/minute", key_func=user_or_ip)
-@limiter.limit("200/day", key_func=user_or_ip)
-#tetto complessivo: senza, bastano due utenti attivi insieme per superare
-#il limite di Groq e ricevere 429 invece di una risposta
-@limiter.limit("8/minute", key_func=lambda request: "extract-preview-globale")
+#resta per le versioni dell'app gia' installate: quella nuova usa /assistant/message
+@limiti_groq
 def extract_expense_preview(request: Request, data_expense: dict, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
     text = data_expense.get("expenseText", "")
+    try:
+        proposta = proponi_spesa(text, db, current_user, giorno)
+    except categorization.ServizioOccupato:
+        #503 e non 422: la frase era valida, e' il servizio a non essere
+        #disponibile. Dire "non ho capito" porterebbe a riscriverla invano
+        raise HTTPException(status_code=503, detail=SERVIZIO_OCCUPATO)
+    if proposta is None:
+        raise HTTPException(status_code=422, detail="Non sono riuscito a capire la spesa")
+    return proposta
+
+
+SERVIZIO_OCCUPATO = "Troppe richieste in questo momento. Riprova tra qualche istante."
+
+
+def proponi_spesa(text: str, db: Session, current_user: models.User, giorno: date) -> dict | None:
+    """La spesa letta nel testo, pronta per la card di conferma. None = non e' una spesa.
+
+    Solleva categorization.ServizioOccupato se Groq e' saturo.
+    """
     #solo le sottocategorie: una spesa non puo' essere assegnata a un gruppo.
     #Il gruppo viene comunque passato al modello come contesto, perche' aiuta
     #a scegliere ("Bolletta energia" sotto "Casa" e' piu' chiaro da solo)
@@ -213,20 +241,11 @@ def extract_expense_preview(request: Request, data_expense: dict, db: Session = 
                 etichetta = f"{c.name} ({prime})"
         per_gruppo.setdefault(c.parent.name, []).append(etichetta)
 
-    #passiamo i nomi al modello: categoria ed estrazione escono dalla stessa chiamata
-    try:
-        #"ieri" e "lunedi" si contano dal giorno dell'utente, non da quello del server
-        extracted = categorization.extract_expense_from_text(text, [c.name for c in categories], per_gruppo, oggi=giorno)
-    except categorization.ServizioOccupato:
-        #503 e non 422: la frase era valida, e' il servizio a non essere
-        #disponibile. Dire "non ho capito" porterebbe a riscriverla invano
-        raise HTTPException(
-            status_code=503,
-            detail="Troppe richieste in questo momento. Riprova tra qualche istante.",
-        )
-
+    #passiamo i nomi al modello: categoria ed estrazione escono dalla stessa chiamata.
+    #"ieri" e "lunedi" si contano dal giorno dell'utente, non da quello del server
+    extracted = categorization.extract_expense_from_text(text, [c.name for c in categories], per_gruppo, oggi=giorno)
     if extracted is None:
-        raise HTTPException(status_code=422, detail="Non sono riuscito a capire la spesa")
+        return None
 
     category_id = None
     if extracted["category"]:

@@ -61,12 +61,13 @@ export default function AssistantScreen() {
       id: "benvenuto",
       sender: "system",
       text: t("assistente.benvenuto"),
-      //coprono i casi che l'assistente sa riconoscere: base, con data, ricorrente
+      //coprono i casi che l'assistente sa riconoscere: base, con data, ricorrente, domanda
       examples: [
         t("assistente.esempio1"),
         t("assistente.esempio2"),
         t("assistente.esempio3"),
         t("assistente.esempio4"),
+        t("assistente.esempio5"),
       ],
     },
   ]);
@@ -109,12 +110,13 @@ export default function AssistantScreen() {
     setIsLoading(true);
 
     try {
-      const response = await apiFetch("/expenses/extract-preview", {
+      //lo stesso endpoint per spese e domande: decide il server cosa e' il messaggio
+      const response = await apiFetch("/assistant/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ expenseText: userMessage.text }),
+        body: JSON.stringify({ text: userMessage.text }),
       });
 
       if (!response.ok) {
@@ -140,7 +142,15 @@ export default function AssistantScreen() {
       }
 
       const data = await response.json();
-      setPendingExpense(data);
+      if (data.tipo === "risposta") {
+        //una domanda sulle spese: la risposta e' un messaggio come gli altri
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now().toString(), sender: "system", text: data.testo },
+        ]);
+        return;
+      }
+      setPendingExpense(data.spesa);
       setAutoRenew(true); //ogni proposta riparte dal default, non dalla scelta fatta sulla precedente
     } catch (error) {
       setMessages((prev) => [

@@ -69,3 +69,34 @@ def user_or_ip(request: Request) -> str:
 # Istanza unica condivisa tra main.py (che la registra sull'app) e i router
 # (che la usano per decorare gli endpoint con @limiter.limit(...))
 limiter = Limiter(key_func=client_ip)
+
+
+#tetto complessivo delle richieste a Groq, condiviso da tutti gli endpoint che
+#lo chiamano. Il piano gratuito concede ~8000 token al minuto: con un prompt da
+#~940 token sono circa 8 richieste
+GROQ_AL_MINUTO = "8/minute"
+GROQ_AMBITO = "groq-globale"
+
+
+def chiave_groq_globale(request: Request) -> str:
+    #la stessa per tutti: e' un contatore unico, non per utente
+    return GROQ_AMBITO
+
+
+def consuma_quota_groq() -> bool:
+    """Conta una richiesta a Groq in piu' sul tetto globale. False = tetto raggiunto.
+
+    Il decoratore conta una richiesta per chiamata all'endpoint, ma una domanda
+    sulle spese puo' interrogare Groq piu' volte: le successive passano di qui.
+    Gli argomenti ricalcano quelli con cui slowapi conta un shared_limit
+    (prefisso, chiave, ambito), cosi' i due conteggi finiscono nello stesso
+    contatore; test_assistente verifica che sia davvero cosi'.
+    """
+    if not limiter.enabled:
+        return True
+    from limits import parse
+
+    identificativi = [chiave_groq_globale(None), GROQ_AMBITO]
+    if limiter._key_prefix:
+        identificativi = [limiter._key_prefix] + identificativi
+    return limiter.limiter.hit(parse(GROQ_AL_MINUTO), *identificativi)

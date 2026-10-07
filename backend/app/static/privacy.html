@@ -76,7 +76,8 @@
     <li><strong>Dati che inserisci:</strong> spese e abbonamenti (importo, descrizione,
       categoria, data, frequenza di rinnovo) e il budget mensile con il giorno di inizio del ciclo.</li>
     <li><strong>Testo inviato all'assistente:</strong> le frasi che scrivi all'assistente
-      (ad esempio "pizza 15 euro ieri") per registrare una spesa a parole.</li>
+      (ad esempio "pizza 15 euro ieri") per registrare una spesa a parole, o le domande
+      sulle tue spese (ad esempio "quanto ho speso a settembre?").</li>
     <li><strong>Codici di verifica:</strong> codici temporanei inviati via email per verificare
       l'indirizzo o reimpostare la password.</li>
     <li><strong>Dati tecnici:</strong> quando l'app comunica con il server, il fornitore
@@ -94,7 +95,8 @@
   <ul>
     <li>Creare e gestire il tuo account e permetterti di accedere.</li>
     <li>Salvare le tue spese e i tuoi abbonamenti e mostrarti statistiche e budget.</li>
-    <li>Interpretare il testo che scrivi all'assistente e proporti la spesa da salvare.</li>
+    <li>Interpretare il testo che scrivi all'assistente e proporti la spesa da salvare, o
+      rispondere alle tue domande sulle spese.</li>
     <li>Inviarti i codici di verifica via email.</li>
     <li>Proteggere il servizio da abusi (ad esempio limitando i tentativi di accesso ripetuti).</li>
   </ul>
@@ -117,8 +119,10 @@
           <td>Server e database dell'app</td><td>Tutti i dati dell'account e quelli che inserisci</td></tr>
         <tr><td><strong>Groq</strong> (Groq, Inc., USA)</td>
           <td>Intelligenza artificiale dell'assistente</td>
-          <td>Solo il testo che scrivi all'assistente, insieme all'elenco delle categorie. Non
-            vengono inviati email, nome o altre spese</td></tr>
+          <td>Il testo che scrivi all'assistente, insieme all'elenco delle categorie. Se fai una
+            domanda sulle spese, anche i dati che servono a risponderle: totali, e le singole spese
+            (data, descrizione, importo, categoria) solo quando la domanda le riguarda. Non vengono
+            inviati email né nome</td></tr>
         <tr><td><strong>Brevo</strong> (Francia)</td>
           <td>Invio delle email con i codici di verifica</td><td>Indirizzo email e codice</td></tr>
         <tr><td><strong>Google</strong> (Google LLC, USA)</td>
@@ -133,7 +137,8 @@
     contrattuali standard approvate dalla Commissione Europea.
   </p>
   <p>
-    <strong>Un consiglio:</strong> l'assistente serve solo a descrivere spese. Evita di
+    <strong>Un consiglio:</strong> l'assistente serve solo a registrare spese e a rispondere su
+    di esse. Evita di
     scrivergli dati personali non necessari, come nomi di altre persone o numeri di carte.
   </p>
 
