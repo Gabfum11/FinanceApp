@@ -81,7 +81,9 @@ export default function AddExpenseScreen() {
     autoRenew?: string; //dalla card dell'assistente o dall'abbonamento in modifica
     currency?: string; //spesa o abbonamento in valuta estera
   }>();
-  const editId = params.editId;
+  //solo cifre: arriva dall'URL, e un valore come "../auth/preferences"
+  //manderebbe la PATCH a un altro endpoint con il token dell'utente
+  const editId = params.editId && /^\d+$/.test(params.editId) ? params.editId : undefined;
   const isEditing = !!editId;
 
   // L'importo è tenuto come stringa perché il tastierino lavora carattere per

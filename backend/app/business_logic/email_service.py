@@ -1,5 +1,5 @@
 import os
-import random
+import secrets
 import httpx
 
 from app.business_logic.testi import testo
@@ -9,8 +9,8 @@ SENDER_EMAIL = os.getenv("GMAIL_ADDRESS")
 BREVO_URL = "https://api.brevo.com/v3/smtp/email"
 
 
-def generate_otp_code() -> str: #genera un numero casuale a 6 cifre
-    return str(random.randint(100000, 999999))
+def generate_otp_code() -> str: #6 cifre da un generatore crittografico: random.randint e' prevedibile
+    return str(secrets.randbelow(900000) + 100000)
 
 
 async def send_otp_email(to_email: str, code: str, purpose: str, lingua: str | None = "it"):
