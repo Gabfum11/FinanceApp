@@ -65,12 +65,30 @@ class TestDietroProxy:
         assert b == IP_UTENTE_B
         assert a != b, "con la stessa chiave si bloccherebbero a vicenda"
 
-    def test_catena_di_proxy_prende_il_primo(self, dietro_proxy):
-        got = state.client_ip(richiesta({"X-Forwarded-For": f"{IP_UTENTE_A}, 10.0.0.5, 10.0.0.9"}))
+    def test_ip_inventato_dal_client_ignorato(self, dietro_proxy):
+        """Il client scrive un IP a caso, il proxy aggiunge in coda quello vero."""
+        got = state.client_ip(richiesta({"X-Forwarded-For": f"1.2.3.4, {IP_UTENTE_A}"}))
         assert got == IP_UTENTE_A
 
+    def test_cambiare_ip_inventato_non_cambia_la_chiave(self, dietro_proxy):
+        """Altrimenti un IP nuovo a ogni richiesta azzererebbe i contatori."""
+        chiavi = {
+            state.client_ip(richiesta({"X-Forwarded-For": f"10.0.0.{n}, {IP_UTENTE_A}"}))
+            for n in range(5)
+        }
+        assert chiavi == {IP_UTENTE_A}
+
+    def test_piu_proxy_fidati(self, dietro_proxy, monkeypatch):
+        monkeypatch.setattr(state, "TRUSTED_PROXY_HOPS", 2)
+        got = state.client_ip(richiesta({"X-Forwarded-For": f"1.2.3.4, {IP_UTENTE_A}, 10.0.0.9"}))
+        assert got == IP_UTENTE_A
+
+    def test_catena_piu_corta_dei_proxy_attesi(self, dietro_proxy, monkeypatch):
+        monkeypatch.setattr(state, "TRUSTED_PROXY_HOPS", 2)
+        assert state.client_ip(richiesta({"X-Forwarded-For": IP_UTENTE_A})) == IP_PROXY
+
     def test_spazi_ignorati(self, dietro_proxy):
-        got = state.client_ip(richiesta({"X-Forwarded-For": f"  {IP_UTENTE_A}  , 10.0.0.5"}))
+        got = state.client_ip(richiesta({"X-Forwarded-For": f"  1.2.3.4  ,  {IP_UTENTE_A}  "}))
         assert got == IP_UTENTE_A
 
     def test_intestazione_assente_ricade_sulla_connessione(self, dietro_proxy):

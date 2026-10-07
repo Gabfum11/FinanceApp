@@ -6,6 +6,9 @@ from starlette.requests import Request
 
 #su Render va impostata a 1: in locale resta spenta, cosi' l'intestazione non e' falsificabile
 TRUST_PROXY_HEADERS = os.getenv("TRUST_PROXY_HEADERS", "").strip().lower() in ("1", "true", "yes")
+#quanti proxy fidati aggiungono un indirizzo in coda a X-Forwarded-For. Su Render
+#e' uno: l'ultimo indirizzo e' quello che si e' collegato al proxy
+TRUSTED_PROXY_HOPS = max(1, int(os.getenv("TRUSTED_PROXY_HOPS", "1")))
 
 
 def client_ip(request: Request) -> str:
@@ -20,14 +23,19 @@ def client_ip(request: Request) -> str:
     sappiamo di stare dietro un proxy (TRUST_PROXY_HEADERS=1): in locale
     resta valido get_remote_address, altrimenti basterebbe dichiarare un IP
     inventato a ogni richiesta per non superare mai un limite.
+
+    Anche dietro il proxy l'inizio della catena e' falsificabile: il client
+    puo' inviare un suo X-Forwarded-For e il proxy aggiunge in coda l'indirizzo
+    vero, senza cancellare il resto. Si legge quindi da destra: le voci scritte
+    dai proxy fidati sono le uniche che il chiamante non controlla.
     """
     if TRUST_PROXY_HEADERS:
-        forwarded = request.headers.get("X-Forwarded-For")
-        if forwarded:
-            #la catena e' "client, proxy1, proxy2": il primo e' il chiamante originale
-            first = forwarded.split(",")[0].strip()
-            if first:
-                return first
+        forwarded = request.headers.get("X-Forwarded-For", "")
+        catena = [ip.strip() for ip in forwarded.split(",") if ip.strip()]
+        #meno voci dei proxy attesi: la catena non e' quella che conosciamo,
+        #meglio contare tutti come il proxy che fidarsi di un valore inventato
+        if len(catena) >= TRUSTED_PROXY_HOPS:
+            return catena[-TRUSTED_PROXY_HOPS]
     return get_remote_address(request)
 
 
