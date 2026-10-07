@@ -12,7 +12,7 @@ import pytest
 
 from app import models
 from app.business_logic import security
-from app.routers.auth import MAX_OTP_ATTEMPTS
+from app.routers.auth import MAX_OTP_ATTEMPTS, MAX_OTP_PER_HOUR
 
 PASSWORD = "password123"
 
@@ -108,6 +108,73 @@ class TestTentativiOtp:
             json={"email": "nessuno@example.com", "code": "123456", "purpose": "email_verification"},
         )
         assert r.status_code == 401
+
+
+def otp_count(db_session, user_id):
+    db = db_session()
+    n = db.query(models.OtpCode).filter(models.OtpCode.user_id == user_id).count()
+    db.close()
+    return n
+
+
+def resend(client, email, purpose="password_reset"):
+    return client.post("/auth/resendOTP", json={"email": email, "purpose": purpose})
+
+
+class TestReinvioOtp:
+    """Il limite per account sui reinvii: senza, ogni nuovo codice azzerava i tentativi."""
+
+    def test_oltre_il_limite_orario_nessun_codice_nuovo(self, client, db_session, make_user):
+        user_id = make_user(email="reset@example.com", password=PASSWORD)
+        with patch("app.business_logic.email_service.send_otp_email") as invia:
+            risposte = [resend(client, "reset@example.com") for _ in range(MAX_OTP_PER_HOUR + 1)]
+        assert all(r.status_code == 200 for r in risposte)
+        assert risposte[-1].json() == risposte[0].json(), "la risposta non deve rivelare il blocco"
+        assert invia.call_count == MAX_OTP_PER_HOUR
+        assert otp_count(db_session, user_id) == MAX_OTP_PER_HOUR
+
+    def test_il_reinvio_non_azzera_i_tentativi(self, client, db_session, make_user):
+        make_user(email="reset@example.com", password=PASSWORD)
+        with patch("app.business_logic.email_service.send_otp_email"), \
+             patch("app.business_logic.email_service.generate_otp_code", return_value="123456"):
+            for _ in range(MAX_OTP_PER_HOUR):
+                resend(client, "reset@example.com")
+            for _ in range(MAX_OTP_ATTEMPTS):
+                client.post(
+                    "/auth/verify-otp",
+                    json={"email": "reset@example.com", "code": "000000", "purpose": "password_reset"},
+                )
+            resend(client, "reset@example.com")
+        r = client.post(
+            "/auth/verify-otp",
+            json={"email": "reset@example.com", "code": "123456", "purpose": "password_reset"},
+        )
+        assert r.status_code == 401
+        assert r.json()["detail"] == "Too many attempts"
+
+    def test_i_codici_di_oltre_un_ora_non_contano(self, client, db_session, make_user):
+        user_id = make_user(email="reset@example.com", password=PASSWORD)
+        db = db_session()
+        due_ore_fa = datetime.now(timezone.utc) - timedelta(hours=2)
+        for _ in range(MAX_OTP_PER_HOUR):
+            db.add(models.OtpCode(
+                user_id=user_id, code="111111", purpose="password_reset",
+                expires_at=due_ore_fa + timedelta(minutes=10), created_at=due_ore_fa,
+            ))
+        db.commit()
+        db.close()
+        with patch("app.business_logic.email_service.send_otp_email") as invia:
+            resend(client, "reset@example.com")
+        assert invia.call_count == 1
+        assert otp_count(db_session, user_id) == 1, "i codici vecchi vanno cancellati"
+
+    def test_nessun_codice_di_verifica_per_un_account_gia_verificato(self, client, db_session, make_user):
+        user_id = make_user(email="verificato@example.com", password=PASSWORD)
+        with patch("app.business_logic.email_service.send_otp_email") as invia:
+            r = resend(client, "verificato@example.com", purpose="email_verification")
+        assert r.status_code == 200
+        assert invia.call_count == 0
+        assert otp_count(db_session, user_id) == 0
 
 
 class TestLogin:

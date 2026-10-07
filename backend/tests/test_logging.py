@@ -84,7 +84,7 @@ class TestDatiPersonali:
         """L'email è un dato personale e i log restano leggibili per giorni."""
         from unittest.mock import patch
 
-        user_id = make_user(email="privato@example.com", password="password123")
+        user_id = make_user(email="privato@example.com", password="password123", verified=False)
         with caplog.at_level(logging.ERROR):
             with patch(
                 "app.business_logic.email_service.send_otp_email",

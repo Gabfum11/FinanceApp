@@ -16,6 +16,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime, timedelta, timezone
 router = APIRouter(prefix="/auth", tags=["auth"])
 MAX_OTP_ATTEMPTS = 5  # Numero massimo di tentativi consentiti per l'inserimento del codice OTP
+MAX_OTP_PER_HOUR = 3  # codici inviabili a un account in un'ora, qualunque sia l'IP: senza, ogni reinvio azzererebbe i tentativi
 
 
 def _session_tokens(db: Session, user: models.User) -> dict:
@@ -282,12 +283,29 @@ def delete_me(request: Request, payload: schemas.DeleteAccount, db: Session = De
 @router.post("/resendOTP")
 @limiter.limit("3/5minutes") #significa che un utente puo' richiedere al massimo 3 codici OTP ogni 5 minuti, per impedire abusi
 async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=Depends(get_db)):
+    risposta = {"detail":"Se l'account esiste, ricevereai un codice via mail"}
     auth_user=db.query(models.User).filter(models.User.email==payload.email).first()
     if auth_user is not None:
+        #un account gia' verificato non ha bisogno di un codice di verifica, e
+        #/verify-otp con quel codice aprirebbe una sessione senza password
+        if payload.purpose == "email_verification" and auth_user.is_verified:
+            return risposta
+        un_ora_fa = datetime.now(timezone.utc) - timedelta(hours=1)
+        #i codici dell'ultima ora restano: sono il contatore dei reinvii. Se li
+        #cancellassimo, ogni reinvio azzererebbe anche i tentativi sbagliati
         db.query(models.OtpCode).filter(
             models.OtpCode.user_id == auth_user.id,
-            models.OtpCode.purpose == payload.purpose
+            models.OtpCode.purpose == payload.purpose,
+            models.OtpCode.created_at < un_ora_fa,
         ).delete()
+        recenti = db.query(models.OtpCode).filter(
+            models.OtpCode.user_id == auth_user.id,
+            models.OtpCode.purpose == payload.purpose,
+        ).count()
+        if recenti >= MAX_OTP_PER_HOUR:
+            #stessa risposta di sempre: chi chiede non deve capire se l'account esiste
+            db.commit()
+            return risposta
         otp_code=email_service.generate_otp_code()
         expire_at=datetime.now(timezone.utc) + timedelta(minutes=10)
         new_otp= models.OtpCode(
@@ -309,7 +327,7 @@ async def resendOTP(request: Request, payload: schemas.ResendOtp, db: Session=De
                 "invio del codice OTP non riuscito",
                 extra={"user_id": auth_user.id, "purpose": payload.purpose},
             )
-    return{"detail":"Se l'account esiste, ricevereai un codice via mail"}
+    return risposta
 
 @router.post("/resetPassword")
 @limiter.limit("10/hour")
