@@ -7,7 +7,8 @@ from starlette.requests import Request
 #su Render va impostata a 1: in locale resta spenta, cosi' l'intestazione non e' falsificabile
 TRUST_PROXY_HEADERS = os.getenv("TRUST_PROXY_HEADERS", "").strip().lower() in ("1", "true", "yes")
 #quanti proxy fidati aggiungono un indirizzo in coda a X-Forwarded-For. Su Render
-#e' uno: l'ultimo indirizzo e' quello che si e' collegato al proxy
+#va impostata a 3: la catena arriva come "client, Cloudflare, bilanciatore di
+#Render", e tutto quello che sta prima del client lo ha scritto il chiamante
 TRUSTED_PROXY_HOPS = max(1, int(os.getenv("TRUSTED_PROXY_HOPS", "1")))
 
 
