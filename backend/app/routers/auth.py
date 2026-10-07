@@ -140,6 +140,17 @@ def login_with_google(request: Request, payload: schemas.GoogleLogin, db: Sessio
         #quindi colleghiamo i due metodi invece di creare un doppione
         auth_user = db.query(models.User).filter(models.User.email == info["email"]).first()
         if auth_user is not None:
+            #l'email e' gia' legata a un altro account Google: non lo sostituiamo
+            if auth_user.google_id is not None:
+                raise HTTPException(status_code=409, detail="Email linked to another Google account")
+            if not auth_user.is_verified:
+                #registrazione mai confermata: la password puo' averla scelta
+                #chiunque conoscesse l'email. Il proprietario e' chi ha appena
+                #dimostrato con Google di possederla, quindi ripartiamo da zero
+                #invece di ereditare password e profilo di uno sconosciuto
+                db.query(models.OtpCode).filter(models.OtpCode.user_id == auth_user.id).delete()
+                auth_user.hashed_password = None
+                auth_user.nickname = info["name"]
             auth_user.google_id = info["google_id"]
         else:
             auth_user = models.User(

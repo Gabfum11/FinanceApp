@@ -198,6 +198,35 @@ class TestGoogle:
         assert user.hashed_password is not None, "la password non va persa"
         assert user.nickname == "Originale", "il nickname non va sovrascritto"
 
+    def test_account_non_verificato_perde_la_password(self, client, db_session, make_user, google_configurato):
+        #qualcuno ha registrato l'email della vittima con una sua password
+        user_id = make_user(email="vittima@gmail.com", password=PASSWORD, verified=False, nickname="Intruso")
+        with patch("httpx.get", return_value=google_response("vittima@gmail.com", "g-3")):
+            r = client.post("/auth/google", json={"id_token": "finto"})
+        assert r.status_code == 200
+
+        db = db_session()
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+        db.close()
+        assert user.google_id == "g-3"
+        assert user.is_verified
+        assert user.hashed_password is None, "la password dell'intruso non deve sopravvivere"
+        assert user.nickname != "Intruso"
+
+        r = client.post("/auth/login", json={"email": "vittima@gmail.com", "password": PASSWORD})
+        assert r.status_code == 401
+
+    def test_google_id_diverso_non_viene_sovrascritto(self, client, db_session, make_user, google_configurato):
+        make_user(email="doppio@gmail.com", password=PASSWORD, google_id="g-originale")
+        with patch("httpx.get", return_value=google_response("doppio@gmail.com", "g-altro")):
+            r = client.post("/auth/google", json={"id_token": "finto"})
+        assert r.status_code == 409
+
+        db = db_session()
+        user = db.query(models.User).filter(models.User.email == "doppio@gmail.com").first()
+        db.close()
+        assert user.google_id == "g-originale"
+
     def test_token_di_un_altra_app_rifiutato(self, client, google_configurato):
         with patch("httpx.get", return_value=google_response("x@gmail.com", "g-9", aud="altra-app")):
             r = client.post("/auth/google", json={"id_token": "finto"})
