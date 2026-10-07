@@ -28,7 +28,7 @@ def verify_google_token(id_token: str) -> dict:
         raise GoogleAuthError("Login con Google non configurato")
 
     try:
-        response = httpx.get(TOKENINFO_URL, params={"id_token": id_token}, timeout=10)
+        response = httpx.post(TOKENINFO_URL, data={"id_token": id_token}, timeout=10)
     except httpx.HTTPError:
         raise GoogleAuthError("Verifica del token non riuscita")
 

@@ -46,7 +46,7 @@ def setup_logging() -> None:
     handler = logging.StreamHandler(sys.stdout)  # Render raccoglie stdout
     handler.setFormatter(
         ContextFormatter(
-            fmt="%(asctime)s  %(levelname)-8s %(name)s  %(message)s",
+            fmt="%(asctime)s  %(levelname)-8s %(name)s  %(message)s", #forma della riga mostrata su Render, 8 sono i caratteri riservati al livello (INFO, WARNING, ERROR) per allineare le righe
             datefmt="%Y-%m-%d %H:%M:%S",
         )
     )
@@ -58,7 +58,16 @@ def setup_logging() -> None:
 
     #uvicorn registra già ogni richiesta: le nostre righe si aggiungerebbero a quelle
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
-
+    #httpx e httpcore scrivono ogni richiesta con l'URL completo, parametri compresi:
+    #finirebbero nei log anche i token. Teniamo solo avvisi ed errori
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(name)
+
+"""
+Esempio di riga di log:
+2026-10-06 09:14:02  WARNING  app.business_logic.cambi  tasso di cambio non disponibile  da=GBP a=EUR giorno=2026-10-05
+└── quando ──────┘  └ gravità┘ └── da quale file ─────┘  └── cosa ──────────────────────┘  └── contesto ──────────┘
+"""
