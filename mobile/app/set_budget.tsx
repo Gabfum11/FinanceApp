@@ -87,7 +87,7 @@ export default function SetBudgetScreen() {
                 value={amount}
                 onChangeText={setAmount}
                 placeholder={t("budgetNuovo.esempioImporto")}
-                keyboardType="numeric"
+                keyboardType="decimal-pad"
                 mode="outlined"
                 outlineStyle={styles.inputOutline}
                 style={styles.input}
