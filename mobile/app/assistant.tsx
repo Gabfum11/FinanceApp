@@ -9,7 +9,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { toDateString, fromDateString } from "@/utils/date"
-import { iconaPerGruppo } from "@/utils/categoryIcons";
+import { iconaPerCategoria } from "@/utils/categoryIcons";
 import { usePreferenze } from "@/utils/preferenze";
 import { SelettoreData } from "@/components/SelettoreData";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
@@ -79,6 +79,9 @@ export default function AssistantScreen() {
   //l'esito o rimettere la card se l'utente non ha salvato.
   //Un ref e non uno stato: cambiarlo non deve rilanciare l'effetto qui sotto
   const propostaInModifica = useRef<ExpenseConfirmation | null>(null);
+  //l'ultima domanda con la sua risposta: il server la manda al modello per
+  //capire i seguiti come "quali sono?" o "e il mese scorso?"
+  const ultimoScambio = useRef<{ domanda: string; risposta: string } | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -116,7 +119,7 @@ export default function AssistantScreen() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ text: userMessage.text }),
+        body: JSON.stringify({ text: userMessage.text, precedente: ultimoScambio.current }),
       });
 
       if (!response.ok) {
@@ -144,6 +147,7 @@ export default function AssistantScreen() {
       const data = await response.json();
       if (data.tipo === "risposta") {
         //una domanda sulle spese: la risposta e' un messaggio come gli altri
+        ultimoScambio.current = { domanda: userMessage.text ?? "", risposta: data.testo };
         setMessages((prev) => [
           ...prev,
           { id: Date.now().toString(), sender: "system", text: data.testo },
@@ -299,7 +303,7 @@ function handleDatePickerDismiss() {
               <View style={styles.savedBody}>
                 <View style={styles.savedIcon}>
                   <MaterialCommunityIcons
-                    name={iconaPerGruppo(item.expenseData.category_group) as any}
+                    name={iconaPerCategoria(item.expenseData.category_name, item.expenseData.category_group) as any}
                     size={20}
                     color={colors.primaryDark}
                   />
@@ -360,7 +364,7 @@ function handleDatePickerDismiss() {
           </Text>
           <View style={styles.categoryRow}>
             <MaterialCommunityIcons
-              name={iconaPerGruppo(pendingExpense.category_group) as any}
+              name={iconaPerCategoria(pendingExpense.category_name, pendingExpense.category_group) as any}
               size={18}
               color="#2ECC71"
             />

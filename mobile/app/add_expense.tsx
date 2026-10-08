@@ -18,7 +18,7 @@ import { SelettoreData } from "@/components/SelettoreData";
 import { apiFetch } from "@/utils/apiFetch";
 import { fromDateString, toDateString } from "@/utils/date";
 import { creaStili, coloriSpesa } from "../styles/add-expense.styles";
-import { iconaPerGruppo } from "@/utils/categoryIcons";
+import { iconaPerCategoria, iconaPerGruppo } from "@/utils/categoryIcons";
 import { usePreferenze } from "@/utils/preferenze";
 import { simbolo, eValuta, VALUTE, IMPORTO_MASSIMO, type Valuta } from "@/utils/formato";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
@@ -680,9 +680,7 @@ export default function AddExpenseScreen() {
               keyExtractor={(item) => item.id.toString()}
               stickySectionHeadersEnabled
               renderSectionHeader={({ section }) => (
-                //il gruppo è solo un'intestazione: non è selezionabile.
-                //L'icona sta qui e non su ogni voce: ripeterla 46 volte
-                //aggiungerebbe rumore senza distinguere nulla
+                //il gruppo è solo un'intestazione: non è selezionabile
                 <View style={styles.categoryGroupHeader}>
                   <MaterialCommunityIcons
                     name={iconaPerGruppo(section.title) as any}
@@ -692,7 +690,7 @@ export default function AddExpenseScreen() {
                   <Text style={styles.categoryGroupTitle}>{nomeCategoria(section.title)}</Text>
                 </View>
               )}
-              renderItem={({ item }) => (
+              renderItem={({ item, section }) => (
                 <Pressable
                   style={styles.categoryRow}
                   onPress={() => {
@@ -700,6 +698,11 @@ export default function AddExpenseScreen() {
                     setShowCategoryPicker(false);
                   }}
                 >
+                  <MaterialCommunityIcons
+                    name={iconaPerCategoria(item.name, section.title) as any}
+                    size={20}
+                    color={category?.id === item.id ? colors.green : colors.label}
+                  />
                   <Text
                     style={[
                       styles.categoryRowText,

@@ -325,6 +325,9 @@ export const creaStili = (tokens: Colori) => {
     letterSpacing: 0.6,
   },
   categoryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     paddingLeft: 32, //rientro: distingue la voce dall'intestazione del gruppo
     paddingRight: 20,
     paddingVertical: 13,

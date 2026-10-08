@@ -9,7 +9,7 @@ import { formatDataSpesa } from "@/utils/date";
 import { creaStili } from "@/styles/all_expenses.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { iconaPerGruppo } from "@/utils/categoryIcons";
+import { iconaPerCategoria } from "@/utils/categoryIcons";
 import { usePreferenze } from "@/utils/preferenze";
 import { useTranslation } from "react-i18next";
 import { nomeCategoria } from "@/utils/categorie";
@@ -280,7 +280,8 @@ export default function ExpenseList() {
             <View style={styles.rigaTabella}>
                 <View style={[styles.expenseIcon, styles.colonnaIcona]}>
                     <MaterialCommunityIcons
-                        name={iconaPerGruppo(
+                        name={iconaPerCategoria(
+                            item.category_name,
                             item.category_id !== null
                                 ? gruppoDiCategoria.get(item.category_id)?.name
                                 : null
@@ -305,10 +306,11 @@ export default function ExpenseList() {
             </View>
         ) : (
             <View style={styles.expenseRow}>
-                {/* l'icona è del gruppo: rende la lista scansionabile senza leggere */}
+                {/* l'icona rende la lista scansionabile senza leggere */}
                 <View style={styles.expenseIcon}>
                     <MaterialCommunityIcons
-                        name={iconaPerGruppo(
+                        name={iconaPerCategoria(
+                            item.category_name,
                             item.category_id !== null
                                 ? gruppoDiCategoria.get(item.category_id)?.name
                                 : null

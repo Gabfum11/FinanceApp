@@ -1,6 +1,6 @@
-// Le icone stanno sui gruppi, non sulle 46 sottocategorie: a 20px "Bolletta
-// acqua" e "Bolletta energia" sarebbero indistinguibili, mentre il gruppo ha
-// un significato visivo netto. La sottocategoria resta nel testo.
+// Ogni gruppo ha la sua icona, e anche le sottocategorie che si riconoscono a
+// colpo d'occhio. Le voci "(generico)" e quelle non elencate qui prendono
+// l'icona del gruppo.
 //
 // I nomi sono di MaterialCommunityIcons, già usato altrove nell'app.
 const ICONE_GRUPPO: Record<string, string> = {
@@ -18,12 +18,59 @@ const ICONE_GRUPPO: Record<string, string> = {
   "Viaggi": "airplane",
 };
 
+// La chiave e' il nome italiano che arriva dal database, come per i gruppi
+const ICONE_CATEGORIA: Record<string, string> = {
+  "Spesa alimentare": "cart-outline",
+  "Pranzi e cene": "food-fork-drink",
+  "Bar e caffè": "coffee-outline",
+  "Abbigliamento": "tshirt-crew-outline",
+  "Scarpe": "shoe-sneaker",
+  "Tecnologia": "cellphone-link",
+  "Regali": "gift-outline",
+  "Tabacchi": "smoking",
+  "Carburante": "gas-station",
+  "Mezzi pubblici": "bus",
+  "Automobile": "car-wrench",
+  "Assicurazione auto": "shield-car",
+  "Parcheggi e pedaggi": "parking",
+  "Affitto o mutuo": "key-variant",
+  "Bolletta energia": "lightning-bolt-outline",
+  "Bolletta acqua": "water-outline",
+  "Bolletta rifiuti": "trash-can-outline",
+  "Internet e telefono": "wifi",
+  "Spese condominiali": "office-building-outline",
+  "Visite mediche": "stethoscope",
+  "Farmacia": "pill",
+  "Parrucchiere": "hair-dryer-outline",
+  "Estetista": "lipstick",
+  "Libri e giornali": "book-open-variant",
+  "Cinema e spettacoli": "ticket-outline",
+  "Abbonamenti digitali": "play-box-outline",
+  "Palestra": "weight-lifter",
+  "Attrezzatura sportiva": "basketball",
+  "Alloggio": "bed-outline",
+  "Trasporti viaggio": "train-car",
+  "Bambini": "baby-face-outline",
+  "Istruzione": "school-outline",
+  "Cibo animali": "food-drumstick-outline",
+  "Veterinario": "dog",
+};
+
 const ICONA_PREDEFINITA = "tag-outline";
 
 /** Icona del gruppo indicato. Un gruppo sconosciuto ricade sulla predefinita. */
 export function iconaPerGruppo(nomeGruppo: string | null | undefined): string {
   if (!nomeGruppo) return ICONA_PREDEFINITA;
   return ICONE_GRUPPO[nomeGruppo] ?? ICONA_PREDEFINITA;
+}
+
+/** Icona della sottocategoria; se non ne ha una propria, quella del suo gruppo. */
+export function iconaPerCategoria(
+  nomeCategoria: string | null | undefined,
+  nomeGruppo: string | null | undefined,
+): string {
+  if (nomeCategoria && ICONE_CATEGORIA[nomeCategoria]) return ICONE_CATEGORIA[nomeCategoria];
+  return iconaPerGruppo(nomeGruppo);
 }
 
 // Ogni gruppo ha il suo colore nelle statistiche, sempre lo stesso: prima il
