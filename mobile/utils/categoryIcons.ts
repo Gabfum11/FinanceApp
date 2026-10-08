@@ -13,7 +13,7 @@ const ICONE_GRUPPO: Record<string, string> = {
   "Famiglia": "account-child-outline",
   "Salute": "medical-bag",
   "Sport": "dumbbell",
-  "Svago": "movie-open-outline",
+  "Svago": "party-popper",
   "Trasporti": "car-outline",
   "Viaggi": "airplane",
 };
@@ -44,7 +44,7 @@ const ICONE_CATEGORIA: Record<string, string> = {
   "Parrucchiere": "hair-dryer-outline",
   "Estetista": "lipstick",
   "Libri e giornali": "book-open-variant",
-  "Cinema e spettacoli": "ticket-outline",
+  "Cinema e spettacoli": "movie-open-outline",
   "Abbonamenti digitali": "play-box-outline",
   "Palestra": "weight-lifter",
   "Attrezzatura sportiva": "basketball",

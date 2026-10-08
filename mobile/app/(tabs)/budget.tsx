@@ -12,6 +12,7 @@ import { useSpazioBarra } from "@/utils/barraSchede";
 import { useTranslation } from "react-i18next";
 import i18n from "@/utils/i18n";
 import { nomeCategoria } from "@/utils/categorie";
+import { iconaPerCategoria } from "@/utils/categoryIcons";
 import { localeAttuale } from "@/utils/date";
 import { useStili, useTema } from "@/utils/tema";
 import { useSchermoLargo } from "@/utils/layout";
@@ -60,6 +61,8 @@ export default function BudgetScreen() {
   //di lista vuota lampeggerebbe a ogni apertura
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  //nome del gruppo di ogni categoria, per l'icona di ripiego
+  const [gruppoDiCategoria, setGruppoDiCategoria] = useState<Map<number, string>>(new Map());
   const activeSubscriptions = subscriptions.filter(sub => sub.is_active);
   const pausedSubscriptions = subscriptions.filter(sub => !sub.is_active);
   const today = new Date();
@@ -82,6 +85,22 @@ export default function BudgetScreen() {
         loadSubscriptions()
       },[])
     );
+    //la gerarchia cambia raramente: basta caricarla una volta all'apertura
+    useEffect(() => {
+      async function loadGruppi() {
+        try {
+          const response = await apiFetch("/categories/grouped");
+          if (!response.ok) return;
+          const gruppi: { name: string; children: { id: number }[] }[] = await response.json();
+          const mappa = new Map<number, string>();
+          for (const g of gruppi) for (const figlia of g.children) mappa.set(figlia.id, g.name);
+          setGruppoDiCategoria(mappa);
+        } catch {
+          //senza gerarchia le icone ricadono sulla predefinita, il resto funziona
+        }
+      }
+      loadGruppi();
+    }, []);
     function getOverdueText(nextDate: string): string {
     const today = new Date();
     today.setHours(0,0,0,0)
@@ -179,7 +198,14 @@ export default function BudgetScreen() {
         {activeSubscriptions.map((item) => (
           <View key={item.id} style={[styles.subRow, largo && styles.cella]}>
             <View style={styles.subIconContainer}>
-              <MaterialCommunityIcons name="repeat" size={20} color={colors.primary} />
+              <MaterialCommunityIcons
+                name={iconaPerCategoria(
+                  item.category_name,
+                  item.category_id !== null ? gruppoDiCategoria.get(item.category_id) : undefined,
+                ) as any}
+                size={20}
+                color={colors.primary}
+              />
             </View>
             <View style={styles.subInfo}>
               <Text style={styles.subDesc}>{item.description}</Text>
