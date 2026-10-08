@@ -375,7 +375,10 @@ def _regole_risposta(utente: models.User) -> str:
     return (
         f"Rispondi sempre {_LINGUE.get(utente.language, 'in italiano')}, "
         "in al massimo quattro frasi di testo semplice: niente markdown, elenchi puntati, "
-        "tabelle o JSON. Importi con due decimali e la valuta. Quando citi una singola "
+        "tabelle o JSON. Importi con due decimali, scritti come si usa nella lingua della "
+        "risposta (in italiano 354,00 €), con il simbolo della valuta invece del codice. "
+        "Se i dati sono filtrati per categoria o per testo, nominali nella risposta, "
+        "cosi' l'utente vede di cosa e' il totale. Quando citi una singola "
         "spesa, di' anche cos'era e quando. Se i dati contengono molte spese singole, "
         "non elencarle tutte: di' quante sono, il totale e al massimo le tre piu' "
         "importanti. Non calcolare percentuali. "
@@ -492,21 +495,35 @@ def _testo_semplice(messaggio) -> str | None:
     return testo or None
 
 
+def _scambio_precedente(precedente: dict | None) -> list:
+    """L'ultima domanda e la sua risposta, per capire "quali sono?" o "e il mese scorso?".
+
+    Solo testo, senza le chiamate a funzione: vedendole il modello prova a
+    richiamarle anche nella seconda richiesta, dove non ne ha.
+    """
+    if not precedente:
+        return []
+    return [{"role": "user", "content": precedente["domanda"]},
+            {"role": "assistant", "content": precedente["risposta"]}]
+
+
 def rispondi_a_domanda(
     testo: str, db: Session, utente: models.User, giorno: date, quota: Callable[[], None],
+    precedente: dict | None = None,
 ) -> str | None:
     """La risposta da mostrare in chat, o None se il modello non ne ha data una.
 
     Al massimo due richieste a Groq: nella prima il modello sceglie le
     funzioni, nella seconda riceve i risultati e risponde. quota() viene
     chiamata prima di ognuna e solleva ServizioOccupato quando il tetto
-    globale e' raggiunto.
+    globale e' raggiunto. precedente ({"domanda", "risposta"}) e' l'ultimo
+    scambio della chat, mandato a entrambe le richieste.
     """
-    domanda = {"role": "user", "content": testo}
+    domanda = [*_scambio_precedente(precedente), {"role": "user", "content": testo}]
     try:
         quota()
         scelta = _chiama_modello(
-            [{"role": "system", "content": _istruzioni_scelta(db, utente, giorno)}, domanda],
+            [{"role": "system", "content": _istruzioni_scelta(db, utente, giorno)}, *domanda],
             con_strumenti=True,
         )
         chiamate = (scelta.tool_calls or [])[:MAX_FUNZIONI]
@@ -523,7 +540,7 @@ def rispondi_a_domanda(
         ]
         quota()
         return _testo_semplice(_chiama_modello(
-            [{"role": "system", "content": _istruzioni_risposta(utente, giorno, risultati)}, domanda],
+            [{"role": "system", "content": _istruzioni_risposta(utente, giorno, risultati)}, *domanda],
             con_strumenti=False,
         ))
     except RateLimitError:

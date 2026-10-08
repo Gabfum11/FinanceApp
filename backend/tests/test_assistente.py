@@ -383,6 +383,25 @@ class TestDialogo:
         with patch.object(categorization.groq_client.chat.completions, "create", return_value=troncata):
             assert domande.rispondi_a_domanda("che spese?", db, utente, OGGI, lambda: None) is None
 
+    def test_lo_scambio_precedente_arriva_a_entrambe_le_richieste(self, db, utente):
+        ricevuti = []
+
+        def modello(messaggi, con_strumenti):
+            ricevuti.append(list(messaggi))
+            if con_strumenti:
+                return risposta_modello(chiamate=[chiamata("stato_budget", {})])
+            return risposta_modello("ok")
+
+        precedente = {"domanda": "Quanto ho speso di benzina?", "risposta": "A ottobre 0,00 €."}
+        with patch.object(domande, "_chiama_modello", modello):
+            domande.rispondi_a_domanda("Il mese scorso", db, utente, OGGI, lambda: None, precedente)
+        for messaggi in ricevuti:
+            assert messaggi[1:] == [
+                {"role": "user", "content": "Quanto ho speso di benzina?"},
+                {"role": "assistant", "content": "A ottobre 0,00 €."},
+                {"role": "user", "content": "Il mese scorso"},
+            ]
+
     def test_un_guasto_del_modello_non_rompe_l_endpoint(self, db, utente):
         with patch.object(domande, "_chiama_modello", side_effect=RuntimeError("giu'")):
             assert domande.rispondi_a_domanda("quanto?", db, utente, OGGI, lambda: None) is None
@@ -442,6 +461,23 @@ class TestEndpoint:
     def test_groq_saturo_da_503(self, client, connesso):
         with patch.object(domande, "rispondi_a_domanda", side_effect=categorization.ServizioOccupato()):
             assert invia(client, "Quanto ho speso?").status_code == 503
+
+    def test_lo_scambio_precedente_passa_alla_domanda(self, client, connesso):
+        with patch.object(domande, "rispondi_a_domanda", return_value="ok") as risposta:
+            client.post("/assistant/message", headers={"Authorization": "Bearer tok"}, json={
+                "text": "Quali sono?",
+                "precedente": {"domanda": " Spese di settembre ", "risposta": "x" * 2000},
+            })
+        assert risposta.call_args.args[-1] == {"domanda": "Spese di settembre", "risposta": "x" * 1000}
+
+    @pytest.mark.parametrize("precedente", [None, "testo", {"domanda": "a"}, {"domanda": 1, "risposta": "b"},
+                                            {"domanda": " ", "risposta": "b"}])
+    def test_uno_scambio_precedente_non_valido_viene_ignorato(self, client, connesso, precedente):
+        with patch.object(domande, "rispondi_a_domanda", return_value="ok") as risposta:
+            r = client.post("/assistant/message", headers={"Authorization": "Bearer tok"},
+                            json={"text": "Quali sono?", "precedente": precedente})
+        assert r.status_code == 200
+        assert risposta.call_args.args[-1] is None
 
     @pytest.mark.parametrize("testo", ["", "   ", "x" * 501])
     def test_messaggio_vuoto_o_troppo_lungo(self, client, connesso, testo):

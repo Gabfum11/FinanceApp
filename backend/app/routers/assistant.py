@@ -15,6 +15,25 @@ router = APIRouter(prefix="/assistant", tags=["assistant"])
 
 #oltre non e' piu' una frase da chat, e ogni carattere finisce nel prompt
 MAX_CARATTERI = 500 #oltre viene rifiutato
+#una risposta dell'assistente e' di al massimo quattro frasi: oltre si taglia
+MAX_CARATTERI_RISPOSTA = 1000
+
+
+def _precedente(dati: dict) -> dict | None:
+    """L'ultimo scambio della chat, mandato dall'app: arriva dal client, si controlla.
+
+    Una risposta inventata dal client cambia solo il contesto della sua
+    domanda: le funzioni filtrano comunque per utente.
+    """
+    precedente = dati.get("precedente")
+    if not isinstance(precedente, dict):
+        return None
+    domanda, risposta = precedente.get("domanda"), precedente.get("risposta")
+    if not (isinstance(domanda, str) and isinstance(risposta, str)
+            and domanda.strip() and risposta.strip()):
+        return None
+    return {"domanda": domanda.strip()[:MAX_CARATTERI],
+            "risposta": risposta.strip()[:MAX_CARATTERI_RISPOSTA]}
 
 
 class QuotaGroq: #è un oggetto perchè serve salvare lo stato per capire quante richieste a Groq sono già state contate per questa domanda.
@@ -62,7 +81,7 @@ def messaggio(request: Request, dati: dict, db: Session = Depends(get_db), curre
             return {"tipo": "spesa", "spesa": proposta}
         #i rinnovi scaduti devono comparire nei totali, come nelle statistiche
         run_due_renewals(db, current_user.id, giorno)
-        risposta = domande.rispondi_a_domanda(testo, db, current_user, giorno, quota)
+        risposta = domande.rispondi_a_domanda(testo, db, current_user, giorno, quota, _precedente(dati))
     except categorization.ServizioOccupato:
         raise HTTPException(status_code=503, detail=SERVIZIO_OCCUPATO)
 
