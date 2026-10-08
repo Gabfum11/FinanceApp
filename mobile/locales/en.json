@@ -142,6 +142,23 @@
       "testo": "Free account. All you need is an email and a password, or your Google account.",
       "crea": "Create an account"
     },
+    "statistiche": {
+      "titolo": "See where your budget goes",
+      "testo": "Your monthly spending split by category. Go back to past months to compare."
+    },
+    "assistente": {
+      "domanda": "How much did I spend at bars last month?",
+      "risposta": "Last month you spent {{importo}} on {{categoria}} across 18 expenses.",
+      "seguito": "And the month before?",
+      "risposta2": "The month before, {{importo}} across 12 expenses: last month you spent {{differenza}} more."
+    },
+    "descrizioni": {
+      "assistente": "Example: ask the assistant how much you spent at bars last month and it answers with the total and a comparison with the month before",
+      "spese": "Example: type an expense in your own words and it's saved with amount, date and category",
+      "budget": "Example: this month's budget with what you spent and what's left, and your spending day by day this week",
+      "statistiche": "Example: this month's spending split by category in a donut chart, with the part of the budget still available",
+      "abbonamenti": "Example: your active subscriptions, with the gym due tomorrow and Netflix in 9 days"
+    },
     "cosaFa": "What TrackIt does",
     "piede": {
       "privacy": "Privacy policy",

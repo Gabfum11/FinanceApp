@@ -265,33 +265,33 @@ export const creaStili = (colors: Colori) =>
     fontSize: 15,
     marginBottom: 12,
   },
+  //come il grafico della home: barre fino a 35 con 8 di spazio, allineate a
+  //sinistra e con la cima tonda. Si stringono da sole se lo spazio non basta,
+  //senza misurare la finestra (la landing viene generata durante la build)
   colonne: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "flex-end",
-    height: 120,
+    gap: 8,
+    paddingHorizontal: 8,
   },
   colonna: {
+    flex: 1,
+    maxWidth: 35,
     alignItems: "center",
     gap: 4,
-    width: 30,
   },
   colonnaValore: {
     color: colors.textOnDark,
     fontSize: 10,
   },
+  //raggio grande: il browser lo riduce a meta' della larghezza, una cupola
   colonnaBarra: {
-    width: 30,
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-  },
-  giorni: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 8,
+    width: "100%",
+    borderTopLeftRadius: 999,
+    borderTopRightRadius: 999,
   },
   giorno: {
-    width: 30,
+    marginTop: 4,
     textAlign: "center",
     color: colors.textOnDarkMuted,
     fontSize: 12,
@@ -360,6 +360,88 @@ export const creaStili = (colors: Colori) =>
   abbonamentoImporto: {
     fontSize: 16,
     color: colors.text,
+  },
+  // --- statistiche (solo nella landing) ---
+  statistiche: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    ...cardShadow,
+  },
+  statPeriodo: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    marginBottom: 10,
+  },
+  statPeriodoTesto: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  statCorpo: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 20,
+  },
+  ciambella: {
+    width: 150,
+    height: 150,
+  },
+  ciambellaRuotata: {
+    transform: [{ rotate: "-90deg" }],
+  },
+  ciambellaCentro: {
+    ...StyleSheet.absoluteFill,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ciambellaEtichetta: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  ciambellaImporto: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: colors.text,
+  },
+  statLegenda: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 180,
+    gap: 9,
+  },
+  statRiga: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  statRigaLibero: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: 9,
+  },
+  statPunto: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statNome: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.text,
+  },
+  statImporto: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  statTestoLibero: {
+    color: colors.textMuted,
   },
   // --- pagina 5: registrazione ---
   finale: {
@@ -499,6 +581,56 @@ export const creaStili = (colors: Colori) =>
     marginTop: 8,
     paddingHorizontal: 16,
   },
+  //il bianco sul verde arriva a 2,1:1, sotto il minimo di 4,5:1; il verde scuro
+  //delle card arriva a 5,3:1 ed e' uguale nei due temi
+  pcCreaTesto: {
+    color: colors.surfaceDark,
+  },
+  // --- chat dell'assistente accanto al titolo ---
+  pcChat: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 340,
+    maxWidth: 460,
+    gap: 10,
+    padding: 18,
+    borderRadius: 24,
+    backgroundColor: colors.surface,
+    ...floatingShadow,
+  },
+  pcChatTesta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  pcChatIcona: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primarySoft,
+  },
+  pcChatTitolo: {
+    fontWeight: "bold",
+    color: colors.text,
+  },
+  risposta: {
+    alignSelf: "flex-start",
+    maxWidth: "90%",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    borderBottomLeftRadius: 4,
+    backgroundColor: colors.surfaceAlt,
+  },
+  rispostaTesto: {
+    lineHeight: 20,
+    color: colors.text,
+  },
   pcNota: {
     fontSize: 14,
     color: colors.textOnDarkMuted,
@@ -518,10 +650,12 @@ export const creaStili = (colors: Colori) =>
     flexWrap: "wrap",
     gap: 20,
   },
+  //400 e non 300: con quattro riquadri ne stanno due per riga, invece di
+  //tre sopra e uno da solo, largo quanto la pagina, sotto
   pcRiquadro: {
     flexGrow: 1,
     flexShrink: 1,
-    flexBasis: 300,
+    flexBasis: 400,
     padding: 24,
     gap: 14,
     borderRadius: 24,

@@ -142,6 +142,23 @@
       "testo": "Account gratuito. Bastano un'email e una password, o il tuo account Google.",
       "crea": "Crea un account"
     },
+    "statistiche": {
+      "titolo": "Vedi dove va il budget",
+      "testo": "Le spese del mese divise per categoria. Torna ai mesi passati per confrontarli."
+    },
+    "assistente": {
+      "domanda": "Quanto ho speso al bar il mese scorso?",
+      "risposta": "Il mese scorso in {{categoria}} hai speso {{importo}} in 18 spese.",
+      "seguito": "E il mese prima?",
+      "risposta2": "Il mese prima {{importo}} in 12 spese: il mese scorso hai speso {{differenza}} in più."
+    },
+    "descrizioni": {
+      "assistente": "Esempio: chiedi all'assistente quanto hai speso al bar il mese scorso e ti risponde con il totale e il confronto con il mese prima",
+      "spese": "Esempio: scrivi una spesa a parole e viene registrata con importo, data e categoria",
+      "budget": "Esempio: il budget del mese con quanto hai speso e quanto ti resta, e le spese giorno per giorno della settimana",
+      "statistiche": "Esempio: le spese del mese divise per categoria in una ciambella, con la parte del budget ancora libera",
+      "abbonamenti": "Esempio: gli abbonamenti attivi, con la palestra che scade domani e Netflix tra 9 giorni"
+    },
     "cosaFa": "Cosa fa TrackIt",
     "piede": {
       "privacy": "Informativa privacy",

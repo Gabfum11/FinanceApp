@@ -27,8 +27,9 @@ const chiaro = {
   text: "#1A1A1A",
   /** testo secondario ancora pienamente leggibile: sottotitoli, etichette di campo */
   textSecondary: "#3A3A3C",
-  /** etichette, metadati, testo di supporto */
-  textMuted: "#8A8A8E",
+  /** etichette, metadati, testo di supporto. Era #8A8A8E, che sullo sfondo
+   *  chiaro arrivava a 3,3:1: sotto il minimo di 4,5:1 per il testo */
+  textMuted: "#6E6E73",
   /** testo disattivato e segnaposto */
   textDisabled: "#A9A9AE",
   textOnPrimary: "#FFFFFF",
@@ -79,8 +80,9 @@ const chiaro = {
   // --- singole schermate ---
   /** cifre e icone del tastierino della spesa: blu, per non competere col verde */
   keypad: "#1B3A6B",
-  /** fetta "disponibile" della ciambella nelle statistiche */
-  donutRemaining: "#E0E0E0",
+  /** fetta "disponibile" della ciambella nelle statistiche: abbastanza scura
+   *  da distinguersi dal bianco della card */
+  donutRemaining: "#C7C7CC",
   /** sfondo della barra delle schede flottante */
   tabBar: "#FFFFFF",
 };
@@ -137,7 +139,7 @@ const scuro: Colori = {
   disabledText: "#6B756F",
 
   keypad: "#9DB8E8",
-  donutRemaining: "#2A3530",
+  donutRemaining: "#3E4B44",
   tabBar: "#1B2520",
 };
 
