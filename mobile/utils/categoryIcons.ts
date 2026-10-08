@@ -2,31 +2,33 @@
 // colpo d'occhio. Le voci "(generico)" e quelle non elencate qui prendono
 // l'icona del gruppo.
 //
-// I nomi sono di MaterialCommunityIcons, già usato altrove nell'app.
+// I nomi sono di MaterialCommunityIcons, già usato altrove nell'app. Sempre la
+// variante piena: l'icona sta bianca su un cerchio colorato (IconaCategoria),
+// e il contorno sottile delle varianti "-outline" li' si perdeva.
 const ICONE_GRUPPO: Record<string, string> = {
-  "Acquisti": "shopping-outline",
+  "Acquisti": "shopping",
   "Altro": "dots-horizontal",
-  "Animali": "paw-outline",
-  "Casa": "home-outline",
+  "Animali": "paw",
+  "Casa": "home",
   "Cibo e bevande": "silverware-fork-knife",
   "Cura personale": "content-cut",
-  "Famiglia": "account-child-outline",
+  "Famiglia": "human-male-female-child",
   "Salute": "medical-bag",
   "Sport": "dumbbell",
   "Svago": "party-popper",
-  "Trasporti": "car-outline",
+  "Trasporti": "car",
   "Viaggi": "airplane",
 };
 
 // La chiave e' il nome italiano che arriva dal database, come per i gruppi
 const ICONE_CATEGORIA: Record<string, string> = {
-  "Spesa alimentare": "cart-outline",
+  "Spesa alimentare": "cart",
   "Pranzi e cene": "food-fork-drink",
-  "Bar e caffè": "coffee-outline",
-  "Abbigliamento": "tshirt-crew-outline",
+  "Bar e caffè": "coffee",
+  "Abbigliamento": "tshirt-crew",
   "Scarpe": "shoe-sneaker",
   "Tecnologia": "cellphone-link",
-  "Regali": "gift-outline",
+  "Regali": "gift",
   "Tabacchi": "smoking",
   "Carburante": "gas-station",
   "Mezzi pubblici": "bus",
@@ -34,29 +36,29 @@ const ICONE_CATEGORIA: Record<string, string> = {
   "Assicurazione auto": "shield-car",
   "Parcheggi e pedaggi": "parking",
   "Affitto o mutuo": "key-variant",
-  "Bolletta energia": "lightning-bolt-outline",
-  "Bolletta acqua": "water-outline",
-  "Bolletta rifiuti": "trash-can-outline",
+  "Bolletta energia": "lightning-bolt",
+  "Bolletta acqua": "water",
+  "Bolletta rifiuti": "trash-can",
   "Internet e telefono": "wifi",
-  "Spese condominiali": "office-building-outline",
+  "Spese condominiali": "office-building",
   "Visite mediche": "stethoscope",
   "Farmacia": "pill",
-  "Parrucchiere": "hair-dryer-outline",
+  "Parrucchiere": "hair-dryer",
   "Estetista": "lipstick",
   "Libri e giornali": "book-open-variant",
-  "Cinema e spettacoli": "movie-open-outline",
-  "Abbonamenti digitali": "play-box-outline",
+  "Cinema e spettacoli": "movie-open",
+  "Abbonamenti digitali": "play-box",
   "Palestra": "weight-lifter",
   "Attrezzatura sportiva": "basketball",
-  "Alloggio": "bed-outline",
+  "Alloggio": "bed",
   "Trasporti viaggio": "train-car",
-  "Bambini": "baby-face-outline",
-  "Istruzione": "school-outline",
-  "Cibo animali": "food-drumstick-outline",
+  "Bambini": "baby-face",
+  "Istruzione": "school",
+  "Cibo animali": "food-drumstick",
   "Veterinario": "dog",
 };
 
-const ICONA_PREDEFINITA = "tag-outline";
+const ICONA_PREDEFINITA = "tag";
 
 /** Icona del gruppo indicato. Un gruppo sconosciuto ricade sulla predefinita. */
 export function iconaPerGruppo(nomeGruppo: string | null | undefined): string {

@@ -101,6 +101,7 @@ export const creaStili = (colors: Colori) =>
         width: 48,
         textAlign: "right",
         color: colors.textMuted,
+        fontVariant: ["tabular-nums"],
     },
     riquadroResto: {
         padding: 20,
@@ -112,6 +113,7 @@ export const creaStili = (colors: Colori) =>
         fontSize: 28,
         fontWeight: "bold",
         color: colors.primaryDark,
+        fontVariant: ["tabular-nums"],
     },
     restoTesto: {
         fontSize: 14,
@@ -139,6 +141,7 @@ export const creaStili = (colors: Colori) =>
     budgetValore: {
         fontSize: 16,
         fontWeight: "bold",
+        fontVariant: ["tabular-nums"],
     },
     //stesso raggio di ConfirmDialog: quello di Paper, con il nostro roundness, e' troppo tondo
     dialog: {
@@ -202,6 +205,7 @@ export const creaStili = (colors: Colori) =>
         fontWeight: "bold",
         fontSize: 14,
         marginLeft: 12,
+        fontVariant: ["tabular-nums"],
     },
     totalLabel: {
         opacity: 0.6,
@@ -210,6 +214,7 @@ export const creaStili = (colors: Colori) =>
     totalAmount: {
         fontWeight: "bold",
         fontSize: 18,
+        fontVariant: ["tabular-nums"],
     },
     //stesso riquadro vuoto della home e della scheda Abbonamenti
     emptyState: {

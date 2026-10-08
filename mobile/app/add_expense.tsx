@@ -18,7 +18,8 @@ import { SelettoreData } from "@/components/SelettoreData";
 import { apiFetch } from "@/utils/apiFetch";
 import { fromDateString, toDateString } from "@/utils/date";
 import { creaStili, coloriSpesa } from "../styles/add-expense.styles";
-import { iconaPerCategoria, iconaPerGruppo } from "@/utils/categoryIcons";
+import { iconaPerGruppo } from "@/utils/categoryIcons";
+import { IconaCategoria } from "@/components/IconaCategoria";
 import { usePreferenze } from "@/utils/preferenze";
 import { simbolo, eValuta, VALUTE, IMPORTO_MASSIMO, type Valuta } from "@/utils/formato";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
@@ -698,11 +699,7 @@ export default function AddExpenseScreen() {
                     setShowCategoryPicker(false);
                   }}
                 >
-                  <MaterialCommunityIcons
-                    name={iconaPerCategoria(item.name, section.title) as any}
-                    size={20}
-                    color={category?.id === item.id ? colors.green : colors.label}
-                  />
+                  <IconaCategoria categoria={item.name} gruppo={section.title} dimensione={34} />
                   <Text
                     style={[
                       styles.categoryRowText,

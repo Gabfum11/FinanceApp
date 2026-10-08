@@ -257,6 +257,7 @@
     "di": "di {{totale}}",
     "speso": "Speso {{importo}}",
     "settimana": "Spese settimanali",
+    "totaleSettimana": "Totale",
     "ultime": "Ultime transazioni",
     "vediTutte": "Vedi tutte",
     "nessunaSpesa": "Nessuna spesa registrata",
@@ -422,6 +423,10 @@
   },
   "abbonamenti": {
     "scadeOggi": "Scade oggi",
+    "alMese": "Al mese",
+    "allAnno": "All'anno",
+    "esclusiValuta_one": "Escluso {{count}} abbonamento in un'altra valuta",
+    "esclusiValuta_other": "Esclusi {{count}} abbonamenti in un'altra valuta",
     "scadeDomani": "Scade domani",
     "scadeTra_one": "Scade tra {{count}} giorno",
     "scadeTra_other": "Scade tra {{count}} giorni",

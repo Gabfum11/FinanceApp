@@ -93,6 +93,7 @@ export const creaStili = (colors: Colori) =>
   miniImporto: {
     fontSize: 14,
     fontWeight: "bold",
+    fontVariant: ["tabular-nums"],
   },
   rinnovoData: {
     fontSize: 13,
@@ -182,16 +183,25 @@ export const creaStili = (colors: Colori) =>
     fontSize: 13,
     lineHeight: 18,
   },
+  //le ultime spese stanno in un riquadro solo, le righe divise da una linea
+  expenseList: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: "hidden",
+    ...cardShadow,
+  },
   expenseRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    
-    padding:14,
-    borderRadius:16,
-    margin:5,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    ...cardShadow,
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  expenseRowSeparata: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   expenseInfo:{
     flex:1
@@ -211,10 +221,15 @@ export const creaStili = (colors: Colori) =>
   },
   expenseAmount: {
     fontSize: 16,
-    color: colors.danger,
+    fontWeight: "600",
+    color: colors.text,
+    //cifre della stessa larghezza: gli importi restano allineati in colonna
+    fontVariant: ["tabular-nums"],
   },
   expenseMeta:{
-
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: 2,
   },
   linkExpenses:{
     color: colors.primary,
@@ -263,6 +278,7 @@ export const creaStili = (colors: Colori) =>
     color: colors.textOnPrimary,
     fontSize: 34,
     fontWeight: "bold",
+    fontVariant: ["tabular-nums"],
   },
   budgetOf: {
     color: colors.textOnDarkMuted,
@@ -307,11 +323,27 @@ export const creaStili = (colors: Colori) =>
     marginBottom: 16,
     overflow:"visible"
   },
+  weeklyTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    gap: 8,
+    marginBottom: 12,
+  },
   weeklyTitle: {
     color: colors.textOnPrimary,
     fontWeight: "bold",
     fontSize: 15,
-    marginBottom: 12,
+  },
+  weeklyTotal: {
+    color: colors.textOnDarkMuted,
+    fontSize: 12,
+  },
+  weeklyTotalValue: {
+    color: colors.textOnPrimary,
+    fontWeight: "bold",
+    fontSize: 15,
+    fontVariant: ["tabular-nums"],
   },
   weeklyChartWrapper: {
     alignItems: "center",

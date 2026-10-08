@@ -31,13 +31,46 @@ export const creaStili = (colors: Colori) =>
         ...cardShadow,
     },
     subIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        backgroundColor: colors.primarySoft,
-        justifyContent: "center",
-        alignItems: "center",
         marginRight: 12,
+    },
+    //quanto costano in tutto gli abbonamenti attivi: la prima cosa che si vuole sapere
+    riepilogo: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        backgroundColor: colors.primarySoft,
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        marginTop: 8,
+        marginBottom: 16,
+    },
+    riepilogoVoce: {
+        flex: 1,
+        gap: 2,
+    },
+    riepilogoSeconda: {
+        borderLeftWidth: 1,
+        borderLeftColor: colors.border,
+        paddingLeft: 16,
+    },
+    riepilogoEtichetta: {
+        fontSize: 12,
+        fontWeight: "700",
+        letterSpacing: 0.5,
+        textTransform: "uppercase",
+        color: colors.primaryDark,
+    },
+    riepilogoValore: {
+        fontSize: 24,
+        fontWeight: "700",
+        color: colors.primaryDark,
+        fontVariant: ["tabular-nums"],
+    },
+    riepilogoNota: {
+        width: "100%",
+        marginTop: 8,
+        fontSize: 12,
+        color: colors.textMuted,
     },
     subInfo:{
         flex:1
@@ -47,7 +80,8 @@ export const creaStili = (colors: Colori) =>
         fontWeight:"bold"
     },
     subAmount:{
-        fontSize:16
+        fontSize:16,
+        fontVariant: ["tabular-nums"],
     },
     pausedRow:{
         flexDirection: "row",
@@ -72,9 +106,9 @@ export const creaStili = (colors: Colori) =>
     color: colors.textMuted,
     fontSize: 13,
     },
-    reactivateLink: {
-    color: colors.primary,
-    fontWeight: "bold",
+    reactivateButton: {
+        borderColor: colors.primary,
+        borderRadius: 999,
     },
     subMeta: {
         color: colors.textMuted,

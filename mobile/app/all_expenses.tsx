@@ -1,15 +1,14 @@
 import { router } from "expo-router";
-import { FlatList, View, Pressable, ScrollView } from "react-native";
+import { SectionList, View, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconButton, Text, Searchbar } from "react-native-paper";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
-import { formatDataSpesa } from "@/utils/date";
+import { formatDataSpesa, intestazioneGiorno } from "@/utils/date";
 import { creaStili } from "@/styles/all_expenses.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { iconaPerCategoria } from "@/utils/categoryIcons";
+import { IconaCategoria } from "@/components/IconaCategoria";
 import { usePreferenze } from "@/utils/preferenze";
 import { useTranslation } from "react-i18next";
 import { nomeCategoria } from "@/utils/categorie";
@@ -23,6 +22,8 @@ type Expense = {
   date: string;
   category_id: number | null;
   category_name: string | null;
+  //gruppo della sottocategoria: colore e icona di ripiego
+  category_group?: string | null;
   created_at : string;
   //spesa pagata in un'altra valuta: amount è già convertito
   original_amount?: number | null;
@@ -111,6 +112,22 @@ export default function ExpenseList() {
         () => filtered.reduce((sum, e) => sum + e.amount, 0),
         [filtered]
     );
+
+    //sul telefono le spese si dividono per giorno, la data diventa l'intestazione;
+    //sul computer resta una tabella sola, che ha gia' la colonna della data
+    const sezioni = useMemo(() => {
+        if (largo) return [{ giorno: "", data: filtered }];
+        //arrivano in ordine di inserimento: una spesa di ieri registrata oggi
+        //finirebbe in cima, staccata dalle altre dello stesso giorno
+        const ordinate = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
+        const perGiorno: { giorno: string; data: Expense[] }[] = [];
+        for (const e of ordinate) {
+            const ultima = perGiorno[perGiorno.length - 1];
+            if (ultima?.giorno === e.date) ultima.data.push(e);
+            else perGiorno.push({ giorno: e.date, data: [e] });
+        }
+        return perGiorno;
+    }, [filtered, largo]);
 
     const hasFilters = query.trim() !== "" || categoryId !== null || period !== "all";
 
@@ -261,10 +278,15 @@ export default function ExpenseList() {
             )}
         </View>
 
-        <FlatList
+        <SectionList
         style={styles.list} //senza flex la lista si adatta al contenuto e il layout si riassesta a ogni filtro
-        data={filtered} //array che si vuole trasformare in una lista visibile
+        contentContainerStyle={!largo && styles.listContainer}
+        sections={sezioni}
+        stickySectionHeadersEnabled={false}
         keyExtractor={(item)=>item.id.toString()} //dice a React come identificare ogni elemento dell'array in modo univoco
+        renderSectionHeader={({ section }) => section.giorno ? (
+            <Text style={styles.dayHeader}>{intestazioneGiorno(section.giorno)}</Text>
+        ) : null}
         ListHeaderComponent={largo && filtered.length > 0 ? (
             <View style={styles.intestazioneTabella}>
                 <View style={styles.colonnaIcona} />
@@ -275,26 +297,17 @@ export default function ExpenseList() {
                 <View style={styles.colonnaAzioni} />
             </View>
         ) : null}
-        renderItem={({item})=> largo ? (
+        renderItem={({ item, index, section })=> largo ? (
             //sul computer: una riga di tabella, ogni dato nella sua colonna
             <View style={styles.rigaTabella}>
-                <View style={[styles.expenseIcon, styles.colonnaIcona]}>
-                    <MaterialCommunityIcons
-                        name={iconaPerCategoria(
-                            item.category_name,
-                            item.category_id !== null
-                                ? gruppoDiCategoria.get(item.category_id)?.name
-                                : null
-                        ) as any}
-                        size={18}
-                        color="#2ECC71"
-                    />
+                <View style={styles.colonnaIcona}>
+                    <IconaCategoria categoria={item.category_name} gruppo={item.category_group} dimensione={34} />
                 </View>
                 <Text style={[styles.expenseDescription, styles.colonnaDescrizione]} numberOfLines={1}>{item.description}</Text>
                 <Text style={[styles.expenseMeta, styles.colonnaCategoria]} numberOfLines={1}>{nomeCategoria(item.category_name)}</Text>
                 <Text style={[styles.expenseMeta, styles.colonnaData]}>{formatDataSpesa(item.date)}</Text>
                 <View style={[styles.amountColumn, styles.colonnaImporto]}>
-                    <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
+                    <Text style={styles.expenseAmount}>−{importo(item.amount)}</Text>
                     {item.original_currency && item.original_amount != null && (
                         <Text style={styles.expenseOriginal}>{importoIn(item.original_amount, item.original_currency)}</Text>
                     )}
@@ -305,34 +318,29 @@ export default function ExpenseList() {
                 </View>
             </View>
         ) : (
-            <View style={styles.expenseRow}>
+            //le spese dello stesso giorno formano un riquadro solo, divise da una linea
+            <View style={[
+                styles.expenseRow,
+                index === 0 && styles.expenseRowPrima,
+                index > 0 && styles.expenseRowSeparata,
+                index === section.data.length - 1 && styles.expenseRowUltima,
+            ]}>
                 {/* l'icona rende la lista scansionabile senza leggere */}
-                <View style={styles.expenseIcon}>
-                    <MaterialCommunityIcons
-                        name={iconaPerCategoria(
-                            item.category_name,
-                            item.category_id !== null
-                                ? gruppoDiCategoria.get(item.category_id)?.name
-                                : null
-                        ) as any}
-                        size={20}
-                        color="#2ECC71"
-                    />
-                </View>
+                <IconaCategoria categoria={item.category_name} gruppo={item.category_group} />
                 <View style={styles.expenseInfo}>
                     <Text style={styles.expenseDescription}>{item.description}</Text>
-                    <Text style={styles.expenseMeta}>
-                        {nomeCategoria(item.category_name)} · {formatDataSpesa(item.date)}
-                    </Text>
+                    {/* la data e' gia' nell'intestazione del giorno */}
+                    <Text style={styles.expenseMeta}>{nomeCategoria(item.category_name)}</Text>
                 </View>
                 <View style={styles.amountColumn}>
-                    <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
+                    <Text style={styles.expenseAmount}>−{importo(item.amount)}</Text>
                     {item.original_currency && item.original_amount != null && (
                         <Text style={styles.expenseOriginal}>{importoIn(item.original_amount, item.original_currency)}</Text>
                     )}
                 </View>
-                <IconButton icon="pencil-outline" size={18} onPress={() => openEdit(item)} />
-                <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} />
+                {/* sempre visibili: si deve capire subito che la spesa si puo' modificare o eliminare */}
+                <IconButton icon="pencil-outline" size={18} onPress={() => openEdit(item)} accessibilityLabel={t("spese.modifica")} style={styles.azioneRiga} />
+                <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} accessibilityLabel={t("spese.elimina")} style={styles.azioneRiga} />
             </View>
         )}
         ListEmptyComponent={

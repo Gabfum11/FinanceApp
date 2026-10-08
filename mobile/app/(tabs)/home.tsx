@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { useSpazioBarra } from "@/utils/barraSchede";
 import { useSchermoStretto, useSchermoLargo, LARGHEZZA_MASSIMA, LARGHEZZA_CONTENUTO, SCHERMO_MOLTO_STRETTO } from "@/utils/layout";
 import { colorePerGruppo } from "@/utils/categoryIcons";
+import { IconaCategoria } from "@/components/IconaCategoria";
 import { nomeCategoria } from "@/utils/categorie";
 import { localeAttuale } from "@/utils/date";
 import Animated, {
@@ -39,6 +40,8 @@ type Expense = {
   date: string;
   category_id: number | null; //può tornare utile
   category_name: string | null;
+  //gruppo della sottocategoria: colore e icona di ripiego
+  category_group?: string | null;
   created_at : string;
   //spesa pagata in un'altra valuta: amount è già convertito
   original_amount?: number | null;
@@ -260,6 +263,12 @@ export default function HomeScreen() {
   const percentage = budgetStatus?.budget
     ? Math.min((budgetStatus.spent / budgetStatus.budget) * 100, 100)
     : 0;
+  //la barra cambia colore avvicinandosi al limite: prima restava verde anche
+  //al 99%, e superato il budget si fermava piena senza dire altro
+  const quotaSpesa = budgetStatus?.budget ? budgetStatus.spent / budgetStatus.budget : 0;
+  const coloreBarra =
+    quotaSpesa >= 1 ? colors.budgetSforato : quotaSpesa >= 0.8 ? colors.warning : colors.primary;
+  const totaleSettimana = weeklyStats.reduce((somma, day) => somma + day.total, 0);
 
   const todayStr = new Date().toDateString();
   const weeklyChartData = weeklyStats.map((day) => {
@@ -389,12 +398,16 @@ export default function HomeScreen() {
               <Text style={[styles.budgetRemaining, largo && styles.budgetRemainingLargo]}>{importo(budgetStatus.remaining ?? 0)}</Text>
               <Text style={styles.budgetOf}>{t("home.di", { totale: importo(budgetStatus.budget) })}</Text>
             </View>
-            <View style={styles.progressBarBackground}>
-              <View style={[styles.progressBarFill, { width: `${percentage}%` }]} />
+            <View
+              style={styles.progressBarBackground}
+              accessibilityRole="progressbar"
+              accessibilityValue={{ min: 0, max: 100, now: Math.round(quotaSpesa * 100) }}
+            >
+              <View style={[styles.progressBarFill, { width: `${percentage}%`, backgroundColor: coloreBarra }]} />
             </View>
             <View style={styles.budgetLegendRow}>
               <View style={styles.budgetLegendItem}>
-                <View style={[styles.budgetLegendDot, { backgroundColor: colors.primary }]} />
+                <View style={[styles.budgetLegendDot, { backgroundColor: coloreBarra }]} />
                 <Text style={styles.budgetLegendText}>{t("home.speso", { importo: importo(budgetStatus.spent) })}</Text>
               </View>
             </View>
@@ -408,7 +421,12 @@ export default function HomeScreen() {
           style={[styles.weeklyCard, largo && styles.cardInRiga]}
           onLayout={(e) => setLarghezzaSettimana(e.nativeEvent.layout.width)}
         >
-          <Text style={styles.weeklyTitle}>{t("home.settimana")}</Text>
+          <View style={styles.weeklyTitleRow}>
+            <Text style={styles.weeklyTitle}>{t("home.settimana")}</Text>
+            <Text style={styles.weeklyTotal}>
+              {t("home.totaleSettimana")} <Text style={styles.weeklyTotalValue}>{importo(totaleSettimana)}</Text>
+            </Text>
+          </View>
           <View style={styles.weeklyChartWrapper}>
             {/* sul computer si disegna solo quando si conosce la larghezza della card */}
             {(!largo || larghezzaSettimana > 0) && (
@@ -448,20 +466,29 @@ export default function HomeScreen() {
         )}
       {/* due righe sul telefono, cinque sul computer: un semplice elenco, perche'
           una FlatList dentro uno ScrollView che scorre nello stesso verso da' problemi */}
-      {expenses.slice(0, largo ? 5 : 2).map((item) => (
-        <View key={item.id} style={styles.expenseRow}>
-          <View style={styles.expenseInfo}>
-            <Text style={styles.expenseDescription}>{item.description}</Text>
-            <Text style={styles.expenseMeta}>{nomeCategoria(item.category_name)}{" · "}{formatDataSpesa(item.date)}</Text>
-          </View>
-          <View style={styles.amountColumn}>
-            <Text style={styles.expenseAmount}>- {importo(item.amount)}</Text>
-            {saldoVisibile && item.original_currency && item.original_amount != null && (
-              <Text style={styles.expenseOriginal}>{importoIn(item.original_amount, item.original_currency)}</Text>
-            )}
-          </View>
+      {/* un solo riquadro con le righe separate da una linea: prima ogni riga
+          era una card con ombra, bordo e margine, e sembravano staccate */}
+      {expenses.length > 0 && (
+        <View style={styles.expenseList}>
+          {expenses.slice(0, largo ? 5 : 2).map((item, indice) => (
+            <View key={item.id} style={[styles.expenseRow, indice > 0 && styles.expenseRowSeparata]}>
+              <IconaCategoria categoria={item.category_name} gruppo={item.category_group} />
+              <View style={styles.expenseInfo}>
+                <Text style={styles.expenseDescription}>{item.description}</Text>
+                <Text style={styles.expenseMeta}>{nomeCategoria(item.category_name)}{" · "}{formatDataSpesa(item.date)}</Text>
+              </View>
+              <View style={styles.amountColumn}>
+                {/* colore neutro: se ogni riga e' rossa il rosso non avvisa piu' di niente.
+                    Il segno meno vero, attaccato alla cifra, non va a capo da solo */}
+                <Text style={styles.expenseAmount}>−{importo(item.amount)}</Text>
+                {saldoVisibile && item.original_currency && item.original_amount != null && (
+                  <Text style={styles.expenseOriginal}>{importoIn(item.original_amount, item.original_currency)}</Text>
+                )}
+              </View>
+            </View>
+          ))}
         </View>
-      ))}
+      )}
       {expensesLoaded && expenses.length === 0 && (
         <Pressable style={styles.emptyState} onPress={() => router.push("/add_expense")}>
           <MaterialCommunityIcons name="receipt-text-outline" size={40} color={colors.chevron} />

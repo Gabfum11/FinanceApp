@@ -46,7 +46,8 @@ function raggruppa(intero: string, separatore: string, soglia: number): string {
 export function formattaImporto(valore: number, valuta: Valuta = "EUR", lingua: Lingua = "it", decimali = 2): string {
   const s = simbolo(valuta);
   const [intero, parteDecimale] = Math.abs(valore).toFixed(decimali).split(".");
-  const segno = valore < 0 ? "-" : "";
+  //il segno meno tipografico, largo quanto le cifre: il trattino era piu' corto
+  const segno = valore < 0 ? "−" : "";
   if (lingua === "en") {
     //1,234.50: virgola per le migliaia, punto per i decimali, simbolo davanti
     const numero = raggruppa(intero, ",", 1000) + (parteDecimale ? `.${parteDecimale}` : "");

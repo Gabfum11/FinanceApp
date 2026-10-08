@@ -12,7 +12,8 @@ import { SelettoreLingua } from "@/components/SelettoreLingua";
 import { usePreferenze } from "@/utils/preferenze";
 import { localeDi, type Lingua } from "@/utils/formato";
 import { nomeCategoria } from "@/utils/categorie";
-import { colorePerGruppo, iconaPerCategoria } from "@/utils/categoryIcons";
+import { colorePerGruppo } from "@/utils/categoryIcons";
+import { IconaCategoria } from "@/components/IconaCategoria";
 import { contattaSupporto } from "@/utils/support";
 import { creaStili } from "@/styles/presentazione.styles";
 import { useStili, useTema } from "@/utils/tema";
@@ -82,9 +83,7 @@ export function IllustrazioneSpese() {
           <Text style={styles.esitoTitolo}>{t("presentazione.p2.aggiunta")}</Text>
         </View>
         <View style={styles.esitoCorpo}>
-          <View style={styles.esitoIcona}>
-            <MaterialCommunityIcons name="silverware-fork-knife" size={20} color={colors.primaryDark} />
-          </View>
+          <IconaCategoria gruppo="Cibo e bevande" dimensione={36} />
           <View style={styles.esitoInfo}>
             <Text style={styles.esitoDescrizione}>{t("presentazione.p2.descrizione")}</Text>
             <Text style={styles.esitoMeta}>{t("presentazione.p2.categoria")} · {ieri(lingua)}</Text>
@@ -149,13 +148,12 @@ export function IllustrazioneBudget() {
 }
 
 //l'icona e' quella della sottocategoria, come nella pagina degli abbonamenti
-function Abbonamento({ nome, meta, importo, categoria }: { nome: string; meta: string; importo: string; categoria: string }) {
+function Abbonamento({ nome, meta, importo, categoria, gruppo }: { nome: string; meta: string; importo: string; categoria: string; gruppo: string }) {
   const styles = useStili(creaStili);
-  const { colors } = useTema();
   return (
     <View style={styles.abbonamento}>
       <View style={styles.abbonamentoIcona}>
-        <MaterialCommunityIcons name={iconaPerCategoria(categoria, null) as any} size={20} color={colors.primary} />
+        <IconaCategoria categoria={categoria} gruppo={gruppo} dimensione={40} />
       </View>
       <View style={styles.abbonamentoInfo}>
         <Text style={styles.abbonamentoNome}>{nome}</Text>
@@ -188,12 +186,14 @@ export function IllustrazioneAbbonamenti() {
         meta={t("presentazione.p4.palestraMeta")}
         importo={importo(39.9)}
         categoria="Palestra"
+        gruppo="Sport"
       />
       <Abbonamento
         nome="Netflix"
         meta={t("presentazione.p4.netflixMeta")}
         importo={importo(13.99)}
         categoria="Abbonamenti digitali"
+        gruppo="Svago"
       />
     </>
   );

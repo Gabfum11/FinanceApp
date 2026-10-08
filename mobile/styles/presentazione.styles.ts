@@ -153,14 +153,6 @@ export const creaStili = (colors: Colori) =>
     gap: 12,
     padding: 14,
   },
-  esitoIcona: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.surfaceAlt,
-  },
   esitoInfo: {
     flex: 1,
   },
@@ -337,12 +329,6 @@ export const creaStili = (colors: Colori) =>
     ...cardShadow,
   },
   abbonamentoIcona: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.primarySoft,
-    justifyContent: "center",
-    alignItems: "center",
     marginRight: 12,
   },
   abbonamentoInfo: {

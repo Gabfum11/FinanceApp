@@ -124,14 +124,6 @@ export const creaStili = (colors: Colori) =>
         gap: 12,
         padding: 14,
     },
-    savedIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: colors.surfaceAlt,
-    },
     savedInfo: {
         flex: 1,
     },

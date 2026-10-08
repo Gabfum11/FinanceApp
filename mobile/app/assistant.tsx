@@ -10,6 +10,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { toDateString, fromDateString } from "@/utils/date"
 import { iconaPerCategoria } from "@/utils/categoryIcons";
+import { IconaCategoria } from "@/components/IconaCategoria";
 import { usePreferenze } from "@/utils/preferenze";
 import { SelettoreData } from "@/components/SelettoreData";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
@@ -301,13 +302,11 @@ function handleDatePickerDismiss() {
                 </Text>
               </View>
               <View style={styles.savedBody}>
-                <View style={styles.savedIcon}>
-                  <MaterialCommunityIcons
-                    name={iconaPerCategoria(item.expenseData.category_name, item.expenseData.category_group) as any}
-                    size={20}
-                    color={colors.primaryDark}
-                  />
-                </View>
+                <IconaCategoria
+                  categoria={item.expenseData.category_name}
+                  gruppo={item.expenseData.category_group}
+                  dimensione={36}
+                />
                 <View style={styles.savedInfo}>
                   <Text style={styles.savedDescription} numberOfLines={1}>
                     {item.expenseData.description}

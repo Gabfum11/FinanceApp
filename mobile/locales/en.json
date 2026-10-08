@@ -257,6 +257,7 @@
     "di": "of {{totale}}",
     "speso": "Spent {{importo}}",
     "settimana": "Weekly spending",
+    "totaleSettimana": "Total",
     "ultime": "Recent transactions",
     "vediTutte": "See all",
     "nessunaSpesa": "No expenses yet",
@@ -422,6 +423,10 @@
   },
   "abbonamenti": {
     "scadeOggi": "Due today",
+    "alMese": "Per month",
+    "allAnno": "Per year",
+    "esclusiValuta_one": "{{count}} subscription in another currency not included",
+    "esclusiValuta_other": "{{count}} subscriptions in another currency not included",
     "scadeDomani": "Due tomorrow",
     "scadeTra_one": "Due in {{count}} day",
     "scadeTra_other": "Due in {{count}} days",

@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori, cardShadow } from "./tokens";
+import { type Colori } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -77,7 +77,19 @@ export const creaStili = (colors: Colori) =>
     flex: 1,
   },
   listContainer: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+  //"Oggi", "Ieri", "lunedì 6 ottobre": sopra il riquadro delle spese di quel giorno
+  dayHeader: {
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    color: colors.textMuted,
+    marginTop: 14,
+    marginBottom: 6,
+    marginLeft: 4,
   },
   searchbar: {
     marginHorizontal: 16,
@@ -139,6 +151,7 @@ export const creaStili = (colors: Colori) =>
     fontSize: 15,
     fontWeight: "700",
     color: colors.text,
+    fontVariant: ["tabular-nums"],
   },
   emptyState: {
     alignItems: "center",
@@ -155,25 +168,36 @@ export const creaStili = (colors: Colori) =>
     color: colors.textMuted,
     fontSize: 13,
   },
+  //le righe di uno stesso giorno si toccano e formano un riquadro solo:
+  //bordo esterno sulle righe, angoli arrotondati solo sulla prima e l'ultima
   expenseRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 12,
     backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 10,
-    ...cardShadow,
+    paddingVertical: 10,
+    paddingLeft: 14,
+    paddingRight: 4,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: colors.border,
   },
-  //cerchio con l'icona del gruppo, come nella schermata Abbonamenti
-  expenseIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.primarySoft,
-    marginRight: 12,
+  expenseRowPrima: {
+    borderTopWidth: 1,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  expenseRowSeparata: {
+    borderTopWidth: 1,
+  },
+  expenseRowUltima: {
+    borderBottomWidth: 1,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  //il margine predefinito di IconButton allargherebbe troppo la riga
+  azioneRiga: {
+    margin: 0,
   },
   expenseInfo: {
     flex: 1,
@@ -197,9 +221,11 @@ export const creaStili = (colors: Colori) =>
     color: colors.textMuted,
     marginTop: 2,
   },
+  //colore neutro: in un elenco di sole uscite il rosso non distingueva nulla
   expenseAmount: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
-    color: colors.danger,
+    color: colors.text,
+    fontVariant: ["tabular-nums"],
   },
 })

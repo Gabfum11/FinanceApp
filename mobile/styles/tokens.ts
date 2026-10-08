@@ -54,6 +54,9 @@ const chiaro = {
    *  diversi da oggi, che non devono competere con quella evidenziata */
   overlayMuted: "rgba(255,255,255,0.15)",
   overlayFaint: "rgba(255,255,255,0.04)",
+  /** barra del budget superato: il rosso di "danger" sul verde scuro della
+   *  card si leggeva poco, questo e' piu' chiaro */
+  budgetSforato: "#FF6B5B",
 
   // --- avvisi (abbonamenti in scadenza) ---
   warning: "#F5C518",
@@ -122,6 +125,7 @@ const scuro: Colori = {
   overlayLight: "rgba(255,255,255,0.2)",
   overlayMuted: "rgba(255,255,255,0.15)",
   overlayFaint: "rgba(255,255,255,0.04)",
+  budgetSforato: "#FF6B5B",
 
   warning: "#F5C518",
   warningSurface: "#2A2614",

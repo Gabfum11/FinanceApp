@@ -31,6 +31,23 @@ export function formatDataSpesa(dateString: string): string {
   });
 }
 
+//intestazione di un giorno nell'elenco delle spese: "Oggi", "Ieri" o la data
+//per esteso con il giorno della settimana, che aiuta a ritrovare una spesa
+export function intestazioneGiorno(dateString: string): string {
+  const data = fromDateString(dateString);
+  const oggi = new Date();
+  const ieri = new Date();
+  ieri.setDate(oggi.getDate() - 1);
+  if (data.toDateString() === oggi.toDateString()) return i18n.t("comune.oggi");
+  if (data.toDateString() === ieri.toDateString()) return i18n.t("comune.ieri");
+  return data.toLocaleDateString(localeAttuale(), {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    ...(data.getFullYear() !== oggi.getFullYear() && { year: "numeric" }),
+  });
+}
+
 //la lingua scelta dall'utente, per le date scritte per esteso
 export function localeAttuale(): string {
   return localeDi(eLingua(i18n.language) ? i18n.language : "it");

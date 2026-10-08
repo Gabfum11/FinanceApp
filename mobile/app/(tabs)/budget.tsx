@@ -3,7 +3,7 @@ import { IconButton, Text, Button, ActivityIndicator, Snackbar } from "react-nat
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { usePreferenze } from "@/utils/preferenze";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
 import { creaStili } from "@/styles/budget.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -12,7 +12,7 @@ import { useSpazioBarra } from "@/utils/barraSchede";
 import { useTranslation } from "react-i18next";
 import i18n from "@/utils/i18n";
 import { nomeCategoria } from "@/utils/categorie";
-import { iconaPerCategoria } from "@/utils/categoryIcons";
+import { IconaCategoria } from "@/components/IconaCategoria";
 import { localeAttuale } from "@/utils/date";
 import { useStili, useTema } from "@/utils/tema";
 import { useSchermoLargo } from "@/utils/layout";
@@ -36,6 +36,8 @@ type Subscription = {
   frequency: string;
   category_id: number | null; //può tornare utile
   category_name: string | null;
+  //gruppo della sottocategoria: colore e icona di ripiego
+  category_group?: string | null;
   is_active:boolean;
   auto_renew:boolean;
   currency?: string | null; //prezzo in un'altra valuta; vuota = quella dell'utente
@@ -47,7 +49,7 @@ type ConfermaInAttesa =
 export default function BudgetScreen() {
   const styles = useStili(creaStili);
   const { colors } = useTema();
-  const { importoIn } = usePreferenze();
+  const { importo, importoIn, valuta } = usePreferenze();
   const { t } = useTranslation();
   //i messaggi in basso compaiono sopra la barra delle schede, non sotto
   const spazioBarra = useSpazioBarra();
@@ -61,9 +63,17 @@ export default function BudgetScreen() {
   //di lista vuota lampeggerebbe a ogni apertura
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
-  //nome del gruppo di ogni categoria, per l'icona di ripiego
-  const [gruppoDiCategoria, setGruppoDiCategoria] = useState<Map<number, string>>(new Map());
   const activeSubscriptions = subscriptions.filter(sub => sub.is_active);
+  //quanto pesano in tutto gli abbonamenti attivi, riportati a un mese.
+  //Quelli in un'altra valuta restano fuori: sommarli senza cambio darebbe
+  //una cifra sbagliata, e il cambio qui non c'e'
+  const nellaMiaValuta = activeSubscriptions.filter(sub => !sub.currency || sub.currency === valuta);
+  const costoMensile = nellaMiaValuta.reduce((somma, sub) => {
+    if (sub.frequency === "weekly") return somma + (sub.amount * 52) / 12;
+    if (sub.frequency === "yearly") return somma + sub.amount / 12;
+    return somma + sub.amount;
+  }, 0);
+  const inAltraValuta = activeSubscriptions.length - nellaMiaValuta.length;
   const pausedSubscriptions = subscriptions.filter(sub => !sub.is_active);
   const today = new Date();
   const dueForRenewal = subscriptions.filter(sub=> sub.is_active && !sub.auto_renew && new Date(sub.next_date)<=today)
@@ -85,22 +95,6 @@ export default function BudgetScreen() {
         loadSubscriptions()
       },[])
     );
-    //la gerarchia cambia raramente: basta caricarla una volta all'apertura
-    useEffect(() => {
-      async function loadGruppi() {
-        try {
-          const response = await apiFetch("/categories/grouped");
-          if (!response.ok) return;
-          const gruppi: { name: string; children: { id: number }[] }[] = await response.json();
-          const mappa = new Map<number, string>();
-          for (const g of gruppi) for (const figlia of g.children) mappa.set(figlia.id, g.name);
-          setGruppoDiCategoria(mappa);
-        } catch {
-          //senza gerarchia le icone ricadono sulla predefinita, il resto funziona
-        }
-      }
-      loadGruppi();
-    }, []);
     function getOverdueText(nextDate: string): string {
     const today = new Date();
     today.setHours(0,0,0,0)
@@ -193,19 +187,27 @@ export default function BudgetScreen() {
   return (
     <View style={styles.container}>
       <PaginaScorrevole style={styles.content} sopraBarra>
+        {nellaMiaValuta.length > 0 && (
+          <View style={styles.riepilogo}>
+            <View style={styles.riepilogoVoce}>
+              <Text style={styles.riepilogoEtichetta}>{t("abbonamenti.alMese")}</Text>
+              <Text style={styles.riepilogoValore}>{importo(costoMensile)}</Text>
+            </View>
+            <View style={[styles.riepilogoVoce, styles.riepilogoSeconda]}>
+              <Text style={styles.riepilogoEtichetta}>{t("abbonamenti.allAnno")}</Text>
+              <Text style={styles.riepilogoValore}>{importo(costoMensile * 12)}</Text>
+            </View>
+            {inAltraValuta > 0 && (
+              <Text style={styles.riepilogoNota}>{t("abbonamenti.esclusiValuta", { count: inAltraValuta })}</Text>
+            )}
+          </View>
+        )}
         <Text variant="headlineMedium">{t("abbonamenti.attivi")}</Text>
         <View style={largo ? styles.griglia : undefined}>
         {activeSubscriptions.map((item) => (
           <View key={item.id} style={[styles.subRow, largo && styles.cella]}>
             <View style={styles.subIconContainer}>
-              <MaterialCommunityIcons
-                name={iconaPerCategoria(
-                  item.category_name,
-                  item.category_id !== null ? gruppoDiCategoria.get(item.category_id) : undefined,
-                ) as any}
-                size={20}
-                color={colors.primary}
-              />
+              <IconaCategoria categoria={item.category_name} gruppo={item.category_group} dimensione={40} />
             </View>
             <View style={styles.subInfo}>
               <Text style={styles.subDesc}>{item.description}</Text>
@@ -250,7 +252,10 @@ export default function BudgetScreen() {
                   <Text style={styles.subDesc}>{item.description}</Text>
                   <Text style={styles.pausedMeta}>{t("abbonamenti.pausa")}</Text>
                 </View>
-                <Text style={styles.reactivateLink} onPress={()=>confirmToggle(item.id, false)}>{t("abbonamenti.riattiva")}</Text>
+                {/* un pulsante vero: il testo semplice non sembrava toccabile ed era piccolo da colpire */}
+                <Button mode="outlined" compact onPress={()=>confirmToggle(item.id, false)} style={styles.reactivateButton}>
+                  {t("abbonamenti.riattiva")}
+                </Button>
                 <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} accessibilityLabel={t("abbonamenti.eliminaTitolo")} />
               </View>
             ))}
