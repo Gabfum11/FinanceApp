@@ -377,6 +377,12 @@ class TestDialogo:
                 domande.rispondi_a_domanda("quanto?", db, utente, OGGI, quota)
         modello.assert_not_called()
 
+    def test_una_risposta_troncata_non_arriva_in_chat(self, db, utente):
+        troncata = SimpleNamespace(choices=[SimpleNamespace(
+            finish_reason="length", message=risposta_modello("Il 4 settembre hai acquist"))])
+        with patch.object(categorization.groq_client.chat.completions, "create", return_value=troncata):
+            assert domande.rispondi_a_domanda("che spese?", db, utente, OGGI, lambda: None) is None
+
     def test_un_guasto_del_modello_non_rompe_l_endpoint(self, db, utente):
         with patch.object(domande, "_chiama_modello", side_effect=RuntimeError("giu'")):
             assert domande.rispondi_a_domanda("quanto?", db, utente, OGGI, lambda: None) is None

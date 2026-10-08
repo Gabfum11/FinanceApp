@@ -23,7 +23,9 @@ from app.logging_config import get_logger
 
 logger = get_logger(__name__)
 
-MODELLO = "openai/gpt-oss-20b"
+#il 20b, usato per l'estrazione delle spese, qui sbagliava piu' spesso la
+#scelta delle funzioni e scriveva un italiano poco naturale ("nel settembre")
+MODELLO = "openai/gpt-oss-120b"
 #funzioni eseguite per una domanda: il modello le chiede tutte insieme nella
 #prima richiesta a Groq, perche' nella seconda deve rispondere
 MAX_FUNZIONI = 4
@@ -374,7 +376,9 @@ def _regole_risposta(utente: models.User) -> str:
         f"Rispondi sempre {_LINGUE.get(utente.language, 'in italiano')}, "
         "in al massimo quattro frasi di testo semplice: niente markdown, elenchi puntati, "
         "tabelle o JSON. Importi con due decimali e la valuta. Quando citi una singola "
-        "spesa, di' anche cos'era e quando. Non calcolare percentuali. "
+        "spesa, di' anche cos'era e quando. Se i dati contengono molte spese singole, "
+        "non elencarle tutte: di' quante sono, il totale e al massimo le tre piu' "
+        "importanti. Non calcolare percentuali. "
     )
 
 
@@ -452,9 +456,13 @@ def _istruzioni_risposta(utente: models.User, giorno: date, risultati: list) -> 
     )
 
 
+class RispostaTroncata(Exception):
+    """Il budget di max_tokens e' finito prima della fine della risposta."""
+
+
 def _chiama_modello(messaggi: list, con_strumenti: bool):
     strumenti = {"tools": STRUMENTI, "tool_choice": "auto"} if con_strumenti else {}
-    return categorization.groq_client.chat.completions.create(
+    scelta = categorization.groq_client.chat.completions.create(
         model=MODELLO,
         messages=messaggi,
         #non c'e' un secondo tentativo, ne' per scegliere le funzioni ne' per
@@ -462,9 +470,15 @@ def _chiama_modello(messaggi: list, con_strumenti: bool):
         #(agosto ma non settembre in un confronto) e leggeva male i risultati
         #(la categoria piu' piccola indicata come la piu' grande)
         reasoning_effort="medium",
-        max_tokens=1024,
+        #il ragionamento rientra nel budget: con 1024 un elenco di spese finiva
+        #tagliato a meta' parola ("il 4 settembre hai acquist")
+        max_tokens=4096,
         **strumenti,
-    ).choices[0].message
+    ).choices[0]
+    if scelta.finish_reason == "length":
+        #meglio "non sono riuscito a rispondere" che una frase spezzata in chat
+        raise RispostaTroncata()
+    return scelta.message
 
 
 def _testo_semplice(messaggio) -> str | None:
@@ -517,6 +531,9 @@ def rispondi_a_domanda(
         raise categorization.ServizioOccupato()
     except categorization.ServizioOccupato:
         raise
+    except RispostaTroncata:
+        logger.warning("risposta del modello troncata da max_tokens")
+        return None
     except Exception:
         logger.exception("risposta alla domanda non riuscita")
         return None
