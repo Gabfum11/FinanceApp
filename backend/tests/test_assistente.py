@@ -64,6 +64,9 @@ def spesa(db, utente_id, giorno, importo, categoria=None, descrizione="spesa"):
     "ho speso troppo questo mese?",
     "How much did I spend last month",
     "Mostrami le spese più alte",
+    "spese di settembre",
+    "ciao",
+    "Quanto ho speso nel 2025",
 ])
 def test_riconosce_le_domande(testo):
     assert domande.sembra_una_domanda(testo)
@@ -75,8 +78,11 @@ def test_riconosce_le_domande(testo):
     "Spesa 40 euro ieri",
     "Palestra 50 euro al mese",
     "Groceries 40 yesterday",
+    "spese 2026",
 ])
 def test_le_spese_non_sono_domande(testo):
+    #"spese 2026" e' una domanda, ma ha una cifra e niente "?": va all'estrazione,
+    #che non la riconosce, e l'app suggerisce il punto interrogativo
     assert not domande.sembra_una_domanda(testo)
 
 
@@ -104,6 +110,9 @@ class TestFunzioni:
         assert domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", categoria="cibo")["totale"] == 80.0
         assert domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30",
                                     categoria="Pranzi e cene")["totale"] == 30.0
+        #il modello a volte copia anche il gruppo, come nell'elenco che riceve
+        assert domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30",
+                                    categoria="Cibo: Pranzi e cene")["totale"] == 30.0
 
     def test_categoria_sconosciuta_elenca_i_nomi_validi(self, db, utente, categorie):
         r = domande.esegui_strumento("totale_spese", json.dumps(
@@ -121,10 +130,39 @@ class TestFunzioni:
         {"da": "2026-09-30", "a": "2026-09-01"},
         {"da": "2000-01-01", "a": "2026-09-01"},
         {"da": "2026-09-01"},
-        {"da": "2026-09-01", "a": "2026-09-30", "giorno": "2020-01-01"},
     ])
     def test_parametri_sbagliati_tornano_al_modello(self, db, utente, parametri):
         r = domande.esegui_strumento("totale_spese", json.dumps(parametri), db, utente, OGGI)
+        assert "errore" in r
+
+    def test_parametri_sconosciuti_o_null_sono_ignorati(self, db, utente):
+        """Non c'e' un secondo giro per correggerli: vale il valore predefinito."""
+        spesa(db, utente.id, date(2026, 9, 3), 10.0)
+        r = domande.esegui_strumento("elenco_spese", json.dumps(
+            {"da": "2026-09-01", "a": "2026-09-30", "ordina": "importo", "categoria": None}), db, utente, OGGI)
+        assert r["numero_spese"] == 1
+
+    def test_il_modello_non_sceglie_utente_ne_giorno(self, db, utente, make_user):
+        altro = make_user(email="altro@example.com")
+        spesa(db, altro, date(2026, 10, 2), 99.0)
+        r = domande.esegui_strumento("stato_budget", json.dumps(
+            {"utente": altro, "giorno": "2020-01-01"}), db, utente, OGGI)
+        assert r["speso"] == 0
+        assert r["inizio_ciclo"] == "2026-10-01"
+
+    def test_totali_per_periodi(self, db, utente, categorie):
+        spesa(db, utente.id, date(2026, 9, 3), 10.0, categorie["ristoranti"])
+        spesa(db, utente.id, date(2026, 9, 20), 30.0, categorie["ristoranti"])
+        spesa(db, utente.id, date(2026, 9, 21), 99.0, categorie["bollette"])
+        r = domande.esegui_strumento("totali_per_periodi", json.dumps({
+            "periodi": [{"da": "2026-09-01", "a": "2026-09-15"}, {"da": "2026-09-16", "a": "2026-09-30"}],
+            "categoria": "Cibo",
+        }), db, utente, OGGI)
+        assert [p["totale"] for p in r["periodi"]] == [10.0, 30.0]
+
+    @pytest.mark.parametrize("periodi", [[], "settembre", [{"da": "x", "a": "y"}], ["2026-09"]])
+    def test_totali_per_periodi_non_validi(self, db, utente, periodi):
+        r = domande.esegui_strumento("totali_per_periodi", json.dumps({"periodi": periodi}), db, utente, OGGI)
         assert "errore" in r
 
     def test_funzione_inesistente(self, db, utente):
@@ -139,6 +177,14 @@ class TestFunzioni:
         assert [g["gruppo"] for g in r["gruppi"]] == ["Cibo", "Casa", "Senza categoria"]
         assert r["gruppi"][0]["totale"] == 80.0
         assert r["totale"] == 145.0
+        #la sottocategoria piu' alta e' Bollette (60), anche se il gruppo piu' alto e' Cibo
+        assert r["sottocategoria_con_la_spesa_piu_alta"] == {"categoria": "Bolletta energia", "totale": 60.0}
+
+    def test_il_risultato_dice_quale_filtro_e_stato_usato(self, db, utente, categorie):
+        spesa(db, utente.id, date(2026, 9, 3), 30.0, categorie["ristoranti"])
+        r = domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", categoria="Pranzi e cene")
+        assert r["categoria"] == "Pranzi e cene"
+        assert domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30")["categoria"] == "tutte"
 
     def test_elenco_ha_un_tetto(self, db, utente):
         for i in range(30):
@@ -152,6 +198,7 @@ class TestFunzioni:
         spesa(db, utente.id, date(2026, 7, 10), 10.0)
         spesa(db, utente.id, date(2026, 9, 10), 20.0)
         r = domande.totali_mensili(db, utente, OGGI, "2026-07-01", "2026-09-30")
+        assert r["categoria"] == "tutte"
         assert r["mesi"] == [
             {"mese": "2026-07", "totale": 10.0},
             {"mese": "2026-08", "totale": 0.0},
@@ -194,6 +241,11 @@ def risposta_modello(testo=None, chiamate=None):
     return SimpleNamespace(content=testo, tool_calls=chiamate)
 
 
+def dati_inviati(messaggi) -> str:
+    """I risultati delle funzioni, come arrivano al modello nella seconda richiesta."""
+    return messaggi[0]["content"].split(domande.INIZIO_DATI, 1)[1]
+
+
 class TestDialogo:
     def test_il_risultato_della_funzione_torna_al_modello(self, db, utente):
         spesa(db, utente.id, date(2026, 9, 3), 42.5)
@@ -210,8 +262,7 @@ class TestDialogo:
             testo = domande.rispondi_a_domanda("quanto a settembre?", db, utente, OGGI, lambda: quota.append(1))
 
         assert testo == "A settembre hai speso 42,50 €."
-        risultato = json.loads(ricevuti[1][-1]["content"])
-        assert risultato["totale"] == 42.5
+        assert "totale: 42.5" in dati_inviati(ricevuti[1])
         assert len(quota) == 2, "ogni richiesta a Groq passa dalla quota"
 
     def test_le_istruzioni_dicono_oggi_e_valuta(self, db, utente, categorie):
@@ -225,9 +276,12 @@ class TestDialogo:
             domande.rispondi_a_domanda("quanto?", db, utente, OGGI, lambda: None)
         assert "2026-10-07" in ricevuti[0]
         assert "EUR" in ricevuti[0]
-        assert "Cibo" in ricevuti[0] and "Pranzi e cene" not in ricevuti[0]
+        #con un solo giro il modello non puo' sbagliare un nome e riprovare:
+        #le sottocategorie le deve avere subito, con il loro gruppo
+        assert "Cibo: Pranzi e cene, Spesa alimentare" in ricevuti[0]
 
-    def test_dopo_l_ultimo_giro_deve_rispondere(self, db, utente):
+    def test_al_massimo_due_richieste_a_groq(self, db, utente):
+        """Anche se il modello volesse altre funzioni, la seconda richiesta deve rispondere."""
         giri = []
 
         def modello(messaggi, con_strumenti):
@@ -239,7 +293,80 @@ class TestDialogo:
         with patch.object(domande, "_chiama_modello", modello):
             testo = domande.rispondi_a_domanda("budget?", db, utente, OGGI, lambda: None)
         assert testo == "Ecco il budget."
-        assert giri == [True] * domande.MAX_GIRI + [False]
+        assert giri == [True, False]
+
+    def test_piu_funzioni_nello_stesso_giro(self, db, utente):
+        """Un confronto chiede i due mesi insieme: i risultati arrivano entrambi."""
+        spesa(db, utente.id, date(2026, 8, 3), 25.0)
+        spesa(db, utente.id, date(2026, 9, 3), 40.0)
+        ricevuti = []
+
+        def modello(messaggi, con_strumenti):
+            ricevuti.append(list(messaggi))
+            if con_strumenti:
+                return risposta_modello(chiamate=[
+                    chiamata("totale_spese", {"da": "2026-08-01", "a": "2026-08-31"}, "c1"),
+                    chiamata("totale_spese", {"da": "2026-09-01", "a": "2026-09-30"}, "c2"),
+                ])
+            return risposta_modello("Agosto 25 €, settembre 40 €.")
+
+        with patch.object(domande, "_chiama_modello", modello):
+            domande.rispondi_a_domanda("confronta agosto e settembre", db, utente, OGGI, lambda: None)
+        dati = dati_inviati(ricevuti[1])
+        assert "totale: 25.0" in dati and "totale: 40.0" in dati
+        assert len(ricevuti) == 2
+
+    def test_la_seconda_richiesta_non_contiene_chiamate_di_funzione(self, db, utente):
+        """Vedendole, il modello prova a chiamarne un'altra e Groq rifiuta la richiesta."""
+        ricevuti = []
+
+        def modello(messaggi, con_strumenti):
+            ricevuti.append(list(messaggi))
+            if con_strumenti:
+                return risposta_modello(chiamate=[chiamata("stato_budget", {})])
+            return risposta_modello("ok")
+
+        with patch.object(domande, "_chiama_modello", modello):
+            domande.rispondi_a_domanda("budget?", db, utente, OGGI, lambda: None)
+        assert [m["role"] for m in ricevuti[1]] == ["system", "user"]
+        #nemmeno il nome della funzione: vedendolo, il modello prova a richiamarla
+        assert "stato_budget" not in ricevuti[1][0]["content"]
+
+    def test_i_dati_arrivano_come_testo_e_non_json(self, db, utente):
+        """Ricevendo JSON, il modello a volte rispondeva in JSON anche lui."""
+        ricevuti = []
+
+        def modello(messaggi, con_strumenti):
+            ricevuti.append(list(messaggi))
+            if con_strumenti:
+                return risposta_modello(chiamate=[chiamata("abbonamenti_attivi", {})])
+            return risposta_modello("ok")
+
+        with patch.object(domande, "_chiama_modello", modello):
+            domande.rispondi_a_domanda("abbonamenti?", db, utente, OGGI, lambda: None)
+        dati = dati_inviati(ricevuti[1])
+        assert "{" not in dati and '"' not in dati
+        assert "abbonamenti: nessuno" in dati
+
+    def test_una_risposta_in_json_non_arriva_in_chat(self, db, utente):
+        with patch.object(domande, "_chiama_modello", return_value=risposta_modello('{"speso": 60}')):
+            assert domande.rispondi_a_domanda("budget?", db, utente, OGGI, lambda: None) is None
+
+    def test_risponde_nella_lingua_dell_app(self, db, make_user):
+        inglese = db.get(models.User, make_user(email="en@example.com", language="en"))
+        ricevuti = []
+
+        def modello(messaggi, con_strumenti):
+            ricevuti.append(messaggi[0]["content"])
+            return risposta_modello("ok")
+
+        with patch.object(domande, "_chiama_modello", modello):
+            domande.rispondi_a_domanda("quanto ho speso?", db, inglese, OGGI, lambda: None)
+        assert "in English" in ricevuti[0]
+
+    def test_niente_grassetto_markdown(self, db, utente):
+        with patch.object(domande, "_chiama_modello", return_value=risposta_modello("Hai speso **10 €**.")):
+            assert domande.rispondi_a_domanda("quanto?", db, utente, OGGI, lambda: None) == "Hai speso 10 €."
 
     def test_quota_esaurita_ferma_il_dialogo(self, db, utente):
         def quota():
@@ -286,12 +413,21 @@ class TestEndpoint:
         assert r.json() == {"tipo": "risposta", "testo": "Hai speso 10 €."}
         estrazione.assert_not_called()
 
-    def test_cio_che_non_e_una_spesa_diventa_una_domanda(self, client, connesso):
-        with patch("app.business_logic.categorization.extract_expense_from_text", return_value=None), \
+    def test_senza_cifre_va_alle_domande_senza_estrazione(self, client, connesso):
+        with patch("app.business_logic.categorization.extract_expense_from_text") as estrazione, \
              patch.object(domande, "rispondi_a_domanda", return_value="Hai speso 10 €.") as risposta:
             r = invia(client, "spese di settembre")
         assert r.json()["tipo"] == "risposta"
         risposta.assert_called_once()
+        estrazione.assert_not_called()
+
+    def test_una_spesa_non_riconosciuta_non_riprova_come_domanda(self, client, connesso):
+        """Riprovare costerebbe una terza richiesta a Groq."""
+        with patch("app.business_logic.categorization.extract_expense_from_text", return_value=None), \
+             patch.object(domande, "rispondi_a_domanda") as risposta:
+            r = invia(client, "spese 2026")
+        assert r.status_code == 422
+        risposta.assert_not_called()
 
     def test_nessuna_risposta_da_422(self, client, connesso):
         with patch.object(domande, "rispondi_a_domanda", return_value=None):

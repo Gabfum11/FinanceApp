@@ -383,7 +383,7 @@
     "esempio4": "Palestra 50 euro al mese",
     "esempio5": "Quanto ho speso in ristoranti a settembre?",
     "perEsempio": "Per esempio:",
-    "nonCapito": "Non sono riuscito a capire. Prova a dirmi cosa hai comprato e quanto hai speso, per esempio \"Pizza 15 euro\".",
+    "nonCapito": "Non sono riuscito a capire. Prova a dirmi cosa hai comprato e quanto hai speso, per esempio \"Pizza 15 euro\". Se è una domanda, aggiungi il punto interrogativo.",
     "nonSalvato": "Non sono riuscito a salvare, riprova.",
     "annullata": "Spesa annullata.",
     "abbonamentoAggiunto": "Abbonamento aggiunto",

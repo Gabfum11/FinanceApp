@@ -383,7 +383,7 @@
     "esempio4": "Gym 50 a month",
     "esempio5": "How much did I spend on restaurants in September?",
     "perEsempio": "For example:",
-    "nonCapito": "I couldn't understand that. Try telling me what you bought and how much you spent, for example \"Pizza 15\".",
+    "nonCapito": "I couldn't understand that. Try telling me what you bought and how much you spent, for example \"Pizza 15\". If it's a question, add a question mark.",
     "nonSalvato": "I couldn't save it, please try again.",
     "annullata": "Expense cancelled.",
     "abbonamentoAggiunto": "Subscription added",
