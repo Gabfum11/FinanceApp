@@ -1,9 +1,8 @@
-import { Button, Dialog, Portal, Text } from "react-native-paper";
+import { Dialog, Portal, Text } from "react-native-paper";
 import { useTranslation } from "react-i18next";
-import { StyleSheet } from "react-native";
-import { radius, type Colori } from "@/styles/tokens";
-import { useStili, useTema } from "@/utils/tema";
+import { useStili } from "@/utils/tema";
 import { DIALOGO_LARGO, useSchermoLargo } from "@/utils/layout";
+import { IconaDialogo, PulsantiDialogo, creaStiliFinestra } from "@/components/Dialogo";
 
 // Un'unica conferma per tutta l'app.
 //
@@ -20,6 +19,9 @@ type Props = {
   cancelLabel?: string;
   /** colora di rosso il pulsante di conferma: per cancellazioni e simili */
   destructive?: boolean;
+  /** icona in cima; se manca, un avviso per le azioni distruttive e un punto
+   *  di domanda per le altre */
+  icon?: string;
   loading?: boolean;
   onConfirm: () => void;
   onDismiss: () => void;
@@ -32,52 +34,31 @@ export function ConfirmDialog({
   confirmLabel,
   cancelLabel,
   destructive = false,
+  icon,
   loading = false,
   onConfirm,
   onDismiss,
 }: Props) {
   const { t } = useTranslation();
-  const styles = useStili(creaStili);
-  const { colors } = useTema();
+  const styles = useStili(creaStiliFinestra);
   const largo = useSchermoLargo();
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={onDismiss} style={[styles.dialog, largo && DIALOGO_LARGO]}>
-        <Dialog.Title style={styles.title}>{title}</Dialog.Title>
+      <Dialog visible={visible} onDismiss={onDismiss} style={[styles.finestra, largo && DIALOGO_LARGO]}>
+        <IconaDialogo nome={icon ?? (destructive ? "alert" : "help")} distruttivo={destructive} />
+        <Dialog.Title style={[styles.titolo, styles.titoloCentrato]}>{title}</Dialog.Title>
         <Dialog.Content>
-          <Text style={styles.message}>{message}</Text>
+          <Text style={[styles.testo, styles.testoCentrato]}>{message}</Text>
         </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={onDismiss} disabled={loading} textColor={colors.textMuted}>
-            {cancelLabel ?? t("comune.annulla")}
-          </Button>
-          <Button
-            onPress={onConfirm}
-            loading={loading}
-            disabled={loading}
-            textColor={destructive ? colors.dangerDark : colors.primary}
-          >
-            {confirmLabel ?? t("comune.conferma")}
-          </Button>
-        </Dialog.Actions>
+        <PulsantiDialogo
+          conferma={confirmLabel ?? t("comune.conferma")}
+          onConferma={onConfirm}
+          annulla={cancelLabel}
+          onAnnulla={onDismiss}
+          distruttivo={destructive}
+          loading={loading}
+        />
       </Dialog>
     </Portal>
   );
 }
-
-const creaStili = (colors: Colori) =>
-  StyleSheet.create({
-  dialog: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.text,
-  },
-  message: {
-    lineHeight: 20,
-    color: colors.text,
-  },
-});

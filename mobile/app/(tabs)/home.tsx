@@ -602,6 +602,7 @@ export default function HomeScreen() {
         title={t("home.esciTitolo")}
         message={t("home.esciTesto")}
         confirmLabel={t("comune.esci")}
+        icon="exit-to-app"
         onConfirm={() => {
           //da Android 12 l'uscita manda l'app in background senza chiuderla:
           //senza questo, alla riapertura la finestra sarebbe ancora aperta

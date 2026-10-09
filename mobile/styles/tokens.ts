@@ -166,8 +166,9 @@ export const radius = {
   pill: 999,
 } as const;
 
-/** Velo scuro dietro i fogli modali. */
-export const scrim = "rgba(0,0,0,0.35)";
+/** Velo scuro dietro finestre, fogli e menu. Era 0.35: sul fondo quasi nero
+ *  del tema scuro la finestra non si staccava dalla pagina dietro. */
+export const scrim = "rgba(0,0,0,0.5)";
 
 /** Ombra leggera delle card: prima era riscritta in ogni file di stile, con
  *  opacita' che andavano da 0.05 a 0.12 senza una ragione visibile. */

@@ -363,6 +363,7 @@ export default function ExpenseList() {
             message={t("spese.eliminaTesto")}
             confirmLabel={t("comune.elimina")}
             destructive
+            icon="trash-can"
             onConfirm={() => daEliminare !== null && handleDelete(daEliminare)}
             onDismiss={() => setDaEliminare(null)}
         />

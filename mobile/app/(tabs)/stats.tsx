@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, Pressable } from "react-native";
-import { IconButton, Text, Snackbar, ActivityIndicator, Dialog, Portal, TextInput, Button } from "react-native-paper";
+import { IconButton, Text, Snackbar, ActivityIndicator, Dialog, Portal, TextInput } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { usePreferenze } from "@/utils/preferenze";
@@ -18,6 +18,7 @@ import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
 import { DIALOGO_LARGO, useSchermoLargo, useSchermoStretto } from "@/utils/layout";
 import { useStili, useTema } from "@/utils/tema";
+import { PulsantiDialogo, creaStiliFinestra } from "@/components/Dialogo";
 
 type CategoryStat = {
   category_name: string;
@@ -37,6 +38,7 @@ function formatCycleLabel(cycleStart: string, cycleEnd: string): string {
 
 export default function StatsScreen() {
   const styles = useStili(creaStili);
+  const finestra = useStili(creaStiliFinestra);
   const { colors } = useTema();
   const { importo, valuta } = usePreferenze();
   const { t } = useTranslation();
@@ -351,8 +353,8 @@ export default function StatsScreen() {
       </PaginaScorrevole>
 
       <Portal>
-        <Dialog visible={modificaBudget} onDismiss={() => setModificaBudget(false)} style={[styles.dialog, largo && DIALOGO_LARGO]}>
-          <Dialog.Title>{t("statistiche.budget")}</Dialog.Title>
+        <Dialog visible={modificaBudget} onDismiss={() => setModificaBudget(false)} style={[finestra.finestra, largo && DIALOGO_LARGO]}>
+          <Dialog.Title style={finestra.titolo}>{t("statistiche.budget")}</Dialog.Title>
           <Dialog.Content>
             <Text style={styles.dialogPeriodo}>{periodo}</Text>
             <TextInput
@@ -365,20 +367,19 @@ export default function StatsScreen() {
               mode="outlined"
               autoFocus
               left={<TextInput.Affix text={simbolo(valuta)} />}
+              error={erroreBudget !== ""}
             />
             {erroreBudget !== "" && <Text style={styles.dialogErrore}>{erroreBudget}</Text>}
             <Text style={styles.dialogSpiegazione}>
               {cycleOffset === 0 ? t("statistiche.budgetDaOra") : t("statistiche.budgetSoloPeriodo")}
             </Text>
           </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setModificaBudget(false)} disabled={salvataggio} textColor={colors.textMuted}>
-              {t("comune.annulla")}
-            </Button>
-            <Button onPress={salvaBudget} loading={salvataggio} disabled={salvataggio}>
-              {t("statistiche.salva")}
-            </Button>
-          </Dialog.Actions>
+          <PulsantiDialogo
+            conferma={t("statistiche.salva")}
+            onConferma={salvaBudget}
+            onAnnulla={() => setModificaBudget(false)}
+            loading={salvataggio}
+          />
         </Dialog>
       </Portal>
 

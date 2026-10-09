@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { Text } from "react-native-paper";
 import { fromDateString, toDateString } from "@/utils/date";
-import { scrim, type Colori } from "@/styles/tokens";
+import { radius, scrim, spacing, type Colori } from "@/styles/tokens";
 import { useStili, useTema } from "@/utils/tema";
+import { PulsantiDialogo, creaStiliFinestra } from "@/components/Dialogo";
 
 //stesse props del DateTimePicker usate nell'app: chi lo usa non cambia nulla.
 //Il campo data del browser su iPhone apre la rotella di Safari, sul computer
@@ -21,6 +22,7 @@ export function SelettoreData({ value, onValueChange, onDismiss }: Props) {
   const { t } = useTranslation();
   const [scelta, setScelta] = useState(toDateString(value));
   const styles = useStili(creaStili);
+  const finestra = useStili(creaStiliFinestra);
   const { colors, scuro } = useTema();
 
   return (
@@ -28,23 +30,21 @@ export function SelettoreData({ value, onValueChange, onDismiss }: Props) {
       <Pressable style={styles.overlay} onPress={onDismiss}>
         {/* il tocco sulla card non deve chiudere la finestra */}
         <Pressable style={styles.card} onPress={() => {}}>
-          <Text variant="titleMedium">{t("data.scegli")}</Text>
+          <Text style={finestra.titolo}>{t("data.scegli")}</Text>
           <input
             type="date"
             value={scelta}
             onChange={(e) => setScelta(e.target.value)}
             style={{ ...campo(colors), colorScheme: scuro ? "dark" : "light" }}
           />
+          {/* il campo si puo' svuotare: senza data non c'e' niente da confermare */}
           <View style={styles.actions}>
-            <Button onPress={onDismiss}>{t("comune.annulla")}</Button>
-            {/* il campo si puo' svuotare: senza data non c'e' niente da confermare */}
-            <Button
-              mode="contained"
-              disabled={!scelta}
-              onPress={() => onValueChange({ type: "set" }, fromDateString(scelta))}
-            >
-              {t("comune.ok")}
-            </Button>
+            <PulsantiDialogo
+              conferma={t("comune.ok")}
+              onConferma={() => onValueChange({ type: "set" }, fromDateString(scelta))}
+              onAnnulla={onDismiss}
+              confermaDisattivata={!scelta}
+            />
           </View>
         </Pressable>
       </Pressable>
@@ -55,9 +55,10 @@ export function SelettoreData({ value, onValueChange, onDismiss }: Props) {
 //stile del tag HTML: non passa da StyleSheet
 const campo = (colors: Colori) => ({
   fontSize: 16,
+  minHeight: 48,
   padding: 12,
-  borderRadius: 12,
-  border: `1px solid ${colors.border}`,
+  borderRadius: radius.md,
+  border: `1.5px solid ${colors.border}`,
   fontFamily: "inherit",
   color: colors.text,
   backgroundColor: colors.surface,
@@ -76,13 +77,14 @@ const creaStili = (colors: Colori) =>
     width: "100%",
     maxWidth: 360,
     backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 20,
-    gap: 16,
+    borderRadius: 24,
+    padding: spacing.xl,
+    paddingBottom: 0,
+    gap: spacing.lg,
   },
+  //PulsantiDialogo ha gia' i margini di una finestra di Paper: qui il bordo
+  //della card c'e' gia', si annullano quelli laterali
   actions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 8,
+    marginHorizontal: -spacing.xl,
   },
 });

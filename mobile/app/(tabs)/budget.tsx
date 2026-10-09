@@ -134,18 +134,21 @@ export default function BudgetScreen() {
         message: t("abbonamenti.pausaTesto"),
         confirmLabel: t("comune.conferma"),
         destructive: false,
+        icon: "pause",
       },
       riattiva: {
         title: t("abbonamenti.riattivaTitolo"),
         message: t("abbonamenti.riattivaTesto"),
         confirmLabel: t("comune.conferma"),
         destructive: false,
+        icon: "play",
       },
       elimina: {
         title: t("abbonamenti.eliminaTitolo"),
         message: t("abbonamenti.eliminaTesto"),
         confirmLabel: t("comune.elimina"),
         destructive: true,
+        icon: "trash-can",
       },
     } as const;
     function eseguiConferma() {
@@ -306,6 +309,7 @@ export default function BudgetScreen() {
         message={conferma ? testiConferma[conferma.tipo].message : ""}
         confirmLabel={conferma ? testiConferma[conferma.tipo].confirmLabel : t("comune.conferma")}
         destructive={conferma ? testiConferma[conferma.tipo].destructive : false}
+        icon={conferma ? testiConferma[conferma.tipo].icon : undefined}
         onConfirm={eseguiConferma}
         onDismiss={() => setConferma(null)}
       />

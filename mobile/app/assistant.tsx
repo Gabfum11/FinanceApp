@@ -435,6 +435,7 @@ function handleDatePickerDismiss() {
       message={pendingExpense ? t("assistente.chiudiProposta") : t("assistente.chiudiMessaggio")}
       confirmLabel={t("comune.chiudi")}
       cancelLabel={t("assistente.resta")}
+      icon="message-off"
     />
     </SafeAreaView>
     </View>

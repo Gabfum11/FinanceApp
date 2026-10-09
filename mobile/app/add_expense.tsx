@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { useSchermoLargo } from "@/utils/layout";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, IconButton, ActivityIndicator, Portal, Switch, Menu } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -63,6 +63,9 @@ export default function AddExpenseScreen() {
   const styles = useStili(creaStili);
   const { colors: tokens } = useTema();
   const colors = useMemo(() => coloriSpesa(tokens), [tokens]);
+  //il foglio delle categorie e' una Modal, fuori dalla SafeAreaView: senza
+  //questo l'ultima voce finiva sotto la barra dei gesti dell'iPhone
+  const { bottom: margineSotto } = useSafeAreaInsets();
   const { valuta, importo: formatta, importoIn } = usePreferenze();
   const { t } = useTranslation();
   const router = useRouter();
@@ -429,6 +432,8 @@ export default function AddExpenseScreen() {
             <Menu
               visible={menuValuta}
               onDismiss={() => setMenuValuta(false)}
+              anchorPosition="bottom"
+              contentStyle={styles.menu}
               anchor={
                 <Pressable
                   style={styles.valutaTocco}
@@ -448,7 +453,11 @@ export default function AddExpenseScreen() {
                 <Menu.Item
                   key={v}
                   title={`${simbolo(v)}  ${v}`}
-                  leadingIcon={v === valutaSpesa ? "check" : undefined}
+                  //la spunta a destra: a sinistra spostava il testo solo sulla voce scelta
+                  trailingIcon={v === valutaSpesa ? "check" : undefined}
+                  style={[styles.menuVoce, v === valutaSpesa && styles.menuVoceScelta]}
+                  titleStyle={[styles.menuTesto, v === valutaSpesa && styles.menuTestoScelto]}
+                  accessibilityState={{ selected: v === valutaSpesa }}
                   onPress={() => {
                     setError(null);
                     setValutaScelta(v === valuta ? null : v);
@@ -669,10 +678,27 @@ export default function AddExpenseScreen() {
       >
         <Pressable style={[styles.modalOverlay, largo && styles.modalOverlayLargo]} onPress={() => setShowCategoryPicker(false)}>
           {/* il Pressable interno intercetta il tap così non chiude il foglio */}
-          <Pressable style={[styles.modalSheet, largo && styles.modalSheetLargo]} onPress={() => {}}>
-            <Text variant="titleMedium" style={styles.modalTitle}>
-              {t("spesa.selezionaCategoria")}
-            </Text>
+          <Pressable
+            style={[styles.modalSheet, !largo && { paddingBottom: Math.max(28, margineSotto + 12) }, largo && styles.modalSheetLargo]}
+            onPress={() => {}}
+          >
+            {/* la maniglia dice "foglio" sul telefono; sul computer e' una finestra */}
+            {!largo && <View style={styles.maniglia} />}
+            <View style={styles.modalIntestazione}>
+              <Text variant="titleMedium" style={styles.modalTitle}>
+                {t("spesa.selezionaCategoria")}
+              </Text>
+              <IconButton
+                icon="close"
+                size={22}
+                mode="contained-tonal"
+                containerColor={colors.surfaceAlt}
+                iconColor={colors.text}
+                onPress={() => setShowCategoryPicker(false)}
+                accessibilityLabel={t("comune.chiudi")}
+                style={styles.modalChiudi}
+              />
+            </View>
             <SectionList
               sections={categories.map((gruppo) => ({
                 title: gruppo.name,
@@ -693,7 +719,13 @@ export default function AddExpenseScreen() {
               )}
               renderItem={({ item, section }) => (
                 <Pressable
-                  style={styles.categoryRow}
+                  style={({ pressed }) => [
+                    styles.categoryRow,
+                    category?.id === item.id && styles.categoryRowScelta,
+                    pressed && styles.categoryRowPremuta,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: category?.id === item.id }}
                   onPress={() => {
                     setCategory(item);
                     setShowCategoryPicker(false);
@@ -708,6 +740,9 @@ export default function AddExpenseScreen() {
                   >
                     {nomeCategoria(item.name)}
                   </Text>
+                  {category?.id === item.id && (
+                    <MaterialCommunityIcons name="check-circle" size={22} color={colors.green} />
+                  )}
                 </Pressable>
               )}
               ListEmptyComponent={

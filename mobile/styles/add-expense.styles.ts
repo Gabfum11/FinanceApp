@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori, cardShadow, scrim } from "./tokens";
+import { type Colori, cardShadow, floatingShadow, radius, scrim } from "./tokens";
 
 // Alias locali sui token condivisi: i nomi restano quelli usati nella
 // schermata, ma i valori vengono da un posto solo.
@@ -14,6 +14,7 @@ export const coloriSpesa = (tokens: Colori) => ({
   label: tokens.textMuted,
   placeholder: tokens.textDisabled,
   border: tokens.border,
+  chevron: tokens.chevron,
   disabled: tokens.disabled,
   disabledText: tokens.disabledText,
   text: tokens.text,
@@ -285,10 +286,11 @@ export const creaStili = (tokens: Colori) => {
   },
   modalSheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 16,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 8,
     paddingBottom: 28,
+    overflow: "hidden",
     maxHeight: "75%", //con 59 voci un foglio basso obbligherebbe a scorrere troppo
   },
   modalOverlayLargo: {
@@ -300,13 +302,39 @@ export const creaStili = (tokens: Colori) => {
     width: "100%",
     maxWidth: 480,
     maxHeight: "80%",
-    borderRadius: 20,
+    borderRadius: 24,
+    paddingTop: 12,
     paddingBottom: 12,
+  },
+  //segno grafico del foglio che sale dal basso
+  maniglia: {
+    alignSelf: "center",
+    width: 36,
+    height: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.chevron,
+    marginBottom: 8,
+  },
+  //titolo a sinistra, chiusura a destra: senza la X l'unico modo per uscire
+  //era toccare il velo scuro, che non tutti scoprono
+  modalIntestazione: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingLeft: 20,
+    paddingRight: 12,
+    paddingBottom: 8,
   },
   modalTitle: {
     fontWeight: "700",
-    paddingHorizontal: 20,
-    paddingBottom: 8,
+    fontSize: 18,
+    color: colors.text,
+  },
+  //44px: la X e' piccola, ma il bersaglio per il dito no
+  modalChiudi: {
+    margin: 0,
+    width: 44,
+    height: 44,
   },
   //intestazione di gruppo: deve leggersi come etichetta, non come voce da toccare
   categoryGroupHeader: {
@@ -335,11 +363,19 @@ export const creaStili = (tokens: Colori) => {
     borderTopColor: colors.border,
   },
   categoryRowText: {
+    flex: 1,
     fontSize: 16,
     color: colors.text,
   },
+  //la voce gia' scelta: sfondo tenue e spunta, non solo il testo colorato
+  categoryRowScelta: {
+    backgroundColor: colors.primarySoft,
+  },
+  categoryRowPremuta: {
+    backgroundColor: colors.surfaceAlt,
+  },
   categoryRowSelected: {
-    color: colors.green,
+    color: colors.darkGreen,
     fontWeight: "700",
   },
   errorText: {
@@ -354,6 +390,32 @@ export const creaStili = (tokens: Colori) => {
     alignItems: "center",
     paddingVertical: 4,
     paddingRight: 2,
+  },
+  //menu della valuta: card con angoli e ombra dell'app, non il rettangolo di Paper
+  menu: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 6,
+    ...floatingShadow,
+  },
+  menuVoce: {
+    minHeight: 44,
+    marginHorizontal: 6,
+    borderRadius: radius.sm,
+  },
+  menuVoceScelta: {
+    backgroundColor: colors.primarySoft,
+  },
+  menuTesto: {
+    fontSize: 15,
+    color: colors.text,
+    fontVariant: ["tabular-nums"],
+  },
+  menuTestoScelto: {
+    fontWeight: "700",
+    color: colors.darkGreen,
   },
   anteprima: {
     marginTop: 10,

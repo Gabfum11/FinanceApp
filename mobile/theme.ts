@@ -1,5 +1,5 @@
 import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
-import { radius, type Colori } from "./styles/tokens";
+import { radius, scrim, type Colori } from "./styles/tokens";
 
 // Il tema di Paper governa dialoghi, pulsanti e campi: senza allinearlo ai
 // token, quei componenti userebbero colori propri e stonerebbero con le
@@ -37,6 +37,8 @@ export function creaTemaPaper(colors: Colori, scuro: boolean) {
         level4: colors.surface,
         level5: colors.surface,
       },
+      //velo dietro le finestre di Paper: il suo e' viola, come il resto di Material 3
+      backdrop: scrim,
       error: colors.danger,
       outline: colors.border,
       onSurfaceVariant: colors.textMuted,

@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { radius, type Colori } from "./tokens";
+import { type Colori } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -144,10 +144,6 @@ export const creaStili = (colors: Colori) =>
         fontVariant: ["tabular-nums"],
     },
     //stesso raggio di ConfirmDialog: quello di Paper, con il nostro roundness, e' troppo tondo
-    dialog: {
-        backgroundColor: colors.surface,
-        borderRadius: radius.xl,
-    },
     dialogPeriodo: {
         color: colors.textMuted,
         marginTop: -8,
