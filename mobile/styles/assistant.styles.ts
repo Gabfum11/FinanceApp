@@ -194,8 +194,11 @@ export const creaStili = (colors: Colori) =>
         paddingTop: 12,
         paddingBottom: 14,
     },
+    //senza dimensione era a 14 (default) e si leggeva poco
     userText:{
-        color:colors.textOnPrimary
+        color:colors.textOnPrimary,
+        fontSize: fontSize.base,
+        lineHeight: 22,
     },
     systemText:{
         color:colors.textSecondary
