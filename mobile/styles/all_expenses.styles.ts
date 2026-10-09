@@ -48,9 +48,6 @@ export const creaStili = (colors: Colori) =>
     flex: 1.5,
     minWidth: 0,
   },
-  colonnaData: {
-    width: 110,
-  },
   colonnaImporto: {
     width: 120,
     textAlign: "right",

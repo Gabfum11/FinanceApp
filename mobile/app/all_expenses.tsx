@@ -5,7 +5,7 @@ import { IconButton, Text, Searchbar } from "react-native-paper";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
-import { formatDataSpesa, intestazioneGiorno } from "@/utils/date";
+import { intestazioneGiorno } from "@/utils/date";
 import { creaStili } from "@/styles/all_expenses.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { IconaCategoria } from "@/components/IconaCategoria";
@@ -113,10 +113,9 @@ export default function ExpenseList() {
         [filtered]
     );
 
-    //sul telefono le spese si dividono per giorno, la data diventa l'intestazione;
-    //sul computer resta una tabella sola, che ha gia' la colonna della data
+    //le spese si dividono per giorno, la data diventa l'intestazione:
+    //sul telefono come sul computer, dove ogni giorno ha le sue righe di tabella
     const sezioni = useMemo(() => {
-        if (largo) return [{ giorno: "", data: filtered }];
         //arrivano in ordine di inserimento: una spesa di ieri registrata oggi
         //finirebbe in cima, staccata dalle altre dello stesso giorno
         const ordinate = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
@@ -127,7 +126,7 @@ export default function ExpenseList() {
             else perGiorno.push({ giorno: e.date, data: [e] });
         }
         return perGiorno;
-    }, [filtered, largo]);
+    }, [filtered]);
 
     const hasFilters = query.trim() !== "" || categoryId !== null || period !== "all";
 
@@ -284,15 +283,14 @@ export default function ExpenseList() {
         sections={sezioni}
         stickySectionHeadersEnabled={false}
         keyExtractor={(item)=>item.id.toString()} //dice a React come identificare ogni elemento dell'array in modo univoco
-        renderSectionHeader={({ section }) => section.giorno ? (
+        renderSectionHeader={({ section }) => (
             <Text style={styles.dayHeader}>{intestazioneGiorno(section.giorno)}</Text>
-        ) : null}
+        )}
         ListHeaderComponent={largo && filtered.length > 0 ? (
             <View style={styles.intestazioneTabella}>
                 <View style={styles.colonnaIcona} />
                 <Text style={[styles.intestazioneColonna, styles.colonnaDescrizione]}>{t("spese.colonnaDescrizione")}</Text>
                 <Text style={[styles.intestazioneColonna, styles.colonnaCategoria]}>{t("spese.colonnaCategoria")}</Text>
-                <Text style={[styles.intestazioneColonna, styles.colonnaData]}>{t("spese.colonnaData")}</Text>
                 <Text style={[styles.intestazioneColonna, styles.colonnaImporto]}>{t("spese.colonnaImporto")}</Text>
                 <View style={styles.colonnaAzioni} />
             </View>
@@ -305,7 +303,6 @@ export default function ExpenseList() {
                 </View>
                 <Text style={[styles.expenseDescription, styles.colonnaDescrizione]} numberOfLines={1}>{item.description}</Text>
                 <Text style={[styles.expenseMeta, styles.colonnaCategoria]} numberOfLines={1}>{nomeCategoria(item.category_name)}</Text>
-                <Text style={[styles.expenseMeta, styles.colonnaData]}>{formatDataSpesa(item.date)}</Text>
                 <View style={[styles.amountColumn, styles.colonnaImporto]}>
                     <Text style={styles.expenseAmount}>−{importo(item.amount)}</Text>
                     {item.original_currency && item.original_amount != null && (
