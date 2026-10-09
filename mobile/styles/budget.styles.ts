@@ -48,11 +48,6 @@ export const creaStili = (colors: Colori) =>
         flex: 1,
         gap: 2,
     },
-    riepilogoSeconda: {
-        borderLeftWidth: 1,
-        borderLeftColor: colors.border,
-        paddingLeft: 16,
-    },
     riepilogoEtichetta: {
         fontSize: fontSize.xs,
         fontWeight: fontWeight.bold,

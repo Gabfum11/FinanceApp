@@ -196,10 +196,6 @@ export default function BudgetScreen() {
               <Text style={styles.riepilogoEtichetta}>{t("abbonamenti.alMese")}</Text>
               <Text style={styles.riepilogoValore}>{importo(costoMensile)}</Text>
             </View>
-            <View style={[styles.riepilogoVoce, styles.riepilogoSeconda]}>
-              <Text style={styles.riepilogoEtichetta}>{t("abbonamenti.allAnno")}</Text>
-              <Text style={styles.riepilogoValore}>{importo(costoMensile * 12)}</Text>
-            </View>
             {inAltraValuta > 0 && (
               <Text style={styles.riepilogoNota}>{t("abbonamenti.esclusiValuta", { count: inAltraValuta })}</Text>
             )}
