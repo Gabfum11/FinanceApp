@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori, cardShadow } from "./tokens";
+import { type Colori, cardShadow, radius } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -79,12 +79,14 @@ export const creaStili = (colors: Colori) =>
   miniLegenda: {
     flex: 1,
     minWidth: 0,
-    gap: 8,
+    gap: 4,
   },
+  //righe con il cerchio dell'icona: un po' piu' alte, per non stringerlo
   miniRiga: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
+    minHeight: 32,
   },
   miniNome: {
     flex: 1,
@@ -138,9 +140,18 @@ export const creaStili = (colors: Colori) =>
     height: 28,
     borderRadius: 14,
   },
-  sectionTitle:{
-    marginTop:16,
-    marginBottom:8
+  //titolo a sinistra, "Vedi tutte" a destra
+  sectionTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: colors.text,
   },
   headerRow: {
     flexDirection: "row",
@@ -176,6 +187,38 @@ export const creaStili = (colors: Colori) =>
     fontWeight: "600",
     color: colors.textSecondary,
     marginTop: 4,
+  },
+  //icona su cerchio verde tenue, come nelle statistiche: il grigio chiaro di
+  //prima arrivava a 1,6:1
+  emptyIcona: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primarySoft,
+  },
+  //pulsante vero al posto di "tocca + ...": verde pieno con testo scuro
+  emptyPulsante: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minHeight: 44,
+    marginTop: 10,
+    paddingHorizontal: 18,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primary,
+  },
+  emptyPulsanteTenue: {
+    backgroundColor: colors.primarySoft,
+  },
+  emptyPulsanteTesto: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.surfaceDark,
+  },
+  emptyPulsanteTestoTenue: {
+    color: colors.primaryDark,
   },
   emptyHint: {
     textAlign: "center",
@@ -231,10 +274,20 @@ export const creaStili = (colors: Colori) =>
     color: colors.textMuted,
     marginTop: 2,
   },
-  linkExpenses:{
-    color: colors.primary,
-    fontWeight:"bold",
-    textAlign:"right"
+  //verde scuro e non verde chiaro: sul fondo grigio si legge (5:1 contro 2:1)
+  linkExpenses: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 44,
+    paddingLeft: 12,
+  },
+  linkExpensesTesto: {
+    color: colors.primaryDark,
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  premuto: {
+    opacity: 0.7,
   },
   budgetCard: {
     backgroundColor: colors.surfaceDark,

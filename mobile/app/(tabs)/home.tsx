@@ -55,7 +55,11 @@ type DayStat = {
 
 //per i riquadri che la home mostra solo sul computer
 type CategoriaStat = { category_name: string; total: number };
-type Rinnovo = { id: number; description: string; amount: number; next_date: string; is_active: boolean; currency?: string | null };
+type Rinnovo = {
+  id: number; description: string; amount: number; next_date: string; is_active: boolean; currency?: string | null;
+  //per l'icona, come nella scheda Abbonamenti
+  category_name?: string | null; category_group?: string | null;
+};
 
 
 //date string ->data della spesa (anno,mese,giorno)
@@ -377,13 +381,22 @@ export default function HomeScreen() {
       <>
         {/* solo a caricamento finito, se no lampeggerebbe a ogni apertura */}
         {budgetStatus && budgetStatus.budget == null && (
-          <Pressable style={styles.emptyState} onPress={() => router.push("/set_budget")}>
-            <MaterialCommunityIcons name="cash" size={40} color={colors.chevron} />
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcona}>
+              <MaterialCommunityIcons name="cash" size={30} color={colors.primaryDark} />
+            </View>
             <Text style={styles.emptyTitle}>{t("home.nessunBudget")}</Text>
-            <Text style={styles.emptyHint}>
-              {t("home.nessunBudgetTesto")}
-            </Text>
-          </Pressable>
+            <Text style={styles.emptyHint}>{t("home.nessunBudgetBreve")}</Text>
+            {/* verde tenue: viene dopo la prima spesa, che ha il pulsante pieno */}
+            <Pressable
+              style={({ pressed }) => [styles.emptyPulsante, styles.emptyPulsanteTenue, pressed && styles.premuto]}
+              onPress={() => router.push("/set_budget")}
+              accessibilityRole="button"
+            >
+              <MaterialCommunityIcons name="plus" size={18} color={colors.primaryDark} />
+              <Text style={[styles.emptyPulsanteTesto, styles.emptyPulsanteTestoTenue]}>{t("statistiche.impostaBudgetBreve")}</Text>
+            </Pressable>
+          </View>
         )}
         {budgetStatus?.budget != null && (
           <View style={[styles.budgetCard, largo && styles.cardInRiga]}>
@@ -456,14 +469,23 @@ export default function HomeScreen() {
 
   const spese = (
       <>
-        <Text variant="titleMedium" style={[styles.sectionTitle, largo && styles.sectionTitleLargo]}>
-          {t("home.ultime")}
-        </Text>
-        {expenses.length > 0 && (
-          <Link href="/all_expenses" asChild>
-            <Text style={styles.linkExpenses}>{t("home.vediTutte")}</Text>
-          </Link>
-        )}
+        {/* "Vedi tutte" sulla riga del titolo: prima stava su una riga da sola,
+            verde chiaro su grigio (2:1), e sembrava un'etichetta */}
+        <View style={[styles.sectionTitleRow, largo && styles.sectionTitleLargo]}>
+          <Text style={styles.sectionTitle} accessibilityRole="header">{t("home.ultime")}</Text>
+          {expenses.length > 0 && (
+            <Link href="/all_expenses" asChild>
+              <Pressable
+                style={({ pressed }) => [styles.linkExpenses, pressed && styles.premuto]}
+                accessibilityRole="link"
+                hitSlop={4}
+              >
+                <Text style={styles.linkExpensesTesto}>{t("home.vediTutte")}</Text>
+                <MaterialCommunityIcons name="chevron-right" size={20} color={colors.primaryDark} />
+              </Pressable>
+            </Link>
+          )}
+        </View>
       {/* due righe sul telefono, cinque sul computer: un semplice elenco, perche'
           una FlatList dentro uno ScrollView che scorre nello stesso verso da' problemi */}
       {/* un solo riquadro con le righe separate da una linea: prima ogni riga
@@ -490,13 +512,22 @@ export default function HomeScreen() {
         </View>
       )}
       {expensesLoaded && expenses.length === 0 && (
-        <Pressable style={styles.emptyState} onPress={() => router.push("/add_expense")}>
-          <MaterialCommunityIcons name="receipt-text-outline" size={40} color={colors.chevron} />
+        <View style={styles.emptyState}>
+          <View style={styles.emptyIcona}>
+            <MaterialCommunityIcons name="receipt-text" size={30} color={colors.primaryDark} />
+          </View>
           <Text style={styles.emptyTitle}>{t("home.nessunaSpesa")}</Text>
-          <Text style={styles.emptyHint}>
-            {t("home.nessunaSpesaTesto")}
-          </Text>
-        </Pressable>
+          <Text style={styles.emptyHint}>{t("home.nessunaSpesaBreve")}</Text>
+          {/* un pulsante vero al posto di "tocca + in basso": la prima cosa da fare */}
+          <Pressable
+            style={({ pressed }) => [styles.emptyPulsante, pressed && styles.premuto]}
+            onPress={() => router.push("/add_expense")}
+            accessibilityRole="button"
+          >
+            <MaterialCommunityIcons name="plus" size={18} color={colors.surfaceDark} />
+            <Text style={styles.emptyPulsanteTesto}>{t("schede.aggiungi")}</Text>
+          </Pressable>
+        </View>
       )}
       </>
   );
@@ -524,7 +555,7 @@ export default function HomeScreen() {
             <View style={styles.miniLegenda}>
               {categorie.slice(0, 4).map((c) => (
                 <View key={c.category_name} style={styles.miniRiga}>
-                  <View style={[styles.budgetLegendDot, { backgroundColor: colorePerGruppo(c.category_name) }]} />
+                  <IconaCategoria gruppo={c.category_name} dimensione={24} />
                   <Text style={styles.miniNome} numberOfLines={1}>{nomeCategoria(c.category_name)}</Text>
                   <Text style={styles.miniImporto}>{importo(c.total)}</Text>
                 </View>
@@ -545,7 +576,7 @@ export default function HomeScreen() {
         ) : (
           rinnovi.map((sub) => (
             <View key={sub.id} style={styles.miniRiga}>
-              <MaterialCommunityIcons name="autorenew" size={18} color={colors.primary} />
+              <IconaCategoria categoria={sub.category_name} gruppo={sub.category_group} dimensione={24} />
               <Text style={styles.miniNome} numberOfLines={1}>{sub.description}</Text>
               <Text style={styles.rinnovoData}>{formatDataSpesa(sub.next_date)}</Text>
               <Text style={styles.miniImporto}>{saldoVisibile ? importoIn(sub.amount, sub.currency) : nascosto}</Text>
