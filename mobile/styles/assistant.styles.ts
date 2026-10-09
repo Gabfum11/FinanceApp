@@ -59,6 +59,10 @@ export const creaStili = (colors: Colori) =>
     chatContainer:{
         padding:16, // i messaggi non toccano i bordi dello schermo
         gap:12, //spazio tra un messaggio e l'altro
+        //i messaggi partono dal fondo, vicino al campo di testo, come nelle app di chat:
+        //il benvenuto con gli esempi resta leggibile mentre l'utente scrive
+        flexGrow:1,
+        justifyContent:"flex-end",
     },
     messageBubble:{
         maxWidth:"85%",

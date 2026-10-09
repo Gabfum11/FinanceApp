@@ -83,6 +83,7 @@ export default function AssistantScreen() {
   //l'ultima domanda con la sua risposta: il server la manda al modello per
   //capire i seguiti come "quali sono?" o "e il mese scorso?"
   const ultimoScambio = useRef<{ domanda: string; risposta: string } | null>(null);
+  const lista = useRef<FlatList<ChatMessage>>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -288,7 +289,12 @@ function handleDatePickerDismiss() {
       </View>
 
       <FlatList
+        ref={lista}
         data={messages}
+        //resta sull'ultimo messaggio quando ne arriva uno nuovo e quando la
+        //tastiera accorcia la lista, altrimenti finirebbe nascosto sotto
+        onContentSizeChange={() => lista.current?.scrollToEnd({ animated: true })}
+        onLayout={() => lista.current?.scrollToEnd({ animated: false })}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.chatContainer}
         renderItem={({ item }) => (
