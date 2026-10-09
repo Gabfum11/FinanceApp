@@ -507,6 +507,7 @@
     "sezioneApp": "APP",
     "sezioneDati": "DATI",
     "sezioneSupporto": "SUPPORTO",
+    "sezioneAccount": "ACCOUNT",
     "promemoria": "Promemoria abbonamenti",
     "promemoriaSi": "Il giorno prima del rinnovo, alle 9:00",
     "promemoriaNo": "Disattivati",
@@ -556,7 +557,9 @@
     "nomeLungo": "Il nome può avere al massimo 50 caratteri",
     "erroreSalvataggio": "Errore nel salvataggio",
     "emailFissa": "L'email non può essere modificata",
-    "cambiaPassword": "Cambia password"
+    "cambiaPassword": "Cambia password",
+    "sezioneSicurezza": "SICUREZZA",
+    "contatore": "{{n}} caratteri su 50"
   },
   "cambiaPassword": {
     "titolo": "Cambia password",

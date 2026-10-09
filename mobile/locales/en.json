@@ -507,6 +507,7 @@
     "sezioneApp": "APP",
     "sezioneDati": "DATA",
     "sezioneSupporto": "SUPPORT",
+    "sezioneAccount": "ACCOUNT",
     "promemoria": "Subscription reminders",
     "promemoriaSi": "The day before renewal, at 9:00",
     "promemoriaNo": "Off",
@@ -556,7 +557,9 @@
     "nomeLungo": "The name can be at most 50 characters",
     "erroreSalvataggio": "Couldn't save",
     "emailFissa": "The email can't be changed",
-    "cambiaPassword": "Change password"
+    "cambiaPassword": "Change password",
+    "sezioneSicurezza": "SECURITY",
+    "contatore": "{{n}} of 50 characters"
   },
   "cambiaPassword": {
     "titolo": "Change password",

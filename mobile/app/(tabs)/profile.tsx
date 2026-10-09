@@ -1,5 +1,5 @@
 import { View, Pressable } from "react-native";
-import { Text, Button, Dialog, Portal, TextInput, ActivityIndicator, Snackbar, Switch, RadioButton } from "react-native-paper";
+import { Text, Dialog, Portal, TextInput, ActivityIndicator, Snackbar, Switch, RadioButton } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { esportaCsv } from "@/utils/exportData";
 import { impostaPromemoria, promemoriaAttivi, dimenticaDispositivo, NOTIFICHE_DISPONIBILI } from "@/utils/notifications";
@@ -9,8 +9,11 @@ import { PRIVACY_URL } from "@/config";
 import { useFocusEffect, useRouter } from "expo-router";
 import { cancellaSessione, chiudiSessione } from "@/utils/session";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { creaStili } from "@/styles/profile.styles";
-import { useCallback, useEffect, useState } from "react";
+import { IconaDialogo, PulsantiDialogo, creaStiliFinestra } from "@/components/Dialogo";
+import { creaStili, COLORI_RIGHE } from "@/styles/profile.styles";
+import { Avatar } from "@/components/Avatar";
+import { IconaCerchio } from "@/components/IconaCategoria";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
@@ -24,6 +27,7 @@ import { DIALOGO_LARGO, useSchermoLargo } from "@/utils/layout";
 
 export default function ProfileScreen() {
   const styles = useStili(creaStili);
+  const finestra = useStili(creaStiliFinestra);
   const { colors, scuro, impostaScuro } = useTema();
   //sul computer: account a sinistra, impostazioni a destra
   const largo = useSchermoLargo();
@@ -203,13 +207,6 @@ export default function ProfileScreen() {
         promemoriaAttivi().then(setPromemoria);
     }, []);
 
-    const initials = nickname
-        .split(" ")
-        .map((word) => word[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
-
     async function handleLogout() {
         setShowLogoutDialog(false);
         //finché c'è il token di accesso: dopo il server non saprebbe di chi è il telefono
@@ -219,29 +216,32 @@ export default function ProfileScreen() {
         router.replace("/login");
     }
 
-    //disconnetti ed elimina: sotto le sezioni sul telefono, sotto l'account sul computer
+    //disconnetti ed elimina: sotto le sezioni sul telefono, sotto l'account sul computer.
+    //In una card come le altre voci: prima erano due scritte sciolte, e "Disconnetti
+    //tutti" in verde chiaro su grigio quasi non si leggeva
     const azioniAccount = (
         <>
-        {/* cancellare il token dal telefono non basta: quello emesso resta
-            valido fino a 30 giorni, e un dispositivo perso resterebbe dentro */}
-        <Button
-            mode="text"
-            onPress={confirmLogoutAll}
-            loading={isLoggingOutAll}
-            disabled={isLoggingOutAll}
-            style={styles.logoutAllButton}
-        >
-            {t("profilo.disconnettiTutti")}
-        </Button>
-
-        <Button
-            mode="text"
-            textColor={colors.dangerDark}
-            onPress={() => setShowDeleteDialog(true)}
-            style={styles.deleteButton}
-        >
-            {t("profilo.eliminaAccount")}
-        </Button>
+        <Text style={[styles.sectionLabel, largo && styles.sezioneAccountLarga]}>{t("profilo.sezioneAccount")}</Text>
+        <View style={styles.sectionCard}>
+            {/* cancellare il token dal telefono non basta: quello emesso resta
+                valido fino a 30 giorni, e un dispositivo perso resterebbe dentro */}
+            <Riga
+                icona="cellphone-remove"
+                colore={COLORI_RIGHE.neutro}
+                etichetta={t("profilo.disconnettiTutti")}
+                onPress={confirmLogoutAll}
+                disabilitata={isLoggingOutAll}
+                destra={isLoggingOutAll ? <ActivityIndicator size={18} /> : undefined}
+            />
+            <View style={styles.rowDivider} />
+            <Riga
+                icona="account-remove"
+                colore={COLORI_RIGHE.pericolo}
+                etichetta={t("profilo.eliminaAccount")}
+                onPress={() => setShowDeleteDialog(true)}
+                distruttiva
+            />
+        </View>
         </>
     );
 
@@ -249,36 +249,40 @@ export default function ProfileScreen() {
         <View style={styles.container}>
             <PaginaScorrevole style={styles.content} sopraBarra>
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>{t("profilo.titolo")}</Text>
+                    <Text style={styles.headerTitle} accessibilityRole="header">{t("profilo.titolo")}</Text>
                     {/* scritta e icona insieme: l'icona da sola non diceva cosa fa */}
                     <Pressable
                         onPress={() => setShowLogoutDialog(true)}
                         style={({ pressed }) => [styles.logoutButton, pressed && styles.logoutPremuto]}
                         accessibilityRole="button"
                         accessibilityLabel={t("profilo.esci")}
-                        hitSlop={4}
                     >
                         <Text style={styles.logoutTesto}>{t("profilo.esciTitolo")}</Text>
-                        <MaterialCommunityIcons name="logout" size={20} color={colors.danger} />
+                        <MaterialCommunityIcons name="logout" size={20} color={colors.dangerDark} />
                     </Pressable>
                 </View>
 
                 {/* sul computer: account a sinistra, impostazioni a destra */}
                 <View style={largo ? styles.dueColonne : undefined}>
                 <View style={largo ? styles.colonnaAccount : undefined}>
-                <View style={[styles.profCard, largo && styles.profCardLarga]}>
-                    <View style={styles.avatarCircle}>
-                        <Text style={styles.avatarInitials}>{initials}</Text>
+                {/* tutta la card porta alla modifica: il pulsante resta, ma il dito
+                    puo' toccare anche il nome */}
+                <Pressable
+                    style={({ pressed }) => [styles.profCard, largo && styles.profCardLarga, pressed && styles.profCardPremuta]}
+                    onPress={() => router.push("/modify_profile")}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${nickname}, ${email}. ${t("modificaProfilo.titolo")}`}
+                >
+                    <Avatar nome={nickname} dimensione={largo ? 72 : 56} />
+                    <View style={[styles.profileInfo, largo && styles.profileInfoLarga]}>
+                        <Text style={[styles.profileName, largo && styles.testoCentrato]} numberOfLines={1}>{nickname}</Text>
+                        <Text style={[styles.profileEmail, largo && styles.testoCentrato]} numberOfLines={1}>{email}</Text>
                     </View>
-                    <View style={styles.profileInfo}>
-                        <Text style={styles.profileName}>{nickname}</Text>
-                        <Text style={styles.profileEmail}>{email}</Text>
+                    <View style={styles.modificaPillola}>
+                        <MaterialCommunityIcons name="pencil" size={16} color={colors.primaryDark} />
+                        <Text style={styles.modificaTesto}>{t("comune.modifica")}</Text>
                     </View>
-                    <Button mode="outlined" onPress={() => router.push("/modify_profile")} style={styles.button}>
-                        {t("comune.modifica")}
-                    </Button>
-                    <View></View>
-                </View>
+                </Pressable>
                 {largo && azioniAccount}
                 </View>
 
@@ -289,97 +293,92 @@ export default function ProfileScreen() {
                         che non puo' funzionare e' peggio di una voce assente */}
                     {NOTIFICHE_DISPONIBILI && (
                     <>
-                    <View style={styles.row}>
-                        <MaterialCommunityIcons name="bell-outline" size={20} color={colors.accent} />
-                        <View style={styles.rowTextGroup}>
-                            <Text style={styles.rowLabelInGroup}>{t("profilo.promemoria")}</Text>
-                            <Text style={styles.rowHint}>
-                                {promemoria ? t("profilo.promemoriaSi") : t("profilo.promemoriaNo")}
-                            </Text>
-                        </View>
-                        <Switch
-                            value={promemoria}
-                            onValueChange={handlePromemoria}
-                            disabled={promemoriaInCorso}
-                        />
-                    </View>
+                    <Riga
+                        icona="bell"
+                        colore={COLORI_RIGHE.promemoria}
+                        etichetta={t("profilo.promemoria")}
+                        dettaglio={promemoria ? t("profilo.promemoriaSi") : t("profilo.promemoriaNo")}
+                        destra={
+                            <Switch
+                                value={promemoria}
+                                onValueChange={handlePromemoria}
+                                disabled={promemoriaInCorso}
+                                accessibilityLabel={t("profilo.promemoria")}
+                            />
+                        }
+                    />
                     <View style={styles.rowDivider} />
                     </>
                     )}
-                    <Pressable style={styles.row} onPress={() => setShowValutaDialog(true)}>
-                        <MaterialCommunityIcons name="cash-multiple" size={20} color={colors.primary} />
-                        <View style={styles.rowTextGroup}>
-                            <Text style={styles.rowLabelInGroup}>{t("profilo.valuta")}</Text>
-                            <Text style={styles.rowHint}>{nomeValuta(valuta)} ({simbolo(valuta)})</Text>
-                        </View>
-                        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
-                    </Pressable>
+                    <Riga
+                        icona="cash-multiple"
+                        colore={COLORI_RIGHE.valuta}
+                        etichetta={t("profilo.valuta")}
+                        dettaglio={`${nomeValuta(valuta)} (${simbolo(valuta)})`}
+                        onPress={() => setShowValutaDialog(true)}
+                    />
                     <View style={styles.rowDivider} />
-                    <Pressable style={styles.row} onPress={() => setShowLinguaDialog(true)}>
-                        <MaterialCommunityIcons name="translate" size={20} color={colors.primary} />
-                        <View style={styles.rowTextGroup}>
-                            <Text style={styles.rowLabelInGroup}>{t("lingua.titolo")}</Text>
-                            <Text style={styles.rowHint}>{t(`lingua.${lingua}`)}</Text>
-                        </View>
-                        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
-                    </Pressable>
+                    <Riga
+                        icona="translate"
+                        colore={COLORI_RIGHE.lingua}
+                        etichetta={t("lingua.titolo")}
+                        dettaglio={t(`lingua.${lingua}`)}
+                        onPress={() => setShowLinguaDialog(true)}
+                    />
                     <View style={styles.rowDivider} />
                     {/* cambia subito: niente da confermare, si torna indietro con lo stesso tocco */}
-                    <View style={styles.row}>
-                        <MaterialCommunityIcons name="weather-night" size={20} color={colors.primary} />
-                        <View style={styles.rowTextGroup}>
-                            <Text style={styles.rowLabelInGroup}>{t("profilo.temaScuro")}</Text>
-                        </View>
-                        <Switch value={scuro} onValueChange={impostaScuro} />
-                    </View>
+                    <Riga
+                        icona="weather-night"
+                        colore={COLORI_RIGHE.tema}
+                        etichetta={t("profilo.temaScuro")}
+                        destra={<Switch value={scuro} onValueChange={impostaScuro} accessibilityLabel={t("profilo.temaScuro")} />}
+                    />
                 </View>
 
                 <Text style={styles.sectionLabel}>{t("profilo.sezioneDati")}</Text>
                 <View style={styles.sectionCard}>
-                    <Pressable
-                        style={styles.row}
+                    <Riga
+                        icona="receipt"
+                        colore={COLORI_RIGHE.esporta}
+                        etichetta={t("profilo.esportaSpese")}
                         onPress={() => handleExport("expenses")}
-                        disabled={esportazione !== null}
-                    >
-                        <MaterialCommunityIcons name="file-download-outline" size={20} color={colors.primary} />
-                        <Text style={styles.rowLabel}>{t("profilo.esportaSpese")}</Text>
-                        {esportazione === "expenses"
-                            ? <ActivityIndicator size={18} />
-                            : <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />}
-                    </Pressable>
+                        disabilitata={esportazione !== null}
+                        destra={esportazione === "expenses" ? <ActivityIndicator size={18} /> : <MaterialCommunityIcons name="download" size={22} color={colors.chevron} />}
+                    />
                     <View style={styles.rowDivider} />
-                    <Pressable
-                        style={styles.row}
+                    <Riga
+                        icona="autorenew"
+                        colore={COLORI_RIGHE.esporta}
+                        etichetta={t("profilo.esportaAbbonamenti")}
                         onPress={() => handleExport("subscriptions")}
-                        disabled={esportazione !== null}
-                    >
-                        <MaterialCommunityIcons name="file-download-outline" size={20} color={colors.primary} />
-                        <Text style={styles.rowLabel}>{t("profilo.esportaAbbonamenti")}</Text>
-                        {esportazione === "subscriptions"
-                            ? <ActivityIndicator size={18} />
-                            : <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />}
-                    </Pressable>
+                        disabilitata={esportazione !== null}
+                        destra={esportazione === "subscriptions" ? <ActivityIndicator size={18} /> : <MaterialCommunityIcons name="download" size={22} color={colors.chevron} />}
+                    />
                 </View>
 
                 <Text style={styles.sectionLabel}>{t("profilo.sezioneSupporto")}</Text>
                 <View style={styles.sectionCard}>
-                    <Pressable style={styles.row} onPress={() => router.navigate({ pathname: "/(tabs)/home", params: { tour: "1" } })}>
-                        <MaterialCommunityIcons name="school-outline" size={20} color={colors.primary} />
-                        <Text style={styles.rowLabel}>{t("profilo.rivediTutorial")}</Text>
-                        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
-                    </Pressable>
+                    <Riga
+                        icona="school"
+                        colore={COLORI_RIGHE.tutorial}
+                        etichetta={t("profilo.rivediTutorial")}
+                        onPress={() => router.navigate({ pathname: "/(tabs)/home", params: { tour: "1" } })}
+                    />
                     <View style={styles.rowDivider} />
-                    <Pressable style={styles.row} onPress={() => setShowSupportDialog(true)}>
-                        <MaterialCommunityIcons name="help-circle-outline" size={20} color={colors.primary} />
-                        <Text style={styles.rowLabel}>{t("profilo.contattaci")}</Text>
-                        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
-                    </Pressable>
+                    <Riga
+                        icona="help"
+                        colore={COLORI_RIGHE.supporto}
+                        etichetta={t("profilo.contattaci")}
+                        onPress={() => setShowSupportDialog(true)}
+                    />
                     <View style={styles.rowDivider} />
-                    <Pressable style={styles.row} onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
-                        <MaterialCommunityIcons name="shield-lock-outline" size={20} color={colors.primary} />
-                        <Text style={styles.rowLabel}>{t("profilo.privacy")}</Text>
-                        <MaterialCommunityIcons name="open-in-new" size={20} color={colors.chevron} />
-                    </Pressable>
+                    <Riga
+                        icona="shield-lock"
+                        colore={COLORI_RIGHE.neutro}
+                        etichetta={t("profilo.privacy")}
+                        onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}
+                        destra={<MaterialCommunityIcons name="open-in-new" size={20} color={colors.chevron} />}
+                    />
                 </View>
 
                 {!largo && azioniAccount}
@@ -389,14 +388,14 @@ export default function ProfileScreen() {
             </PaginaScorrevole>
 
             <Portal>
-                <Dialog visible={showValutaDialog} onDismiss={() => setShowValutaDialog(false)} style={[styles.dialog, largo && DIALOGO_LARGO]}>
-                    <Dialog.Title style={styles.dialogTitle}>{t("profilo.valuta")}</Dialog.Title>
-                    <Dialog.Content>
+                <Dialog visible={showValutaDialog} onDismiss={() => setShowValutaDialog(false)} style={[finestra.finestra, largo && DIALOGO_LARGO]}>
+                    <Dialog.Title style={finestra.titolo}>{t("profilo.valuta")}</Dialog.Title>
+                    <Dialog.Content style={styles.dialogScelte}>
                         <RadioButton.Group onValueChange={scegliValuta} value={valuta}>
                             {VALUTE.map((v) => (
                                 <RadioButton.Item
-                                    labelStyle={styles.opzioneTesto}
-                                    style={styles.opzione}
+                                    labelStyle={[styles.opzioneTesto, v === valuta && styles.opzioneTestoScelto]}
+                                    style={[styles.opzione, v === valuta && styles.opzioneScelta]}
                                     key={v}
                                     value={v}
                                     label={`${nomeValuta(v)} (${simbolo(v)})`}
@@ -404,13 +403,14 @@ export default function ProfileScreen() {
                             ))}
                         </RadioButton.Group>
                     </Dialog.Content>
+                    <PulsantiDialogo conferma={t("comune.chiudi")} onConferma={() => setShowValutaDialog(false)} />
                 </Dialog>
             </Portal>
 
             <Portal>
-                <Dialog visible={showLinguaDialog} onDismiss={() => setShowLinguaDialog(false)} style={[styles.dialog, largo && DIALOGO_LARGO]}>
-                    <Dialog.Title style={styles.dialogTitle}>{t("lingua.titolo")}</Dialog.Title>
-                    <Dialog.Content>
+                <Dialog visible={showLinguaDialog} onDismiss={() => setShowLinguaDialog(false)} style={[finestra.finestra, largo && DIALOGO_LARGO]}>
+                    <Dialog.Title style={finestra.titolo}>{t("lingua.titolo")}</Dialog.Title>
+                    <Dialog.Content style={styles.dialogScelte}>
                         <RadioButton.Group
                             onValueChange={(scelta) => {
                                 setShowLinguaDialog(false);
@@ -421,53 +421,58 @@ export default function ProfileScreen() {
                             {/* ogni lingua nella sua lingua: chi non capisce l'italiano la riconosce */}
                             {LINGUE.map((l) => (
                                 <RadioButton.Item
-                                    labelStyle={styles.opzioneTesto}
-                                    style={styles.opzione} key={l} value={l} label={t(`lingua.${l}`)} />
+                                    labelStyle={[styles.opzioneTesto, l === lingua && styles.opzioneTestoScelto]}
+                                    style={[styles.opzione, l === lingua && styles.opzioneScelta]}
+                                    key={l} value={l} label={t(`lingua.${l}`)} />
                             ))}
                         </RadioButton.Group>
                         <Text style={styles.dialogNota}>{t("lingua.nota")}</Text>
                     </Dialog.Content>
+                    <PulsantiDialogo conferma={t("comune.chiudi")} onConferma={() => setShowLinguaDialog(false)} />
                 </Dialog>
             </Portal>
 
             <Portal>
-                <Dialog visible={valutaNuova !== null} onDismiss={() => !valutaInCorso && setValutaNuova(null)} style={[styles.dialog, largo && DIALOGO_LARGO]}>
-                    <Dialog.Title style={styles.dialogTitle}>
+                <Dialog visible={valutaNuova !== null} onDismiss={() => !valutaInCorso && setValutaNuova(null)} style={[finestra.finestra, largo && DIALOGO_LARGO]}>
+                    <IconaDialogo nome="swap-horizontal" />
+                    <Dialog.Title style={[finestra.titolo, finestra.titoloCentrato]}>
                         {valutaNuova ? t("profilo.passareA", { valuta: `${nomeValuta(valutaNuova)} (${simbolo(valutaNuova)})` }) : ""}
                     </Dialog.Title>
-                    <Dialog.Content>
+                    <Dialog.Content style={styles.dialogScelte}>
                         <RadioButton.Group
                             onValueChange={(scelta) => setConvertiPassate(scelta === "converti")}
                             value={convertiPassate ? "converti" : "mantieni"}
                         >
-                            <RadioButton.Item
-                                    labelStyle={styles.opzioneTesto}
-                                    style={styles.opzione}
-                                value="converti"
-                                label={t("profilo.converti")}
-                                disabled={valutaInCorso}
-                            />
-                            <Text style={[styles.opzioneNota, styles.opzioneNotaStaccata]}>
-                                {t("profilo.convertiTesto")}
-                            </Text>
-                            <RadioButton.Item
-                                    labelStyle={styles.opzioneTesto}
-                                    style={styles.opzione}
-                                value="mantieni"
-                                label={t("profilo.mantieni")}
-                                disabled={valutaInCorso}
-                            />
-                            <Text style={styles.opzioneNota}>
-                                {t("profilo.mantieniTesto")}
-                            </Text>
+                            {/* ogni scelta in un riquadro con la sua spiegazione: si capisce
+                                che la nota appartiene alla voce sopra e non a quella sotto */}
+                            <View style={[styles.sceltaRiquadro, convertiPassate && styles.sceltaRiquadroScelto]}>
+                                <RadioButton.Item
+                                    labelStyle={[styles.opzioneTesto, styles.opzioneTestoScelto]}
+                                    style={styles.opzioneInRiquadro}
+                                    value="converti"
+                                    label={t("profilo.converti")}
+                                    disabled={valutaInCorso}
+                                />
+                                <Text style={styles.opzioneNota}>{t("profilo.convertiTesto")}</Text>
+                            </View>
+                            <View style={[styles.sceltaRiquadro, !convertiPassate && styles.sceltaRiquadroScelto]}>
+                                <RadioButton.Item
+                                    labelStyle={[styles.opzioneTesto, styles.opzioneTestoScelto]}
+                                    style={styles.opzioneInRiquadro}
+                                    value="mantieni"
+                                    label={t("profilo.mantieni")}
+                                    disabled={valutaInCorso}
+                                />
+                                <Text style={styles.opzioneNota}>{t("profilo.mantieniTesto")}</Text>
+                            </View>
                         </RadioButton.Group>
                     </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button onPress={() => setValutaNuova(null)} disabled={valutaInCorso}>{t("comune.annulla")}</Button>
-                        <Button mode="contained" onPress={confermaValuta} loading={valutaInCorso} disabled={valutaInCorso}>
-                            {t("profilo.cambiaValuta")}
-                        </Button>
-                    </Dialog.Actions>
+                    <PulsantiDialogo
+                        conferma={t("profilo.cambiaValuta")}
+                        onConferma={confermaValuta}
+                        onAnnulla={() => setValutaNuova(null)}
+                        loading={valutaInCorso}
+                    />
                 </Dialog>
             </Portal>
 
@@ -477,6 +482,7 @@ export default function ProfileScreen() {
                 message={t("profilo.esciTesto")}
                 confirmLabel={t("profilo.esciTitolo")}
                 destructive
+                icon="logout"
                 onConfirm={handleLogout}
                 onDismiss={() => setShowLogoutDialog(false)}
             />
@@ -487,15 +493,17 @@ export default function ProfileScreen() {
                 message={t("profilo.disconnettiTesto")}
                 confirmLabel={t("profilo.disconnetti")}
                 destructive
+                icon="cellphone-remove"
                 onConfirm={handleLogoutAll}
                 onDismiss={() => setShowLogoutAllDialog(false)}
             />
 
             <Portal>
-                <Dialog visible={showDeleteDialog} onDismiss={closeDeleteDialog} style={[styles.dialog, largo && DIALOGO_LARGO]}>
-                    <Dialog.Title style={styles.dialogTitle}>{t("profilo.eliminaAccount")}</Dialog.Title>
+                <Dialog visible={showDeleteDialog} onDismiss={closeDeleteDialog} style={[finestra.finestra, largo && DIALOGO_LARGO]}>
+                    <IconaDialogo nome="account-remove" distruttivo />
+                    <Dialog.Title style={[finestra.titolo, finestra.titoloCentrato]}>{t("profilo.eliminaAccount")}</Dialog.Title>
                     <Dialog.Content>
-                        <Text style={styles.deleteWarning}>
+                        <Text style={[finestra.testo, finestra.testoCentrato, styles.deleteWarning]}>
                             {t("profilo.eliminaTesto")}
                         </Text>
                         {hasPassword ? (
@@ -506,49 +514,43 @@ export default function ProfileScreen() {
                                 secureTextEntry
                                 mode="outlined"
                                 autoCapitalize="none"
+                                error={!!deleteError}
                             />
                         ) : (
-                            <Text style={styles.deleteWarning}>
+                            <Text style={[finestra.testo, finestra.testoCentrato]}>
                                 {t("profilo.collegatoGoogle")}
                             </Text>
                         )}
                         {deleteError && <Text style={styles.deleteError}>{deleteError}</Text>}
                     </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button onPress={closeDeleteDialog} disabled={isDeleting}>
-                            {t("comune.annulla")}
-                        </Button>
-                        <Button
-                            onPress={handleDeleteAccount}
-                            textColor={colors.dangerDark}
-                            disabled={isDeleting || (hasPassword && password.length === 0)}
-                            loading={isDeleting}
-                        >
-                            {t("comune.elimina")}
-                        </Button>
-                    </Dialog.Actions>
+                    <PulsantiDialogo
+                        conferma={t("comune.elimina")}
+                        onConferma={handleDeleteAccount}
+                        onAnnulla={closeDeleteDialog}
+                        distruttivo
+                        loading={isDeleting}
+                        confermaDisattivata={hasPassword && password.length === 0}
+                    />
                 </Dialog>
 
                 <Dialog
                     visible={showSupportDialog}
                     onDismiss={() => setShowSupportDialog(false)}
-                    style={[styles.dialog, largo && DIALOGO_LARGO]}
+                    style={[finestra.finestra, largo && DIALOGO_LARGO]}
                 >
-                    <Dialog.Title style={styles.dialogTitle}>{t("profilo.supportoTitolo")}</Dialog.Title>
+                    <IconaDialogo nome="email" />
+                    <Dialog.Title style={[finestra.titolo, finestra.titoloCentrato]}>{t("profilo.supportoTitolo")}</Dialog.Title>
                     <Dialog.Content>
-                        <Text style={styles.dialogText}>
+                        <Text style={[finestra.testo, finestra.testoCentrato]}>
                             {t("profilo.supportoTesto")}
                         </Text>
-                        <Text style={styles.supportEmail}>{SUPPORT_EMAIL}</Text>
+                        <Text style={styles.supportEmail} selectable>{SUPPORT_EMAIL}</Text>
                     </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button onPress={() => setShowSupportDialog(false)} textColor={colors.textMuted}>
-                            {t("comune.annulla")}
-                        </Button>
-                        <Button onPress={handleContatta} textColor={colors.primary}>
-                            {t("profilo.mandaEmail")}
-                        </Button>
-                    </Dialog.Actions>
+                    <PulsantiDialogo
+                        conferma={t("profilo.mandaEmail")}
+                        onConferma={handleContatta}
+                        onAnnulla={() => setShowSupportDialog(false)}
+                    />
                 </Dialog>
             </Portal>
 
@@ -557,5 +559,42 @@ export default function ProfileScreen() {
                 {messaggio}
             </Snackbar>
         </View>
+    );
+}
+
+//una riga dell'elenco: cerchio colorato, testo, e a destra freccia o
+//interruttore. Tutte uguali, cosi' le sezioni si leggono come un elenco solo
+function Riga({ icona, colore, etichetta, dettaglio, onPress, destra, distruttiva, disabilitata }: {
+    icona: string;
+    colore: string;
+    etichetta: string;
+    dettaglio?: string;
+    onPress?: () => void;
+    destra?: ReactNode;
+    distruttiva?: boolean;
+    disabilitata?: boolean;
+}) {
+    const styles = useStili(creaStili);
+    const { colors } = useTema();
+    const contenuto = (
+        <>
+            <IconaCerchio icona={icona} sfondo={colore} dimensione={32} />
+            <View style={styles.rowTextGroup}>
+                <Text style={[styles.rowLabelInGroup, distruttiva && styles.rowLabelDistruttiva]}>{etichetta}</Text>
+                {dettaglio !== undefined && <Text style={styles.rowHint}>{dettaglio}</Text>}
+            </View>
+            {destra ?? (onPress && <MaterialCommunityIcons name="chevron-right" size={22} color={colors.chevron} />)}
+        </>
+    );
+    if (!onPress) return <View style={styles.row}>{contenuto}</View>;
+    return (
+        <Pressable
+            style={({ pressed }) => [styles.row, pressed && styles.rowPremuta]}
+            onPress={onPress}
+            disabled={disabilitata}
+            accessibilityRole="button"
+        >
+            {contenuto}
+        </Pressable>
     );
 }
