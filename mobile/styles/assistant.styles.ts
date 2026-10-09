@@ -201,7 +201,9 @@ export const creaStili = (colors: Colori) =>
         lineHeight: 22,
     },
     systemText:{
-        color:colors.textSecondary
+        color:colors.textSecondary,
+        fontSize: fontSize.base,
+        lineHeight: 22,
     },
     inputRow:{
         flexDirection: "row",
