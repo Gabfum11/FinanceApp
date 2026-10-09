@@ -37,6 +37,45 @@ def categorize_by_rules(description: str, db: Session) :
 
     return None
 
+
+def _normalizza(testo: str) -> str:
+    return " ".join(testo.lower().split())
+
+
+def memoria_categorie(user_id: int, db: Session) -> list[tuple[str, int]]:
+    """Le descrizioni gia' usate dall'utente, con la categoria dell'ultima volta.
+
+    La memoria sono le spese stesse: correggere la categoria di una spesa
+    aggiorna anche cio' che l'assistente proporra' la volta dopo.
+    """
+    righe = (
+        db.query(models.Expense.description, models.Expense.category_id)
+        .join(models.Category, models.Expense.category_id == models.Category.id)
+        #le vecchie spese possono puntare a un gruppo, che non si assegna piu'
+        .filter(models.Expense.user_id == user_id, models.Category.parent_id.isnot(None))
+        .order_by(models.Expense.date.desc(), models.Expense.id.desc())
+        .all()
+    )
+    ultima: dict[str, int] = {}
+    for descrizione, category_id in righe:
+        ultima.setdefault(_normalizza(descrizione), category_id)
+    return ordina_memoria(ultima)
+
+
+def ordina_memoria(ultima: dict[str, int]) -> list[tuple[str, int]]:
+    #la piu' lunga prima: "pizza da asporto" e' piu' precisa di "pizza"
+    return sorted(ultima.items(), key=lambda voce: len(voce[0]), reverse=True)
+
+
+def cerca_in_memoria(testo: str, memoria: list[tuple[str, int]]) -> int | None:
+    """La categoria della prima descrizione nota che compare nel testo come parole intere."""
+    testo = _normalizza(testo)
+    for descrizione, category_id in memoria:
+        #parole intere: "bar" non deve scattare dentro "barbiere"
+        if descrizione and re.search(rf"(?<!\w){re.escape(descrizione)}(?!\w)", testo):
+            return category_id
+    return None
+
 # Il modello sbaglia l'aritmetica sui giorni della settimana ("mercoledi" -> lunedi),
 # quindi restituisce solo l'espressione e la data la calcola Python.
 RELATIVE_DAYS = {

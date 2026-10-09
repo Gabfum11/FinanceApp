@@ -241,14 +241,23 @@ def proponi_spesa(text: str, db: Session, current_user: models.User, giorno: dat
                 etichetta = f"{c.name} ({prime})"
         per_gruppo.setdefault(c.parent.name, []).append(etichetta)
 
+    #una descrizione gia' usata riprende la categoria dell'ultima volta: il modello
+    #non deve sceglierla, e il prompt perde l'elenco delle categorie, la parte piu' lunga
+    memoria = categorization.memoria_categorie(current_user.id, db)
+    category_id = categorization.cerca_in_memoria(text, memoria)
+
     #passiamo i nomi al modello: categoria ed estrazione escono dalla stessa chiamata.
     #"ieri" e "lunedi" si contano dal giorno dell'utente, non da quello del server
-    extracted = categorization.extract_expense_from_text(text, [c.name for c in categories], per_gruppo, oggi=giorno)
+    if category_id is None:
+        extracted = categorization.extract_expense_from_text(text, [c.name for c in categories], per_gruppo, oggi=giorno)
+    else:
+        extracted = categorization.extract_expense_from_text(text, None, None, oggi=giorno)
     if extracted is None:
         return None
 
-    category_id = None
-    if extracted["category"]:
+    if category_id is None: #il testo la scrive diversa ("caffe"), il modello come l'ultima volta ("Caffè")
+        category_id = categorization.cerca_in_memoria(extracted["description"], memoria)
+    if category_id is None and extracted["category"]:
         match = next((c for c in categories if c.name == extracted["category"]), None)
         category_id = match.id if match else None
     if category_id is None: #il modello non ha scelto: ci provano le keyword
