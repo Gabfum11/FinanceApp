@@ -308,8 +308,9 @@ export default function StatsScreen() {
                 {remaining > 0 && (
                   <View style={[styles.legendRow, styles.legendRowSeparata]}>
                     <View style={styles.legendLeft}>
-                      {/* grigio come la sua fetta: e' quello che resta, non una spesa */}
-                      <IconaCerchio icona="wallet" sfondo={colors.donutRemaining} dimensione={30} />
+                      {/* un anello vuoto, grigio come la sua fetta: e' il pezzo di ciambella
+                          che resta, non una categoria, quindi niente icona */}
+                      <View style={[styles.legendaAnello, { borderColor: colors.donutRemaining }]} />
                       <Text style={styles.legendLabel} numberOfLines={1}>
                         {meseInCorso ? t("statistiche.disponibile") : t("statistiche.avanzato")}
                       </Text>

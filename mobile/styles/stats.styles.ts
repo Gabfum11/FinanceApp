@@ -252,6 +252,13 @@ export const creaStili = (colors: Colori) =>
     legendaResto: {
         color: colors.textMuted,
     },
+    //largo come le icone delle categorie, cosi' i nomi restano allineati
+    legendaAnello: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        borderWidth: 7,
+    },
     //colore del tema e non opacita': sul fondo scuro il 60% di bianco non bastava
     totalLabel: {
         color: colors.textMuted,
