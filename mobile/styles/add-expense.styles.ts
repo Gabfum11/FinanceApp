@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori, cardShadow, floatingShadow, radius, scrim } from "./tokens";
+import { type Colori, cardShadow, floatingShadow, radius, scrim, fontSize, fontWeight } from "./tokens";
 
 // Alias locali sui token condivisi: i nomi restano quelli usati nella
 // schermata, ma i valori vengono da un posto solo.
@@ -71,7 +71,7 @@ export const creaStili = (tokens: Colori) => {
   headerTitle: {
     flex: 1,
     textAlign: "center",
-    fontWeight: "700",
+    fontWeight: fontWeight.bold,
   },
   // stessa larghezza dell'IconButton di sinistra, così il titolo resta centrato
   headerSpacer: {
@@ -102,11 +102,11 @@ export const creaStili = (tokens: Colori) => {
     ...cardShadow,
   },
   segmentLabel: {
-    fontSize: 14,
+    fontSize: fontSize.md,
     color: colors.label,
     //peso costante: in grassetto il testo e' piu' largo e i due segmenti
     //cambierebbero larghezza a vicenda a ogni cambio di selezione
-    fontWeight: "600",
+    fontWeight: fontWeight.semibold,
   },
   segmentLabelSelected: {
     color: colors.darkGreen,
@@ -131,12 +131,12 @@ export const creaStili = (tokens: Colori) => {
     backgroundColor: colors.primarySoft,
   },
   frequencyLabel: {
-    fontSize: 14,
+    fontSize: fontSize.md,
     color: colors.textSecondary,
   },
   frequencyLabelSelected: {
     color: colors.darkGreen,
-    fontWeight: "700",
+    fontWeight: fontWeight.bold,
   },
   autoRenewRow: {
     flexDirection: "row",
@@ -153,11 +153,11 @@ export const creaStili = (tokens: Colori) => {
     flex: 1,
   },
   autoRenewLabel: {
-    fontSize: 15,
+    fontSize: fontSize.md,
     color: colors.text,
   },
   autoRenewHint: {
-    fontSize: 12,
+    fontSize: fontSize.xs,
     color: colors.textSecondary,
     marginTop: 2,
   },
@@ -176,14 +176,14 @@ export const creaStili = (tokens: Colori) => {
   },
   currency: {
     color: colors.green,
-    fontSize: 26,
-    fontWeight: "700",
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.bold,
     marginRight: 4,
   },
   amountValue: {
     color: colors.text,
-    fontSize: 44,
-    fontWeight: "700",
+    fontSize: fontSize.hero,
+    fontWeight: fontWeight.bold,
   },
   cursor: {
     width: 2,
@@ -252,8 +252,8 @@ export const creaStili = (tokens: Colori) => {
   },
   saveButtonText: {
     color: colors.surface,
-    fontWeight: "700",
-    fontSize: 16,
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.base,
   },
   saveButtonTextDisabled: {
     color: colors.disabledText,
@@ -275,7 +275,7 @@ export const creaStili = (tokens: Colori) => {
     opacity: 0.4,
   },
   keyText: {
-    fontSize: 24,
+    fontSize: fontSize.xxl,
     color: colors.keypadText,
   },
 
@@ -326,8 +326,8 @@ export const creaStili = (tokens: Colori) => {
     paddingBottom: 8,
   },
   modalTitle: {
-    fontWeight: "700",
-    fontSize: 18,
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.lg,
     color: colors.text,
   },
   //44px: la X e' piccola, ma il bersaglio per il dito no
@@ -346,8 +346,8 @@ export const creaStili = (tokens: Colori) => {
     paddingVertical: 8,
   },
   categoryGroupTitle: {
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
     color: colors.label,
     textTransform: "uppercase",
     letterSpacing: 0.6,
@@ -364,7 +364,7 @@ export const creaStili = (tokens: Colori) => {
   },
   categoryRowText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: fontSize.base,
     color: colors.text,
   },
   //la voce gia' scelta: sfondo tenue e spunta, non solo il testo colorato
@@ -376,7 +376,7 @@ export const creaStili = (tokens: Colori) => {
   },
   categoryRowSelected: {
     color: colors.darkGreen,
-    fontWeight: "700",
+    fontWeight: fontWeight.bold,
   },
   errorText: {
     color: colors.error,
@@ -409,29 +409,29 @@ export const creaStili = (tokens: Colori) => {
     backgroundColor: colors.primarySoft,
   },
   menuTesto: {
-    fontSize: 15,
+    fontSize: fontSize.md,
     color: colors.text,
     fontVariant: ["tabular-nums"],
   },
   menuTestoScelto: {
-    fontWeight: "700",
+    fontWeight: fontWeight.bold,
     color: colors.darkGreen,
   },
   anteprima: {
     marginTop: 10,
     color: colors.label,
-    fontSize: 14,
+    fontSize: fontSize.md,
   },
   anteprimaErrore: {
     marginTop: 10,
     color: colors.error,
-    fontSize: 13,
+    fontSize: fontSize.sm,
     textAlign: "center",
     paddingHorizontal: 20,
   },
   convertitoInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: fontSize.base,
     paddingVertical: 0,
   },
 });

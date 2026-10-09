@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { Text } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTema } from "@/utils/tema";
+import { fontWeight } from "@/styles/tokens";
 
 // Iniziali del nome in un cerchio verde pieno: nel profilo e nella modifica
 // del profilo, dove cambiano mentre si scrive il nome.
@@ -43,7 +44,7 @@ export function Avatar({ nome, dimensione = 56 }: { nome: string; dimensione?: n
       <Text
         style={{
           color: colors.surfaceDark,
-          fontWeight: "700",
+          fontWeight: fontWeight.bold,
           fontSize: Math.round(dimensione * 0.36),
           lineHeight: Math.round(dimensione * 0.44),
         }}

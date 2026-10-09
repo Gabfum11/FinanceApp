@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori } from "./tokens";
+import { type Colori, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -26,8 +26,8 @@ export const creaStili = (colors: Colori) =>
       borderRadius: 9,
     },
     nomeApp: {
-      fontSize: 20,
-      fontWeight: "bold",
+      fontSize: fontSize.xl,
+      fontWeight: fontWeight.bold,
       color: colors.text,
     },
     //giallo come il "+" della barra del telefono: e' lo stesso comando
@@ -42,8 +42,8 @@ export const creaStili = (colors: Colori) =>
       backgroundColor: colors.accent,
     },
     nuovaTesto: {
-      fontSize: 15,
-      fontWeight: "bold",
+      fontSize: fontSize.md,
+      fontWeight: fontWeight.bold,
       color: "black",
     },
     premuto: {
@@ -66,11 +66,11 @@ export const creaStili = (colors: Colori) =>
       backgroundColor: colors.primarySoft,
     },
     nome: {
-      fontSize: 15,
+      fontSize: fontSize.md,
       color: colors.textSecondary,
     },
     nomeAttivo: {
-      fontWeight: "bold",
+      fontWeight: fontWeight.bold,
       color: colors.primaryDark,
     },
   });

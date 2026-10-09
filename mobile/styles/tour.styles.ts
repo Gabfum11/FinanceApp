@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori, radius } from "./tokens";
+import { type Colori, radius, fontSize, fontWeight } from "./tokens";
 
 export const VELO = "rgba(12,22,17,0.68)";
 
@@ -29,7 +29,7 @@ export const creaStili = (colors: Colori) =>
     marginBottom: 12,
   },
   introTitle: {
-    fontWeight: "bold",
+    fontWeight: fontWeight.bold,
     textAlign: "center",
     marginBottom: 6,
   },
@@ -44,8 +44,8 @@ export const creaStili = (colors: Colori) =>
     width: "100%",
   },
   introButtonLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
   },
   // --- fumetto ---
   tip: {
@@ -68,19 +68,19 @@ export const creaStili = (colors: Colori) =>
     transform: [{ rotate: "45deg" }],
   },
   count: {
-    fontSize: 11,
-    fontWeight: "bold",
+    fontSize: fontSize.xxs,
+    fontWeight: fontWeight.bold,
     letterSpacing: 0.6,
     color: colors.textMuted,
   },
   tipTitle: {
-    fontSize: 17,
-    fontWeight: "bold",
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
     marginTop: 4,
     marginBottom: 4,
   },
   tipText: {
-    fontSize: 14,
+    fontSize: fontSize.md,
     lineHeight: 20,
     color: colors.textSecondary,
   },

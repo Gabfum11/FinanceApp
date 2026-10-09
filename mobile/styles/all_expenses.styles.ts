@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori } from "./tokens";
+import { type Colori, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -20,8 +20,8 @@ export const creaStili = (colors: Colori) =>
     paddingBottom: 8,
   },
   intestazioneColonna: {
-    fontSize: 12,
-    fontWeight: "bold",
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
     letterSpacing: 0.4,
     color: colors.textMuted,
     textTransform: "uppercase",
@@ -82,8 +82,8 @@ export const creaStili = (colors: Colori) =>
   },
   //"Oggi", "Ieri", "lunedì 6 ottobre": sopra il riquadro delle spese di quel giorno
   dayHeader: {
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
     letterSpacing: 0.5,
     textTransform: "uppercase",
     color: colors.textMuted,
@@ -98,7 +98,7 @@ export const creaStili = (colors: Colori) =>
     borderRadius: 12,
   },
   searchbarInput: {
-    fontSize: 15,
+    fontSize: fontSize.md,
     minHeight: 0,
   },
   //la ScrollView orizzontale senza altezza esplicita si adatta al contenuto:
@@ -126,11 +126,11 @@ export const creaStili = (colors: Colori) =>
     borderColor: colors.primary,
   },
   chipLabel: {
-    fontSize: 13,
+    fontSize: fontSize.sm,
     color: colors.textSecondary,
     //il peso resta invariato tra selezionato e non: il grassetto e' piu' largo
     //e farebbe cambiare larghezza al chip, spostando quelli accanto
-    fontWeight: "600",
+    fontWeight: fontWeight.semibold,
   },
   chipLabelSelected: {
     color: colors.primaryDark,
@@ -144,12 +144,12 @@ export const creaStili = (colors: Colori) =>
     height: 32, //fissa: altrimenti comparendo e sparendo sposta la lista sotto
   },
   summaryCount: {
-    fontSize: 13,
+    fontSize: fontSize.sm,
     color: colors.textMuted,
   },
   summaryTotal: {
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
     color: colors.text,
     fontVariant: ["tabular-nums"],
   },
@@ -160,13 +160,13 @@ export const creaStili = (colors: Colori) =>
     gap: 6,
   },
   emptyTitle: {
-    fontWeight: "600",
+    fontWeight: fontWeight.semibold,
     color: colors.textSecondary,
   },
   emptyHint: {
     textAlign: "center",
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: fontSize.sm,
   },
   //le righe di uno stesso giorno si toccano e formano un riquadro solo:
   //bordo esterno sulle righe, angoli arrotondati solo sulla prima e l'ultima
@@ -203,12 +203,12 @@ export const creaStili = (colors: Colori) =>
     flex: 1,
   },
   expenseDescription: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
     color: colors.text,
   },
   expenseMeta: {
-    fontSize: 13,
+    fontSize: fontSize.sm,
     color: colors.textMuted,
     marginTop: 3,
   },
@@ -217,14 +217,14 @@ export const creaStili = (colors: Colori) =>
     alignItems: "flex-end",
   },
   expenseOriginal: {
-    fontSize: 12,
+    fontSize: fontSize.xs,
     color: colors.textMuted,
     marginTop: 2,
   },
   //colore neutro: in un elenco di sole uscite il rosso non distingueva nulla
   expenseAmount: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
     color: colors.text,
     fontVariant: ["tabular-nums"],
   },

@@ -166,6 +166,50 @@ export const radius = {
   pill: 999,
 } as const;
 
+/** Scala dei caratteri. Prima c'erano 25 dimensioni diverse (14 e 15, 16 e 17,
+ *  22, 24 e 26 usati per lo stesso ruolo in schermate diverse): ora ogni testo
+ *  sceglie un gradino da qui, sul telefono e sul computer. */
+export const fontSize = {
+  /** solo annotazioni dei grafici ed etichette della barra delle schede */
+  xxs: 11,
+  /** didascalie, metadati, badge */
+  xs: 12,
+  /** etichette secondarie, chip */
+  sm: 13,
+  /** testo secondario, descrizioni, pulsanti delle finestre */
+  md: 15,
+  /** testo principale, campi, titoli delle righe, titoli di sezione, pulsanti principali */
+  base: 16,
+  /** titoli dei fogli, nome nel profilo, sottotitoli grandi */
+  lg: 18,
+  /** titoli delle finestre, nome dell'app */
+  xl: 20,
+  /** importi dei riepiloghi, cifre del codice di verifica */
+  xxl: 24,
+  /** titoli di schermata */
+  xxxl: 28,
+  display: 34,
+  /** importi grandi: saldo in home, cifra della nuova spesa */
+  hero: 42,
+} as const;
+
+/** Spessori: "bold" e "700" erano scritti in tutti e due i modi. */
+export const fontWeight = {
+  regular: "400",
+  /** solo il pulsante di Google, che le linee guida vogliono Medium */
+  medium: "500",
+  /** etichette, pulsanti, voce scelta */
+  semibold: "600",
+  /** titoli e importi */
+  bold: "700",
+} as const;
+
+/** Font di sistema sul web, lo stesso che React Native Web mette ai suoi testi.
+ *  Serve dove lo stile non passa da StyleSheet (tag HTML, tema di Paper), che
+ *  altrimenti userebbe un font diverso: Arial su Windows, Times nei campi data. */
+export const fontWeb =
+  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
 /** Velo scuro dietro finestre, fogli e menu. Era 0.35: sul fondo quasi nero
  *  del tema scuro la finestra non si staccava dalla pagina dietro. */
 export const scrim = "rgba(0,0,0,0.5)";

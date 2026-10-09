@@ -1,5 +1,7 @@
 import { StyleSheet } from "react-native";
 
+import { fontSize, fontWeight } from "./tokens";
+
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -20,7 +22,7 @@ export const styles = StyleSheet.create({
         marginBottom: 24,
     },
     label: {
-        fontWeight: "bold",
+        fontWeight: fontWeight.bold,
         marginBottom: 8,
         marginTop: 12,
     },
@@ -35,7 +37,7 @@ export const styles = StyleSheet.create({
         marginTop: 8,
     },
     buttonLabel: {
-        fontSize: 18,
-        fontWeight: "bold",
+        fontSize: fontSize.base,
+        fontWeight: fontWeight.bold,
     },
 });

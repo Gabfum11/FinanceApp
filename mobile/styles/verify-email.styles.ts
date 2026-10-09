@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori } from "./tokens";
+import { type Colori, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -55,8 +55,8 @@ export const creaStili = (colors: Colori) =>
     borderWidth: 2,
   },
   codeDigit: {
-    fontSize: 22,
-    fontWeight: "700",
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.bold,
   },
   hiddenInput: {
     position: "absolute",
@@ -72,7 +72,7 @@ export const creaStili = (colors: Colori) =>
   },
   resendCodeText:{
     color: colors.primary,
-    fontWeight:"bold"
+    fontWeight: fontWeight.bold
   },
   remainingTime:{
     opacity: 0.6

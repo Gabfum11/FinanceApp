@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori, cardShadow } from "./tokens";
+import { type Colori, cardShadow, fontSize, fontWeight } from "./tokens";
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
     container:{
@@ -54,33 +54,40 @@ export const creaStili = (colors: Colori) =>
         paddingLeft: 16,
     },
     riepilogoEtichetta: {
-        fontSize: 12,
-        fontWeight: "700",
+        fontSize: fontSize.xs,
+        fontWeight: fontWeight.bold,
         letterSpacing: 0.5,
         textTransform: "uppercase",
         color: colors.primaryDark,
     },
+    //titoli delle sezioni (attivi, in pausa, da rinnovare): come quelli della home.
+    //Erano headlineMedium, alti come il titolo di una schermata
+    sezioneTitolo: {
+        fontSize: fontSize.base,
+        fontWeight: fontWeight.bold,
+        color: colors.text,
+    },
     riepilogoValore: {
-        fontSize: 24,
-        fontWeight: "700",
+        fontSize: fontSize.xxl,
+        fontWeight: fontWeight.bold,
         color: colors.primaryDark,
         fontVariant: ["tabular-nums"],
     },
     riepilogoNota: {
         width: "100%",
         marginTop: 8,
-        fontSize: 12,
+        fontSize: fontSize.xs,
         color: colors.textMuted,
     },
     subInfo:{
         flex:1
     },
     subDesc:{
-        fontSize:16,
-        fontWeight:"bold"
+        fontSize: fontSize.base,
+        fontWeight: fontWeight.bold
     },
     subAmount:{
-        fontSize:16,
+        fontSize: fontSize.base,
         fontVariant: ["tabular-nums"],
     },
     pausedRow:{
@@ -104,7 +111,7 @@ export const creaStili = (colors: Colori) =>
     },
     pausedMeta: {
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: fontSize.sm,
     },
     reactivateButton: {
         borderColor: colors.primary,
@@ -112,7 +119,7 @@ export const creaStili = (colors: Colori) =>
     },
     subMeta: {
         color: colors.textMuted,
-        fontSize: 13,
+        fontSize: fontSize.sm,
     },
     dueCard: {
         borderWidth: 1,
@@ -135,8 +142,8 @@ export const creaStili = (colors: Colori) =>
     dueBadge: {
         backgroundColor: colors.warningBadge,
         color: colors.warningText,
-        fontSize: 11,
-        fontWeight: "bold",
+        fontSize: fontSize.xxs,
+        fontWeight: fontWeight.bold,
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 8,
@@ -144,7 +151,7 @@ export const creaStili = (colors: Colori) =>
     },
     dueOverdue: {
         color: colors.textMuted,
-        fontSize: 12,
+        fontSize: fontSize.xs,
     },
     dueQuestion: {
         marginTop: 10,
@@ -162,14 +169,14 @@ export const creaStili = (colors: Colori) =>
         gap: 6,
     },
     emptyTitle: {
-        fontWeight: "600",
+        fontWeight: fontWeight.semibold,
         color: colors.textSecondary,
         marginTop: 4,
     },
     emptyHint: {
         textAlign: "center",
         color: colors.textMuted,
-        fontSize: 13,
+        fontSize: fontSize.sm,
         lineHeight: 18,
     },
     loader: {

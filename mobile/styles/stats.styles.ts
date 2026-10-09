@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { cardShadow, radius, type Colori } from "./tokens";
+import { cardShadow, radius, type Colori, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -12,8 +12,8 @@ export const creaStili = (colors: Colori) =>
         paddingBottom: 48,
     },
     title: {
-        fontWeight: "bold",
-        fontSize: 26,
+        fontWeight: fontWeight.bold,
+        fontSize: fontSize.xxxl,
         marginBottom: 16,
     },
     //frecce ai lati e date al centro, tutte sulla stessa linea
@@ -24,8 +24,8 @@ export const creaStili = (colors: Colori) =>
         marginBottom: 16,
     },
     periodo: {
-        fontSize: 17,
-        fontWeight: "700",
+        fontSize: fontSize.base,
+        fontWeight: fontWeight.bold,
         color: colors.text,
         fontVariant: ["tabular-nums"],
     },
@@ -90,8 +90,8 @@ export const creaStili = (colors: Colori) =>
         elevation: 2,
     },
     cifraTesto: {
-        fontSize: 14,
-        fontWeight: "bold",
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.bold,
         color: colors.textMuted,
     },
     cifraTestoScelto: {
@@ -117,8 +117,8 @@ export const creaStili = (colors: Colori) =>
         marginTop: 0,
     },
     intestazioneColonna: {
-        fontSize: 12,
-        fontWeight: "bold",
+        fontSize: fontSize.xs,
+        fontWeight: fontWeight.bold,
         letterSpacing: 0.4,
         color: colors.textMuted,
         textTransform: "uppercase",
@@ -141,13 +141,13 @@ export const creaStili = (colors: Colori) =>
         ...cardShadow,
     },
     restoValore: {
-        fontSize: 28,
-        fontWeight: "bold",
+        fontSize: fontSize.xxxl,
+        fontWeight: fontWeight.bold,
         color: colors.primaryDark,
         fontVariant: ["tabular-nums"],
     },
     restoTesto: {
-        fontSize: 14,
+        fontSize: fontSize.md,
         color: colors.textSecondary,
     },
     //il budget del periodo mostrato, con la matita per cambiarlo
@@ -176,12 +176,12 @@ export const creaStili = (colors: Colori) =>
         flex: 1,
     },
     budgetEtichetta: {
-        fontSize: 13,
+        fontSize: fontSize.sm,
         color: colors.textMuted,
     },
     budgetValore: {
-        fontSize: 17,
-        fontWeight: "bold",
+        fontSize: fontSize.base,
+        fontWeight: fontWeight.bold,
         color: colors.text,
         fontVariant: ["tabular-nums"],
     },
@@ -236,14 +236,14 @@ export const creaStili = (colors: Colori) =>
         minWidth: 0, // permette al contenitore di ridursi se necessario
     },
     legendLabel: {
-        fontSize: 15,
+        fontSize: fontSize.md,
         color: colors.text,
         flexShrink: 1, // permette di ridurre la dimensione del testo se necessario
     },
     //staccato dal nome: con un nome lungo i due non si attaccano piu'
     legendPercentage: {
-        fontWeight: "bold",
-        fontSize: 15,
+        fontWeight: fontWeight.bold,
+        fontSize: fontSize.md,
         color: colors.text,
         marginLeft: 12,
         fontVariant: ["tabular-nums"],
@@ -262,11 +262,11 @@ export const creaStili = (colors: Colori) =>
     //colore del tema e non opacita': sul fondo scuro il 60% di bianco non bastava
     totalLabel: {
         color: colors.textMuted,
-        fontSize: 13,
+        fontSize: fontSize.sm,
     },
     totalAmount: {
-        fontWeight: "bold",
-        fontSize: 20,
+        fontWeight: fontWeight.bold,
+        fontSize: fontSize.xl,
         color: colors.text,
         fontVariant: ["tabular-nums"],
     },
@@ -298,12 +298,12 @@ export const creaStili = (colors: Colori) =>
         backgroundColor: colors.primary,
     },
     aggiungiTesto: {
-        fontSize: 15,
-        fontWeight: "600",
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
         color: colors.surfaceDark,
     },
     emptyTitle: {
-        fontWeight: "600",
+        fontWeight: fontWeight.semibold,
         color: colors.textSecondary,
         marginTop: 4,
         textAlign: "center",
@@ -311,7 +311,7 @@ export const creaStili = (colors: Colori) =>
     emptyHint: {
         textAlign: "center",
         color: colors.textMuted,
-        fontSize: 13,
+        fontSize: fontSize.sm,
         lineHeight: 18,
     },
     budgetHint: {
@@ -326,8 +326,8 @@ export const creaStili = (colors: Colori) =>
         backgroundColor: colors.primarySoft,
     },
     budgetHintTesto: {
-        fontSize: 15,
-        fontWeight: "600",
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
         color: colors.primaryDark,
     },
 });

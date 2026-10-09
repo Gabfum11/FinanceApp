@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori } from "./tokens";
+import { type Colori, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -50,8 +50,8 @@ export const creaStili = (colors: Colori) =>
       borderRadius: 11,
     },
     nomeApp: {
-      fontSize: 22,
-      fontWeight: "bold",
+      fontSize: fontSize.xxl,
+      fontWeight: fontWeight.bold,
       color: colors.textOnPrimary,
     },
     messaggio: {
@@ -59,13 +59,13 @@ export const creaStili = (colors: Colori) =>
       maxWidth: 460,
     },
     titolo: {
-      fontSize: 40,
+      fontSize: fontSize.hero,
       lineHeight: 46,
-      fontWeight: "bold",
+      fontWeight: fontWeight.bold,
       color: colors.textOnPrimary,
     },
     sottotitolo: {
-      fontSize: 17,
+      fontSize: fontSize.base,
       lineHeight: 25,
       color: colors.textOnDark,
     },
@@ -84,18 +84,18 @@ export const creaStili = (colors: Colori) =>
       alignItems: "flex-end",
     },
     cardEtichetta: {
-      fontSize: 12,
-      fontWeight: "bold",
+      fontSize: fontSize.xs,
+      fontWeight: fontWeight.bold,
       letterSpacing: 0.5,
       color: colors.accent,
     },
     cardImporto: {
-      fontSize: 30,
-      fontWeight: "bold",
+      fontSize: fontSize.xxxl,
+      fontWeight: fontWeight.bold,
       color: colors.textOnPrimary,
     },
     cardTotale: {
-      fontSize: 13,
+      fontSize: fontSize.sm,
       marginBottom: 4,
       color: colors.textOnDarkMuted,
     },

@@ -33,6 +33,8 @@ import Animated, {
   useReducedMotion,
 } from "react-native-reanimated";
 import { useStili, useTema } from "@/utils/tema";
+import { fontSize } from "@/styles/tokens";
+
 type Expense = {
   id: number;
   description: string;
@@ -455,7 +457,7 @@ export default function HomeScreen() {
               hideYAxisText
               yAxisThickness={0}
               xAxisThickness={0}
-              xAxisLabelTextStyle={{ color: colors.textOnDarkMuted, fontSize: 12 }}
+              xAxisLabelTextStyle={{ color: colors.textOnDarkMuted, fontSize: fontSize.xs }}
               noOfSections={3}
               height={100}
               maxValue={weeklyMaxValue}

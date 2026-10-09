@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori, floatingShadow } from "./tokens";
+import { type Colori, floatingShadow, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -28,12 +28,12 @@ export const creaStili = (colors: Colori) =>
   },
   titolo: {
     flex: 1,
-    fontSize: 17,
-    fontWeight: "bold",
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
     color: colors.text,
   },
   testo: {
-    fontSize: 14,
+    fontSize: fontSize.md,
     color: colors.textSecondary,
   },
   passi: {
@@ -59,15 +59,15 @@ export const creaStili = (colors: Colori) =>
     marginRight: 10,
     textAlign: "center",
     lineHeight: 22,
-    fontSize: 12,
-    fontWeight: "bold",
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
     color: colors.primaryDark,
     backgroundColor: colors.primarySoft,
     overflow: "hidden",
   },
   evidenza: {
-    fontSize: 14,
-    fontWeight: "bold",
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
     color: colors.text,
   },
   azioni: {

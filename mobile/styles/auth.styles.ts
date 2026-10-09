@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori } from "./tokens";
+import { type Colori, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -21,15 +21,15 @@ export const creaStili = (colors: Colori) =>
     borderRadius:16,
   },
   logoLabel:{
-    fontWeight:"bold", //spessore/grassetto del testo
-    fontSize:20,
+    fontWeight: fontWeight.bold, //spessore/grassetto del testo
+    fontSize: fontSize.xl,
     marginTop:10,
   },
   title: {
     marginBottom: 24,
     textAlign: "center",
-    fontWeight:"bold",
-    fontSize:30
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.xxxl
   },
   input: {
     marginBottom: 16,
@@ -45,19 +45,19 @@ export const creaStili = (colors: Colori) =>
     marginTop: 8,
   },
   buttonLabel:{
-    fontSize:18,
-    fontWeight:"bold"
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold
   },
   link:{
     marginTop: 16,
     textAlign:"center",
-    fontSize:16
+    fontSize: fontSize.base
     
   },
   legal: {
     marginTop: 16,
     textAlign: "center",
-    fontSize: 13,
+    fontSize: fontSize.sm,
     lineHeight: 18,
     color: colors.textMuted,
   },
@@ -67,7 +67,7 @@ export const creaStili = (colors: Colori) =>
   },
   linkAction:{
     color: colors.primary,
-    fontWeight:"bold"
+    fontWeight: fontWeight.bold
   },
   dividerRow: {
     flexDirection: "row",

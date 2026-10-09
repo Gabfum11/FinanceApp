@@ -1,5 +1,47 @@
+import { Platform } from "react-native";
 import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
-import { radius, scrim, type Colori } from "./styles/tokens";
+import { fontSize, fontWeb, fontWeight, radius, scrim, type Colori } from "./styles/tokens";
+
+// Caratteri di Paper allineati a quelli delle schermate. Sul web Paper usa
+// "Roboto, Helvetica Neue, Arial" mentre i testi di React Native usano il font
+// di sistema: su Windows pulsanti, campi e titoli uscivano in Arial accanto al
+// Segoe UI del resto della pagina. Le misure seguono la scala di tokens.ts,
+// e i titoli sono in grassetto come quelli scritti a mano.
+const ritocchi: Partial<Record<keyof typeof MD3LightTheme.fonts, object>> = {
+  //testo dei Text con variant="bodyMedium" e degli Snackbar: era 14
+  bodyMedium: { fontSize: fontSize.md, lineHeight: 22 },
+  //etichette dei pulsanti: come quelle dei pulsanti delle finestre
+  labelLarge: { fontSize: fontSize.md, lineHeight: 20, fontWeight: fontWeight.semibold },
+  //etichette sopra gli importi: era 11, sotto la didascalia piu' piccola
+  labelSmall: { fontSize: fontSize.xs, lineHeight: 16 },
+  //titoli delle intestazioni
+  titleMedium: { fontWeight: fontWeight.bold },
+  titleLarge: { fontSize: fontSize.xxl, lineHeight: 30, fontWeight: fontWeight.bold },
+  //titoli delle finestre di Paper: come quelli di components/Dialogo
+  headlineSmall: { fontSize: fontSize.xl, lineHeight: 28, fontWeight: fontWeight.bold },
+  //titoli di schermata
+  headlineMedium: { fontWeight: fontWeight.bold },
+};
+
+function creaFont(base: typeof MD3LightTheme.fonts) {
+  //su Android il medio di Paper e' una famiglia a parte ("sans-serif-medium"):
+  //dove lo spessore cambia si torna alla famiglia normale, come nel resto dell'app
+  const normale = base.default.fontFamily;
+  return Object.fromEntries(
+    Object.entries(base).map(([nome, stile]) => {
+      const extra = ritocchi[nome as keyof typeof base];
+      return [
+        nome,
+        {
+          ...stile,
+          ...(extra && "fontWeight" in extra && { fontFamily: normale }),
+          ...extra,
+          ...(Platform.OS === "web" && { fontFamily: fontWeb }),
+        },
+      ];
+    }),
+  ) as typeof base;
+}
 
 // Il tema di Paper governa dialoghi, pulsanti e campi: senza allinearlo ai
 // token, quei componenti userebbero colori propri e stonerebbero con le
@@ -11,6 +53,7 @@ export function creaTemaPaper(colors: Colori, scuro: boolean) {
   return {
     ...base,
     roundness: radius.md,
+    fonts: creaFont(base.fonts),
     colors: {
       ...base.colors,
       primary: colors.primary,          // pulsanti principali, elementi attivi

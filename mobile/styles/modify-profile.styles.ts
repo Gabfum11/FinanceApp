@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { cardShadow, radius, spacing, type Colori } from "./tokens";
+import { cardShadow, radius, spacing, type Colori, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -21,8 +21,8 @@ export const creaStili = (colors: Colori) =>
     headerTitle: {
         flex: 1,
         textAlign: "center",
-        fontSize: 17,
-        fontWeight: "700",
+        fontSize: fontSize.base,
+        fontWeight: fontWeight.bold,
         color: colors.text,
     },
     //44px di altezza: il minimo per il dito, anche in un'intestazione
@@ -31,8 +31,8 @@ export const creaStili = (colors: Colori) =>
         paddingHorizontal: spacing.xs,
     },
     headerEtichetta: {
-        fontSize: 15,
-        fontWeight: "600",
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
         marginHorizontal: spacing.sm,
     },
     salva: {
@@ -46,8 +46,8 @@ export const creaStili = (colors: Colori) =>
         marginBottom: spacing.xl,
     },
     label: {
-        fontSize: 14,
-        fontWeight: "600",
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
         color: colors.textSecondary,
         marginBottom: spacing.sm,
     },
@@ -68,14 +68,14 @@ export const creaStili = (colors: Colori) =>
     //13 e non 12: e' l'unica spiegazione del perche' il campo e' bloccato
     helperText: {
         color: colors.textMuted,
-        fontSize: 13,
+        fontSize: fontSize.sm,
         marginTop: 6,
         marginLeft: spacing.xs,
     },
     //stessa etichetta di sezione del profilo
     sectionLabel: {
-        fontSize: 12,
-        fontWeight: "700",
+        fontSize: fontSize.xs,
+        fontWeight: fontWeight.bold,
         color: colors.textMuted,
         letterSpacing: 0.6,
         marginBottom: spacing.sm,
@@ -99,7 +99,7 @@ export const creaStili = (colors: Colori) =>
         flex: 1,
     },
     settingsLabel: {
-        fontSize: 16,
+        fontSize: fontSize.base,
         color: colors.text,
     },
 });

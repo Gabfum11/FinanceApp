@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori, cardShadow, floatingShadow } from "./tokens";
+import { type Colori, cardShadow, floatingShadow, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -50,7 +50,7 @@ export const creaStili = (colors: Colori) =>
         flex: 1,
     },
     headerTitle: {
-        fontWeight: "700",
+        fontWeight: fontWeight.bold,
         color: colors.text,
     },
     headerSubtitle: {
@@ -87,8 +87,8 @@ export const creaStili = (colors: Colori) =>
         gap: 4,
     },
     examplesLabel: {
-        fontSize: 12,
-        fontWeight: "600",
+        fontSize: fontSize.xs,
+        fontWeight: fontWeight.semibold,
         color: colors.textMuted,
         marginBottom: 2,
     },
@@ -115,7 +115,7 @@ export const creaStili = (colors: Colori) =>
         backgroundColor: colors.primarySoft,
     },
     savedTitle: {
-        fontWeight: "700",
+        fontWeight: fontWeight.bold,
         color: colors.primaryDark,
     },
     savedBody: {
@@ -128,17 +128,17 @@ export const creaStili = (colors: Colori) =>
         flex: 1,
     },
     savedDescription: {
-        fontWeight: "600",
+        fontWeight: fontWeight.semibold,
         color: colors.text,
     },
     savedMeta: {
-        fontSize: 12,
+        fontSize: fontSize.xs,
         color: colors.textMuted,
         marginTop: 2,
     },
     savedAmount: {
-        fontWeight: "700",
-        fontSize: 16,
+        fontWeight: fontWeight.bold,
+        fontSize: fontSize.base,
         color: colors.text,
     },
     expenseCard:{
@@ -155,7 +155,7 @@ export const creaStili = (colors: Colori) =>
     },
     cardAmount: {
     color: colors.primary,
-    fontWeight: "700",
+    fontWeight: fontWeight.bold,
     },
     confirmationDetail: {
     marginTop: 4,

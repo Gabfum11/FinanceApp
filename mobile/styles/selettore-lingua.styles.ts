@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori } from "./tokens";
+import { type Colori, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -33,8 +33,8 @@ export const creaStili = (colors: Colori) =>
     backgroundColor: colors.textOnPrimary,
   },
   testo: {
-    fontSize: 13,
-    fontWeight: "bold",
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
     color: colors.textMuted,
   },
   testoScuro: {

@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori, floatingShadow } from "./tokens";
+import { type Colori, floatingShadow, fontSize, fontWeight } from "./tokens";
 import { ALTEZZA_BARRA } from "@/utils/barraSchede";
 
 export const creaStili = (colors: Colori) =>
@@ -36,11 +36,11 @@ export const creaStili = (colors: Colori) =>
     backgroundColor: colors.primarySoft,
   },
   nome: {
-    fontSize: 11,
+    fontSize: fontSize.xxs,
     color: colors.textMuted,
   },
   nomeAttivo: {
-    fontWeight: "bold",
+    fontWeight: fontWeight.bold,
     color: colors.primaryDark,
   },
   postoPiu: {

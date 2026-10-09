@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
 import { fromDateString, toDateString } from "@/utils/date";
-import { radius, scrim, spacing, type Colori } from "@/styles/tokens";
+import { radius, scrim, spacing, type Colori, fontSize, fontWeb } from "@/styles/tokens";
 import { useStili, useTema } from "@/utils/tema";
 import { PulsantiDialogo, creaStiliFinestra } from "@/components/Dialogo";
 
@@ -54,12 +54,12 @@ export function SelettoreData({ value, onValueChange, onDismiss }: Props) {
 
 //stile del tag HTML: non passa da StyleSheet
 const campo = (colors: Colori) => ({
-  fontSize: 16,
+  fontSize: fontSize.base,
   minHeight: 48,
   padding: 12,
   borderRadius: radius.md,
   border: `1.5px solid ${colors.border}`,
-  fontFamily: "inherit",
+  fontFamily: fontWeb,
   color: colors.text,
   backgroundColor: colors.surface,
 });

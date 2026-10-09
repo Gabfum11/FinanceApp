@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
 import { Button } from "react-native-paper";
 import { useTranslation } from "react-i18next";
-import { radius, spacing, type Colori } from "@/styles/tokens";
+import { radius, spacing, type Colori, fontSize, fontWeight } from "@/styles/tokens";
 import { useStili, useTema } from "@/utils/tema";
 import { useSchermoLargo } from "@/utils/layout";
 
@@ -141,8 +141,8 @@ const creaStili = (colors: Colori) =>
       paddingHorizontal: spacing.sm,
     },
     etichetta: {
-      fontSize: 15,
-      fontWeight: "600",
+      fontSize: fontSize.md,
+      fontWeight: fontWeight.semibold,
       letterSpacing: 0.1,
     },
     icona: {
@@ -169,16 +169,16 @@ export const creaStiliFinestra = (colors: Colori) =>
       borderColor: colors.border,
     },
     titolo: {
-      fontSize: 20,
+      fontSize: fontSize.xl,
       lineHeight: 26,
-      fontWeight: "700",
+      fontWeight: fontWeight.bold,
       color: colors.text,
     },
     titoloCentrato: {
       textAlign: "center",
     },
     testo: {
-      fontSize: 15,
+      fontSize: fontSize.md,
       lineHeight: 22,
       color: colors.textSecondary,
     },

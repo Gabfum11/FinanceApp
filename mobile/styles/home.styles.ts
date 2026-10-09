@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori, cardShadow, radius } from "./tokens";
+import { type Colori, cardShadow, radius, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -44,7 +44,7 @@ export const creaStili = (colors: Colori) =>
     minHeight: 190,
   },
   budgetRemainingLargo: {
-    fontSize: 42,
+    fontSize: fontSize.hero,
   },
   sectionTitleLargo: {
     marginTop: 8,
@@ -64,8 +64,8 @@ export const creaStili = (colors: Colori) =>
     alignItems: "center",
   },
   riquadroTitolo: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
   },
   miniStatistiche: {
     flexDirection: "row",
@@ -73,8 +73,8 @@ export const creaStili = (colors: Colori) =>
     gap: 20,
   },
   miniTotale: {
-    fontSize: 13,
-    fontWeight: "bold",
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
   },
   miniLegenda: {
     flex: 1,
@@ -90,15 +90,15 @@ export const creaStili = (colors: Colori) =>
   },
   miniNome: {
     flex: 1,
-    fontSize: 14,
+    fontSize: fontSize.md,
   },
   miniImporto: {
-    fontSize: 14,
-    fontWeight: "bold",
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
     fontVariant: ["tabular-nums"],
   },
   rinnovoData: {
-    fontSize: 13,
+    fontSize: fontSize.sm,
     color: colors.textMuted,
   },
   // il margine sta sulla riga, così il saluto e l'icona restano allineati
@@ -131,8 +131,8 @@ export const creaStili = (colors: Colori) =>
     opacity: 0.8,
   },
   assistantButtonLabel: {
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
     color: "black",
   },
   assistantIcon: {
@@ -149,8 +149,8 @@ export const creaStili = (colors: Colori) =>
     marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
     color: colors.text,
   },
   headerRow: {
@@ -174,7 +174,7 @@ export const creaStili = (colors: Colori) =>
     borderRadius: 20,
   },
   buttonLabel: {
-    fontSize: 13,
+    fontSize: fontSize.sm,
   },
   //primo avvio: la lista vuota da sola non spiega nulla, questo indica cosa fare
   emptyState: {
@@ -184,7 +184,7 @@ export const creaStili = (colors: Colori) =>
     gap: 6,
   },
   emptyTitle: {
-    fontWeight: "600",
+    fontWeight: fontWeight.semibold,
     color: colors.textSecondary,
     marginTop: 4,
   },
@@ -213,8 +213,8 @@ export const creaStili = (colors: Colori) =>
     backgroundColor: colors.primarySoft,
   },
   emptyPulsanteTesto: {
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
     color: colors.surfaceDark,
   },
   emptyPulsanteTestoTenue: {
@@ -223,7 +223,7 @@ export const creaStili = (colors: Colori) =>
   emptyHint: {
     textAlign: "center",
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: fontSize.sm,
     lineHeight: 18,
   },
   //le ultime spese stanno in un riquadro solo, le righe divise da una linea
@@ -250,27 +250,27 @@ export const creaStili = (colors: Colori) =>
     flex:1
   },
   expenseDescription: {
-    fontSize: 16,
-    fontWeight:"bold"
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold
   },
   //importo convertito sopra, cifra originale in piccolo sotto
   amountColumn: {
     alignItems: "flex-end",
   },
   expenseOriginal: {
-    fontSize: 12,
+    fontSize: fontSize.xs,
     color: colors.textMuted,
     marginTop: 2,
   },
   expenseAmount: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.semibold,
     color: colors.text,
     //cifre della stessa larghezza: gli importi restano allineati in colonna
     fontVariant: ["tabular-nums"],
   },
   expenseMeta:{
-    fontSize: 13,
+    fontSize: fontSize.sm,
     color: colors.textMuted,
     marginTop: 2,
   },
@@ -283,8 +283,8 @@ export const creaStili = (colors: Colori) =>
   },
   linkExpensesTesto: {
     color: colors.primaryDark,
-    fontWeight: "600",
-    fontSize: 15,
+    fontWeight: fontWeight.semibold,
+    fontSize: fontSize.md,
   },
   premuto: {
     opacity: 0.7,
@@ -313,13 +313,13 @@ export const creaStili = (colors: Colori) =>
   },
   budgetLabel: {
     color: colors.accent,
-    fontWeight: "bold",
-    fontSize: 12,
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.xs,
     letterSpacing: 0.5,
   },
   budgetCycleRange: {
     color: colors.textOnDarkMuted,
-    fontSize: 12,
+    fontSize: fontSize.xs,
   },
   budgetAmountRow: {
     flexDirection: "row",
@@ -329,13 +329,13 @@ export const creaStili = (colors: Colori) =>
   },
   budgetRemaining: {
     color: colors.textOnPrimary,
-    fontSize: 34,
-    fontWeight: "bold",
+    fontSize: fontSize.display,
+    fontWeight: fontWeight.bold,
     fontVariant: ["tabular-nums"],
   },
   budgetOf: {
     color: colors.textOnDarkMuted,
-    fontSize: 14,
+    fontSize: fontSize.md,
     marginBottom: 4,
   },
   progressBarBackground: {
@@ -366,7 +366,7 @@ export const creaStili = (colors: Colori) =>
   },
   budgetLegendText: {
     color: colors.textOnDark,
-    fontSize: 13,
+    fontSize: fontSize.sm,
   },
   weeklyCard: {
     backgroundColor: colors.surfaceDarker,
@@ -385,17 +385,17 @@ export const creaStili = (colors: Colori) =>
   },
   weeklyTitle: {
     color: colors.textOnPrimary,
-    fontWeight: "bold",
-    fontSize: 15,
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.md,
   },
   weeklyTotal: {
     color: colors.textOnDarkMuted,
-    fontSize: 12,
+    fontSize: fontSize.xs,
   },
   weeklyTotalValue: {
     color: colors.textOnPrimary,
-    fontWeight: "bold",
-    fontSize: 15,
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.md,
     fontVariant: ["tabular-nums"],
   },
   weeklyChartWrapper: {
@@ -404,7 +404,7 @@ export const creaStili = (colors: Colori) =>
   },
   weeklyBarLabel: {
     color: colors.textOnDark,
-    fontSize: 10,
+    fontSize: fontSize.xxs,
     textAlign: "center",
   },
   weeklyBarLabelContainer: {

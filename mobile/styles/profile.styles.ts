@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { cardShadow, type Colori, radius, spacing } from "./tokens";
+import { cardShadow, type Colori, radius, spacing, fontSize, fontWeight } from "./tokens";
 
 /** Colori dei cerchi delle voci: fissi nei due temi, come quelli delle
  *  categorie, da cui vengono. Uno per argomento, non uno per voce: le due
@@ -34,8 +34,8 @@ export const creaStili = (colors: Colori) =>
         marginBottom: spacing.xl,
     },
     headerTitle: {
-        fontSize: 28,
-        fontWeight: "700",
+        fontSize: fontSize.xxxl,
+        fontWeight: fontWeight.bold,
         color: colors.text,
     },
     //pillola con il bordo, come il pulsante dell'occhio in home: un testo
@@ -56,8 +56,8 @@ export const creaStili = (colors: Colori) =>
     },
     //rosso scuro: il rosso pieno su bianco arrivava a 3,8:1, sotto il minimo per il testo
     logoutTesto: {
-        fontSize: 14,
-        fontWeight: "600",
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
         color: colors.dangerDark,
     },
     dueColonne: {
@@ -105,8 +105,8 @@ export const creaStili = (colors: Colori) =>
         backgroundColor: colors.primarySoft,
     },
     modificaTesto: {
-        fontSize: 14,
-        fontWeight: "600",
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
         color: colors.primaryDark,
     },
     profCard: {
@@ -122,19 +122,19 @@ export const creaStili = (colors: Colori) =>
         flex: 1,
     },
     profileName: {
-        fontWeight: "700",
-        fontSize: 18,
+        fontWeight: fontWeight.bold,
+        fontSize: fontSize.lg,
         color: colors.text,
     },
     profileEmail: {
         color: colors.textMuted,
-        fontSize: 14,
+        fontSize: fontSize.md,
         marginTop: 2,
     },
     //etichetta di sezione: raggruppa le voci senza pesare come un titolo
     sectionLabel: {
-        fontSize: 12,
-        fontWeight: "700",
+        fontSize: fontSize.xs,
+        fontWeight: fontWeight.bold,
         color: colors.textMuted,
         letterSpacing: 0.6,
         marginTop: spacing.xl,
@@ -160,7 +160,7 @@ export const creaStili = (colors: Colori) =>
     },
     rowLabelDistruttiva: {
         color: colors.dangerDark,
-        fontWeight: "600",
+        fontWeight: fontWeight.semibold,
     },
     //raggruppa titolo e sottotitolo, così lo switch resta allineato a destra
     rowTextGroup: {
@@ -170,11 +170,11 @@ export const creaStili = (colors: Colori) =>
     //espandere in altezza e ne taglierebbe il contenuto, al contrario di
     //quanto fa nelle righe dove l'etichetta e' figlia diretta della riga
     rowLabelInGroup: {
-        fontSize: 15,
+        fontSize: fontSize.md,
         color: colors.text,
     },
     rowHint: {
-        fontSize: 13,
+        fontSize: fontSize.sm,
         color: colors.textMuted,
         marginTop: 2,
     },
@@ -191,7 +191,7 @@ export const creaStili = (colors: Colori) =>
     dialogNota: {
         marginTop: spacing.md,
         marginHorizontal: spacing.md,
-        fontSize: 13,
+        fontSize: fontSize.sm,
         lineHeight: 18,
         color: colors.textMuted,
     },
@@ -210,11 +210,11 @@ export const creaStili = (colors: Colori) =>
         backgroundColor: colors.primarySoft,
     },
     opzioneTesto: {
-        fontSize: 15,
+        fontSize: fontSize.md,
         color: colors.text,
     },
     opzioneTestoScelto: {
-        fontWeight: "600",
+        fontWeight: fontWeight.semibold,
     },
     //cambio valuta: ogni scelta e' un riquadro con la sua spiegazione dentro
     sceltaRiquadro: {
@@ -235,7 +235,7 @@ export const creaStili = (colors: Colori) =>
     },
     //la spiegazione sotto una scelta, nella finestra del cambio valuta
     opzioneNota: {
-        fontSize: 13,
+        fontSize: fontSize.sm,
         lineHeight: 18,
         color: colors.textSecondary,
         paddingHorizontal: spacing.lg,
@@ -244,8 +244,8 @@ export const creaStili = (colors: Colori) =>
     //Blu e non verde: il verde nell'app segnala un'azione, questo e' solo testo
     supportEmail: {
         marginTop: spacing.md,
-        fontSize: 16,
-        fontWeight: "600",
+        fontSize: fontSize.base,
+        fontWeight: fontWeight.semibold,
         color: colors.link,
         textAlign: "center",
     },

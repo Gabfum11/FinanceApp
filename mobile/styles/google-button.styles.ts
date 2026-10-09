@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { fontWeight } from "./tokens";
 
 // Misure e colori dalle linee guida Google: altezza minima 40, logo 20,
 // bordo #747775 sulla variante chiara, testo #1F1F1F a 14pt medium.
@@ -22,8 +23,8 @@ export const styles = StyleSheet.create({
     opacity: 0.5,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 14, //da linee guida Google, fuori dalla scala dell'app
+    fontWeight: fontWeight.medium,
     color: "#1F1F1F",
     letterSpacing: 0.25,
   },

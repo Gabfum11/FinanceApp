@@ -205,7 +205,7 @@ export default function BudgetScreen() {
             )}
           </View>
         )}
-        <Text variant="headlineMedium">{t("abbonamenti.attivi")}</Text>
+        <Text style={styles.sezioneTitolo} accessibilityRole="header">{t("abbonamenti.attivi")}</Text>
         <View style={largo ? styles.griglia : undefined}>
         {activeSubscriptions.map((item) => (
           <View key={item.id} style={[styles.subRow, largo && styles.cella]}>
@@ -244,7 +244,7 @@ export default function BudgetScreen() {
         )}
         {pausedSubscriptions.length > 0 && (
           <>
-            <Text variant="headlineMedium">{t("abbonamenti.inPausa")}</Text>
+            <Text style={styles.sezioneTitolo} accessibilityRole="header">{t("abbonamenti.inPausa")}</Text>
             <View style={largo ? styles.griglia : undefined}>
             {pausedSubscriptions.map((item) => (
               <View key={item.id} style={[styles.pausedRow, largo && styles.cella]}>
@@ -268,7 +268,7 @@ export default function BudgetScreen() {
 
         {dueForRenewal.length > 0 && (
           <>
-            <Text variant="headlineMedium">{t("abbonamenti.daRinnovare")}</Text>
+            <Text style={styles.sezioneTitolo} accessibilityRole="header">{t("abbonamenti.daRinnovare")}</Text>
             <View style={largo ? styles.griglia : undefined}>
             {dueForRenewal.map((item) => (
               <View key={item.id} style={[styles.dueCard, largo && styles.cella]}>

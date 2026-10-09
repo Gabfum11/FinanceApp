@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori, cardShadow, floatingShadow } from "./tokens";
+import { type Colori, cardShadow, floatingShadow, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -32,14 +32,14 @@ export const creaStili = (colors: Colori) =>
     paddingVertical: 16,
   },
   titolo: {
-    fontSize: 28,
+    fontSize: fontSize.xxxl,
     lineHeight: 34,
-    fontWeight: "bold",
+    fontWeight: fontWeight.bold,
     color: colors.text,
     marginBottom: 10,
   },
   testo: {
-    fontSize: 16,
+    fontSize: fontSize.base,
     lineHeight: 24,
     color: colors.textSecondary,
   },
@@ -63,8 +63,8 @@ export const creaStili = (colors: Colori) =>
     backgroundColor: colors.overlayLight,
   },
   buttonLabel: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
   },
   // --- pagina 1: benvenuto ---
   logoArea: {
@@ -98,19 +98,19 @@ export const creaStili = (colors: Colori) =>
     borderRadius: 28,
   },
   nomeApp: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
     color: colors.textOnDark,
   },
   titoloScuro: {
-    fontSize: 32,
+    fontSize: fontSize.xxxl,
     lineHeight: 38,
-    fontWeight: "bold",
+    fontWeight: fontWeight.bold,
     color: colors.textOnPrimary,
     marginBottom: 10,
   },
   testoScuro: {
-    fontSize: 17,
+    fontSize: fontSize.base,
     lineHeight: 25,
     color: "rgba(255,255,255,0.75)",
   },
@@ -144,7 +144,7 @@ export const creaStili = (colors: Colori) =>
     backgroundColor: colors.primarySoft,
   },
   esitoTitolo: {
-    fontWeight: "700",
+    fontWeight: fontWeight.bold,
     color: colors.primaryDark,
   },
   esitoCorpo: {
@@ -157,17 +157,17 @@ export const creaStili = (colors: Colori) =>
     flex: 1,
   },
   esitoDescrizione: {
-    fontWeight: "600",
+    fontWeight: fontWeight.semibold,
     color: colors.text,
   },
   esitoMeta: {
-    fontSize: 12,
+    fontSize: fontSize.xs,
     color: colors.textMuted,
     marginTop: 2,
   },
   esitoImporto: {
-    fontWeight: "700",
-    fontSize: 16,
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.base,
     color: colors.text,
   },
   // --- pagina 3: budget ---
@@ -194,13 +194,13 @@ export const creaStili = (colors: Colori) =>
   },
   budgetEtichetta: {
     color: colors.accent,
-    fontWeight: "bold",
-    fontSize: 12,
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.xs,
     letterSpacing: 0.5,
   },
   budgetPeriodo: {
     color: colors.textOnDarkMuted,
-    fontSize: 12,
+    fontSize: fontSize.xs,
   },
   budgetImporti: {
     flexDirection: "row",
@@ -210,12 +210,12 @@ export const creaStili = (colors: Colori) =>
   },
   budgetResto: {
     color: colors.textOnPrimary,
-    fontSize: 34,
-    fontWeight: "bold",
+    fontSize: fontSize.display,
+    fontWeight: fontWeight.bold,
   },
   budgetTotale: {
     color: colors.textOnDarkMuted,
-    fontSize: 14,
+    fontSize: fontSize.md,
     marginBottom: 4,
   },
   barra: {
@@ -244,7 +244,7 @@ export const creaStili = (colors: Colori) =>
   },
   legendaTesto: {
     color: colors.textOnDark,
-    fontSize: 13,
+    fontSize: fontSize.sm,
   },
   settimana: {
     backgroundColor: colors.surfaceDarker,
@@ -253,8 +253,8 @@ export const creaStili = (colors: Colori) =>
   },
   settimanaTitolo: {
     color: colors.textOnPrimary,
-    fontWeight: "bold",
-    fontSize: 15,
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.md,
     marginBottom: 12,
   },
   //come il grafico della home: barre fino a 35 con 8 di spazio, allineate a
@@ -274,7 +274,7 @@ export const creaStili = (colors: Colori) =>
   },
   colonnaValore: {
     color: colors.textOnDark,
-    fontSize: 10,
+    fontSize: fontSize.xxs,
   },
   //raggio grande: il browser lo riduce a meta' della larghezza, una cupola
   colonnaBarra: {
@@ -286,7 +286,7 @@ export const creaStili = (colors: Colori) =>
     marginTop: 4,
     textAlign: "center",
     color: colors.textOnDarkMuted,
-    fontSize: 12,
+    fontSize: fontSize.xs,
   },
   // --- pagina 4: abbonamenti ---
   notifica: {
@@ -305,19 +305,19 @@ export const creaStili = (colors: Colori) =>
     borderRadius: 9,
   },
   notificaApp: {
-    fontSize: 12,
+    fontSize: fontSize.xs,
     color: colors.textMuted,
   },
   notificaTitolo: {
-    fontSize: 15,
-    fontWeight: "bold",
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
     color: colors.text,
   },
   notificaTesto: {
     color: colors.textSecondary,
   },
   sezione: {
-    fontSize: 22,
+    fontSize: fontSize.xxl,
     color: colors.text,
   },
   abbonamento: {
@@ -335,16 +335,16 @@ export const creaStili = (colors: Colori) =>
     flex: 1,
   },
   abbonamentoNome: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
     color: colors.text,
   },
   abbonamentoMeta: {
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: fontSize.sm,
   },
   abbonamentoImporto: {
-    fontSize: 16,
+    fontSize: fontSize.base,
     color: colors.text,
   },
   // --- statistiche (solo nella landing) ---
@@ -363,8 +363,8 @@ export const creaStili = (colors: Colori) =>
     marginBottom: 10,
   },
   statPeriodoTesto: {
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
     color: colors.text,
   },
   statCorpo: {
@@ -387,12 +387,12 @@ export const creaStili = (colors: Colori) =>
     justifyContent: "center",
   },
   ciambellaEtichetta: {
-    fontSize: 12,
+    fontSize: fontSize.xs,
     color: colors.textMuted,
   },
   ciambellaImporto: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.bold,
     color: colors.text,
   },
   statLegenda: {
@@ -418,12 +418,12 @@ export const creaStili = (colors: Colori) =>
   },
   statNome: {
     flex: 1,
-    fontSize: 14,
+    fontSize: fontSize.md,
     color: colors.text,
   },
   statImporto: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
     color: colors.text,
   },
   statTestoLibero: {
@@ -442,8 +442,8 @@ export const creaStili = (colors: Colori) =>
     borderRadius: 16,
   },
   logoNome: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
     marginBottom: 14,
   },
   centrato: {
@@ -470,7 +470,7 @@ export const creaStili = (colors: Colori) =>
   legale: {
     marginTop: 12,
     textAlign: "center",
-    fontSize: 13,
+    fontSize: fontSize.sm,
     lineHeight: 18,
     color: colors.textMuted,
   },
@@ -481,11 +481,11 @@ export const creaStili = (colors: Colori) =>
   accedi: {
     marginTop: 16,
     textAlign: "center",
-    fontSize: 16,
+    fontSize: fontSize.base,
   },
   accediLink: {
     color: colors.primary,
-    fontWeight: "bold",
+    fontWeight: fontWeight.bold,
   },
   // --- landing: pagina unica di benvenuto (browser e computer) ---
   //niente misure che dipendono dalla finestra: la pagina viene generata
@@ -524,8 +524,8 @@ export const creaStili = (colors: Colori) =>
     borderRadius: 10,
   },
   pcNomeApp: {
-    fontSize: 22,
-    fontWeight: "bold",
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.bold,
     color: colors.textOnPrimary,
   },
   pcAzioni: {
@@ -553,11 +553,11 @@ export const creaStili = (colors: Colori) =>
     //finestra: e' CSS, quindi funziona anche nella pagina generata in anticipo
     fontSize: "clamp(34px, 6vw, 52px)" as unknown as number,
     lineHeight: "1.12" as unknown as number,
-    fontWeight: "bold",
+    fontWeight: fontWeight.bold,
     color: colors.textOnPrimary,
   },
   pcSottotitolo: {
-    fontSize: 19,
+    fontSize: fontSize.lg,
     lineHeight: 28,
     maxWidth: 480,
     color: colors.textOnDark,
@@ -601,7 +601,7 @@ export const creaStili = (colors: Colori) =>
     backgroundColor: colors.primarySoft,
   },
   pcChatTitolo: {
-    fontWeight: "bold",
+    fontWeight: fontWeight.bold,
     color: colors.text,
   },
   risposta: {
@@ -618,7 +618,7 @@ export const creaStili = (colors: Colori) =>
     color: colors.text,
   },
   pcNota: {
-    fontSize: 14,
+    fontSize: fontSize.md,
     color: colors.textOnDarkMuted,
   },
   pcCorpo: {
@@ -627,8 +627,8 @@ export const creaStili = (colors: Colori) =>
     gap: 28,
   },
   pcSezione: {
-    fontSize: 28,
-    fontWeight: "bold",
+    fontSize: fontSize.xxxl,
+    fontWeight: fontWeight.bold,
     color: colors.text,
   },
   pcRiquadri: {
@@ -656,12 +656,12 @@ export const creaStili = (colors: Colori) =>
     gap: 10,
   },
   pcRiquadroTitolo: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
     color: colors.text,
   },
   pcRiquadroTesto: {
-    fontSize: 15,
+    fontSize: fontSize.md,
     lineHeight: 22,
     color: colors.textSecondary,
   },
@@ -687,11 +687,11 @@ export const creaStili = (colors: Colori) =>
     columnGap: 20,
   },
   piedeVoce: {
-    fontSize: 14,
+    fontSize: fontSize.md,
     color: colors.textSecondary,
   },
   piedeCopyright: {
-    fontSize: 14,
+    fontSize: fontSize.md,
     color: colors.textMuted,
   },
 });
