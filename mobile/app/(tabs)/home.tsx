@@ -473,17 +473,18 @@ export default function HomeScreen() {
             verde chiaro su grigio (2:1), e sembrava un'etichetta */}
         <View style={[styles.sectionTitleRow, largo && styles.sectionTitleLargo]}>
           <Text style={styles.sectionTitle} accessibilityRole="header">{t("home.ultime")}</Text>
+          {/* router.push e non Link asChild: sul web Link fonde gli stili come oggetti
+              e lo stile-funzione del Pressable spariva, con freccia e testo in colonna */}
           {expenses.length > 0 && (
-            <Link href="/all_expenses" asChild>
-              <Pressable
-                style={({ pressed }) => [styles.linkExpenses, pressed && styles.premuto]}
-                accessibilityRole="link"
-                hitSlop={4}
-              >
-                <Text style={styles.linkExpensesTesto}>{t("home.vediTutte")}</Text>
-                <MaterialCommunityIcons name="chevron-right" size={20} color={colors.primaryDark} />
-              </Pressable>
-            </Link>
+            <Pressable
+              style={({ pressed }) => [styles.linkExpenses, pressed && styles.premuto]}
+              onPress={() => router.push("/all_expenses")}
+              accessibilityRole="link"
+              hitSlop={4}
+            >
+              <Text style={styles.linkExpensesTesto}>{t("home.vediTutte")}</Text>
+              <MaterialCommunityIcons name="chevron-right" size={20} color={colors.primaryDark} />
+            </Pressable>
           )}
         </View>
       {/* due righe sul telefono, cinque sul computer: un semplice elenco, perche'
