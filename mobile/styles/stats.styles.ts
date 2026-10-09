@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type Colori } from "./tokens";
+import { cardShadow, radius, type Colori } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
@@ -23,11 +23,36 @@ export const creaStili = (colors: Colori) =>
         justifyContent: "space-between",
         marginBottom: 16,
     },
+    periodo: {
+        fontSize: 17,
+        fontWeight: "700",
+        color: colors.text,
+        fontVariant: ["tabular-nums"],
+    },
+    freccia: {
+        width: 44,
+        height: 44,
+        borderRadius: radius.pill,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    frecciaSpenta: {
+        backgroundColor: "transparent",
+        borderColor: "transparent",
+    },
+    //riscontro al tocco, uguale per frecce, matita e pillole
+    premuto: {
+        opacity: 0.7,
+    },
     card: {
         backgroundColor: colors.surface,
         borderRadius: 20,
         padding: 20,
         gap: 12,
+        ...cardShadow,
     },
     //ciambella e legenda: affiancate, o una sopra l'altra su schermo stretto
     cardCorpo: {
@@ -47,20 +72,25 @@ export const creaStili = (colors: Colori) =>
         backgroundColor: colors.surfaceAlt,
     },
     cifraVoce: {
-        minWidth: 44,
-        height: 30,
+        minWidth: 48,
+        height: 36,
         paddingHorizontal: 12,
         borderRadius: 999,
         alignItems: "center",
         justifyContent: "center",
     },
-    //come la pillola della scheda attiva: si vede anche nel tema scuro, dove
-    //due grigi vicini si confonderebbero
+    //la voce scelta in rilievo sulla guida grigia, come i controlli segmentati
+    //di iOS; il testo verde scuro la distingue anche nel tema scuro
     cifraScelta: {
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.surface,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.12,
+        shadowRadius: 3,
+        elevation: 2,
     },
     cifraTesto: {
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: "bold",
         color: colors.textMuted,
     },
@@ -108,6 +138,7 @@ export const creaStili = (colors: Colori) =>
         gap: 8,
         borderRadius: 16,
         backgroundColor: colors.surface,
+        ...cardShadow,
     },
     restoValore: {
         fontSize: 28,
@@ -125,11 +156,21 @@ export const creaStili = (colors: Colori) =>
         alignItems: "center",
         gap: 12,
         marginTop: 16,
-        paddingVertical: 4,
+        paddingVertical: 8,
         paddingLeft: 16,
-        paddingRight: 4,
+        paddingRight: 8,
         borderRadius: 16,
         backgroundColor: colors.surface,
+        ...cardShadow,
+    },
+    //matita piena su verde tenue, come la pillola "Modifica" del profilo
+    matita: {
+        width: 44,
+        height: 44,
+        borderRadius: radius.pill,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: colors.primarySoft,
     },
     budgetTesti: {
         flex: 1,
@@ -139,8 +180,9 @@ export const creaStili = (colors: Colori) =>
         color: colors.textMuted,
     },
     budgetValore: {
-        fontSize: 16,
+        fontSize: 17,
         fontWeight: "bold",
+        color: colors.text,
         fontVariant: ["tabular-nums"],
     },
     //stesso raggio di ConfirmDialog: quello di Paper, con il nostro roundness, e' troppo tondo
@@ -173,52 +215,85 @@ export const creaStili = (colors: Colori) =>
     },
     legendContainer: {
         flex: 1,
-        gap: 10,
     },
+    //44px: righe comode da leggere e allineate, con l'icona della categoria
     legendRow: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
+        minHeight: 44,
+        paddingVertical: 4,
+    },
+    legendRowSeparata: {
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
     },
     legendLeft: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 8,
+        gap: 12,
         flex: 1,
         minWidth: 0, // permette al contenitore di ridursi se necessario
     },
-    legendDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-    },
     legendLabel: {
-        fontSize: 14,
+        fontSize: 15,
+        color: colors.text,
         flexShrink: 1, // permette di ridurre la dimensione del testo se necessario
     },
     //staccato dal nome: con un nome lungo i due non si attaccano piu'
     legendPercentage: {
         fontWeight: "bold",
-        fontSize: 14,
+        fontSize: 15,
+        color: colors.text,
         marginLeft: 12,
         fontVariant: ["tabular-nums"],
     },
+    //quello che resta del budget: grigio, non e' una spesa
+    legendaResto: {
+        color: colors.textMuted,
+    },
+    //colore del tema e non opacita': sul fondo scuro il 60% di bianco non bastava
     totalLabel: {
-        opacity: 0.6,
-        fontSize: 12,
+        color: colors.textMuted,
+        fontSize: 13,
     },
     totalAmount: {
         fontWeight: "bold",
-        fontSize: 18,
+        fontSize: 20,
+        color: colors.text,
         fontVariant: ["tabular-nums"],
     },
     //stesso riquadro vuoto della home e della scheda Abbonamenti
     emptyState: {
         flex: 1,
         alignItems: "center",
-        paddingVertical: 28,
+        paddingVertical: 24,
         paddingHorizontal: 12,
         gap: 6,
+    },
+    emptyIcona: {
+        width: 56,
+        height: 56,
+        borderRadius: radius.pill,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: colors.primarySoft,
+    },
+    //verde pieno con testo scuro, come le conferme delle finestre
+    aggiungi: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        minHeight: 44,
+        marginTop: 10,
+        paddingHorizontal: 18,
+        borderRadius: radius.pill,
+        backgroundColor: colors.primary,
+    },
+    aggiungiTesto: {
+        fontSize: 15,
+        fontWeight: "600",
+        color: colors.surfaceDark,
     },
     emptyTitle: {
         fontWeight: "600",
@@ -233,9 +308,19 @@ export const creaStili = (colors: Colori) =>
         lineHeight: 18,
     },
     budgetHint: {
+        flexDirection: "row",
+        alignItems: "center",
+        alignSelf: "center",
+        gap: 8,
+        minHeight: 44,
         marginTop: 16,
-        textAlign: "center",
-        color: colors.primary,
-        fontWeight: "bold",
+        paddingHorizontal: 18,
+        borderRadius: radius.pill,
+        backgroundColor: colors.primarySoft,
+    },
+    budgetHintTesto: {
+        fontSize: 15,
+        fontWeight: "600",
+        color: colors.primaryDark,
     },
 });

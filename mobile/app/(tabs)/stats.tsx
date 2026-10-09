@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, Pressable } from "react-native";
-import { IconButton, Text, Snackbar, ActivityIndicator, Dialog, Portal, TextInput } from "react-native-paper";
+import { Text, Snackbar, ActivityIndicator, Dialog, Portal, TextInput } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { usePreferenze } from "@/utils/preferenze";
@@ -19,6 +19,7 @@ import { useSpazioBarra } from "@/utils/barraSchede";
 import { DIALOGO_LARGO, useSchermoLargo, useSchermoStretto } from "@/utils/layout";
 import { useStili, useTema } from "@/utils/tema";
 import { PulsantiDialogo, creaStiliFinestra } from "@/components/Dialogo";
+import { IconaCategoria, IconaCerchio } from "@/components/IconaCategoria";
 
 type CategoryStat = {
   category_name: string;
@@ -204,12 +205,17 @@ export default function StatsScreen() {
     <View style={styles.container}>
       <PaginaScorrevole style={styles.content} sopraBarra>
         <View style={styles.selectorRow}>
-          <IconButton icon="chevron-left" onPress={() => setCycleOffset((prev) => prev - 1)} />
-          <Text variant="titleMedium">{periodo}</Text>
-          <IconButton
-            icon="chevron-right"
+          <FrecciaPeriodo
+            icona="chevron-left"
+            onPress={() => setCycleOffset((prev) => prev - 1)}
+            etichetta={t("statistiche.periodoPrima")}
+          />
+          <Text style={styles.periodo} accessibilityRole="header">{periodo}</Text>
+          <FrecciaPeriodo
+            icona="chevron-right"
             onPress={() => setCycleOffset((prev) => prev + 1)}
-            disabled={cycleOffset >= 0}
+            disabilitata={cycleOffset >= 0}
+            etichetta={t("statistiche.periodoDopo")}
           />
         </View>
         <View style={largo ? styles.rigaLarga : undefined}>
@@ -245,19 +251,29 @@ export default function StatsScreen() {
           ) : stats.length === 0 ? (
             //senza spese la ciambella era vuota e non diceva nulla: come in home,
             //si spiega cosa manca e, nel mese in corso, come rimediare
-            <Pressable
-              style={styles.emptyState}
-              onPress={cycleOffset === 0 ? () => router.push("/add_expense") : undefined}
-              disabled={cycleOffset !== 0}
-            >
-              <MaterialCommunityIcons name="chart-donut" size={40} color={colors.chevron} />
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIcona}>
+                <MaterialCommunityIcons name="chart-donut" size={30} color={colors.primaryDark} />
+              </View>
               <Text style={styles.emptyTitle}>
                 {cycleOffset === 0 ? t("statistiche.nessunaMese") : t("statistiche.nessunaPeriodo")}
               </Text>
               <Text style={styles.emptyHint}>
-                {cycleOffset === 0 ? t("statistiche.compaiono") : t("statistiche.nessunaPeriodoDettaglio")}
+                {cycleOffset === 0 ? t("statistiche.compaionoBreve") : t("statistiche.nessunaPeriodoDettaglio")}
               </Text>
-            </Pressable>
+              {/* un pulsante vero al posto di "tocca +": prima toccare il riquadro
+                  funzionava, ma niente lo faceva capire */}
+              {cycleOffset === 0 && (
+                <Pressable
+                  style={({ pressed }) => [styles.aggiungi, pressed && styles.premuto]}
+                  onPress={() => router.push("/add_expense")}
+                  accessibilityRole="button"
+                >
+                  <MaterialCommunityIcons name="plus" size={18} color={colors.surfaceDark} />
+                  <Text style={styles.aggiungiTesto}>{t("schede.aggiungi")}</Text>
+                </Pressable>
+              )}
+            </View>
           ) : (
             <>
               {(stretto || largo) && ciambella}
@@ -269,11 +285,13 @@ export default function StatsScreen() {
                     <Text style={[styles.intestazioneColonna, styles.colonnaPercentuale]}>%</Text>
                   </View>
                 )}
-                {stats.map((item) => {
+                {stats.map((item, indice) => {
                   return (
-                    <View key={item.category_name} style={styles.legendRow}>
+                    <View key={item.category_name} style={[styles.legendRow, (indice > 0 || largo) && styles.legendRowSeparata]}>
                       <View style={styles.legendLeft}>
-                        <View style={[styles.legendDot, { backgroundColor: colorePerGruppo(item.category_name) }]} />
+                        {/* l'icona oltre al colore: la fetta si riconosce anche
+                            da chi distingue male i colori */}
+                        <IconaCategoria gruppo={item.category_name} dimensione={30} />
                         <Text style={styles.legendLabel} numberOfLines={1}>{nomeCategoria(item.category_name)}</Text>
                       </View>
                       {largo ? (
@@ -288,20 +306,21 @@ export default function StatsScreen() {
                   );
                 })}
                 {remaining > 0 && (
-                  <View style={styles.legendRow}>
+                  <View style={[styles.legendRow, styles.legendRowSeparata]}>
                     <View style={styles.legendLeft}>
-                      <View style={[styles.legendDot, { backgroundColor: colors.donutRemaining }]} />
+                      {/* grigio come la sua fetta: e' quello che resta, non una spesa */}
+                      <IconaCerchio icona="wallet" sfondo={colors.donutRemaining} dimensione={30} />
                       <Text style={styles.legendLabel} numberOfLines={1}>
                         {meseInCorso ? t("statistiche.disponibile") : t("statistiche.avanzato")}
                       </Text>
                     </View>
                     {largo ? (
                       <>
-                        <Text style={[styles.legendPercentage, styles.colonnaImporto]}>{importo(remaining)}</Text>
+                        <Text style={[styles.legendPercentage, styles.legendaResto, styles.colonnaImporto]}>{importo(remaining)}</Text>
                         <Text style={styles.colonnaPercentuale}>{percentuale(remaining)}%</Text>
                       </>
                     ) : (
-                      <Text style={styles.legendPercentage}>{cifra(remaining)}</Text>
+                      <Text style={[styles.legendPercentage, styles.legendaResto]}>{cifra(remaining)}</Text>
                     )}
                   </View>
                 )}
@@ -318,14 +337,21 @@ export default function StatsScreen() {
         <View style={largo ? styles.colonnaLaterale : undefined}>
         {!loading && stats.length > 0 && (cycleOffset < 0 || budgetMensile != null) && (
           <View style={[styles.budgetRiga, largo && styles.senzaMargine]}>
-            <MaterialCommunityIcons name="cash" size={20} color={colors.primary} />
+            <IconaCerchio icona="cash" sfondo={colors.primary} dimensione={32} />
             <View style={styles.budgetTesti}>
               <Text style={styles.budgetEtichetta}>{t("statistiche.budget")}</Text>
               <Text style={styles.budgetValore}>
                 {budgetMensile != null ? importo(budgetMensile) : t("statistiche.budgetNonImpostato")}
               </Text>
             </View>
-            <IconButton icon="pencil-outline" onPress={apriModificaBudget} accessibilityLabel={t("statistiche.modificaBudget")} />
+            <Pressable
+              style={({ pressed }) => [styles.matita, pressed && styles.premuto]}
+              onPress={apriModificaBudget}
+              accessibilityRole="button"
+              accessibilityLabel={t("statistiche.modificaBudget")}
+            >
+              <MaterialCommunityIcons name="pencil" size={20} color={colors.primaryDark} />
+            </Pressable>
           </View>
         )}
         {/* sul computer, accanto: quanto resta, la domanda che segue la ciambella */}
@@ -345,9 +371,16 @@ export default function StatsScreen() {
 
         {/* solo nel mese in corso: per i mesi passati il budget di allora non si ricostruisce */}
         {!loading && cycleOffset === 0 && stats.length > 0 && budgetImpostato === false && (
-          <Text style={styles.budgetHint} onPress={() => router.push("/set_budget")}>
-            {t("statistiche.impostaBudget")}
-          </Text>
+          //pillola e non scritta verde: prima non sembrava toccabile e si leggeva a fatica
+          <Pressable
+            style={({ pressed }) => [styles.budgetHint, pressed && styles.premuto]}
+            onPress={() => router.push("/set_budget")}
+            accessibilityRole="button"
+            accessibilityHint={t("statistiche.impostaBudget")}
+          >
+            <MaterialCommunityIcons name="plus" size={18} color={colors.primaryDark} />
+            <Text style={styles.budgetHintTesto}>{t("statistiche.impostaBudgetBreve")}</Text>
+          </Pressable>
         )}
 
       </PaginaScorrevole>
@@ -388,5 +421,29 @@ export default function StatsScreen() {
         {errorMessage}
       </Snackbar>
     </View>
+  );
+}
+
+//freccia per cambiare periodo: un cerchio da 44px. Quella del mese futuro resta
+//senza cerchio, cosi' si vede che non si puo' toccare
+function FrecciaPeriodo({ icona, onPress, disabilitata = false, etichetta }: {
+  icona: string;
+  onPress: () => void;
+  disabilitata?: boolean;
+  etichetta: string;
+}) {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.freccia, disabilitata && styles.frecciaSpenta, pressed && styles.premuto]}
+      onPress={onPress}
+      disabled={disabilitata}
+      accessibilityRole="button"
+      accessibilityLabel={etichetta}
+      accessibilityState={{ disabled: disabilitata }}
+    >
+      <MaterialCommunityIcons name={icona as any} size={24} color={disabilitata ? colors.textDisabled : colors.text} />
+    </Pressable>
   );
 }
