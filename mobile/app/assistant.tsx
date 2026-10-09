@@ -1,18 +1,17 @@
-import { KeyboardAvoidingView, View, FlatList, Platform, Pressable, Image } from "react-native";
+import { Animated, KeyboardAvoidingView, View, FlatList, Platform, Pressable, Image } from "react-native";
 import { useSchermoLargo } from "@/utils/layout";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, IconButton, TextInput, Button, Switch, Portal } from "react-native-paper";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { API_URL } from "@/config";
 import { creaStili } from "../styles/assistant.styles";
 import { useFocusEffect, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { toDateString, fromDateString } from "@/utils/date"
-import { iconaPerCategoria } from "@/utils/categoryIcons";
 import { IconaCategoria } from "@/components/IconaCategoria";
 import { usePreferenze } from "@/utils/preferenze";
-import { SelettoreData } from "@/components/SelettoreData";
+import { CampoData } from "@/components/CampoData";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { prendiSalvataggio } from "@/utils/esitoAssistente";
 import { useTranslation } from "react-i18next";
@@ -73,7 +72,6 @@ export default function AssistantScreen() {
     },
   ]);
   const [autoRenew, setAutoRenew] = useState(true);
-  const [showPicker, setShowPicker] = useState(false);
   //chiudere con una proposta ancora da confermare la perderebbe senza avviso
   const { dialogo } = useConfirmDiscard(pendingExpense !== null || expenseText.trim() !== "");
   //la proposta aperta nel form con "Modifica": serve al ritorno, per mostrare
@@ -104,11 +102,18 @@ export default function AssistantScreen() {
     }, [])
   );
   
+  //il campo e' bloccato mentre l'assistente risponde o c'e' una spesa da confermare
+  const bloccato = isLoading || pendingExpense !== null;
+  const puoInviare = !bloccato && expenseText.trim() !== "";
+
   async function handleSend() {
+    //Invio sul computer arriva anche col campo vuoto: una bolla vuota
+    //farebbe rispondere "non ho capito" a un messaggio mai scritto
+    if (!puoInviare) return;
     const userMessage: ChatMessage = {
       id: Date.now().toString(), //id basato sul timestamp attuale
       sender: "user",
-      text: expenseText,
+      text: expenseText.trim(),
     };
     setMessages((prev) => [...prev, userMessage]); //crea un array contenente tutti i messaggi precedenti, più il nuovo aggiunto in fondo
     setExpenseText("");
@@ -167,16 +172,6 @@ export default function AssistantScreen() {
       setIsLoading(false);
     }
   }
-  function handleDateSelected(event: any, selectedDate: Date) {
-  setShowPicker(false);
-  if (!pendingExpense) return;
-  setPendingExpense({ ...pendingExpense, date: toDateString(selectedDate) });
-}
-
-function handleDatePickerDismiss() {
-  setShowPicker(false);
-}
-
   async function handleConfirm() {
     if (!pendingExpense) return;
     const endpoint= pendingExpense.recurring ? "/subscriptions/" : "/expenses/"
@@ -263,6 +258,29 @@ function handleDatePickerDismiss() {
     setPendingExpense(null);
   }
 
+  //icona, descrizione, categoria e data, importo: uguale nella spesa da
+  //confermare e in quella salvata, che cosi' si riconosce come la stessa
+  function corpoSpesa(spesa: ExpenseConfirmation) {
+    return (
+      <View style={styles.savedBody}>
+        <IconaCategoria categoria={spesa.category_name} gruppo={spesa.category_group} dimensione={36} />
+        <View style={styles.savedInfo}>
+          <Text style={styles.savedDescription} numberOfLines={1}>
+            {spesa.description}
+          </Text>
+          <Text style={styles.savedMeta}>
+            {nomeCategoria(spesa.category_name)}
+            {" · "}
+            {spesa.recurring
+              ? frequenza(spesa.frequency)
+              : fromDateString(spesa.date).toLocaleDateString(localeAttuale())}
+          </Text>
+        </View>
+        <Text style={styles.savedAmount}>{importoIn(spesa.amount, spesa.currency)}</Text>
+      </View>
+    );
+  }
+
   return (
     //i dialoghi vanno disegnati dentro la modale: con l'host globale, su iOS
     //finirebbero sotto la schermata presentata
@@ -307,26 +325,7 @@ function handleDatePickerDismiss() {
                   {item.expenseData.recurring ? t("assistente.abbonamentoAggiunto") : t("assistente.spesaAggiunta")}
                 </Text>
               </View>
-              <View style={styles.savedBody}>
-                <IconaCategoria
-                  categoria={item.expenseData.category_name}
-                  gruppo={item.expenseData.category_group}
-                  dimensione={36}
-                />
-                <View style={styles.savedInfo}>
-                  <Text style={styles.savedDescription} numberOfLines={1}>
-                    {item.expenseData.description}
-                  </Text>
-                  <Text style={styles.savedMeta}>
-                    {nomeCategoria(item.expenseData.category_name)}
-                    {" · "}
-                    {item.expenseData.recurring
-                      ? frequenza(item.expenseData.frequency)
-                      : fromDateString(item.expenseData.date).toLocaleDateString(localeAttuale())}
-                  </Text>
-                </View>
-                <Text style={styles.savedAmount}>{importoIn(item.expenseData.amount, item.expenseData.currency)}</Text>
-              </View>
+              {corpoSpesa(item.expenseData)}
             </View>
           ) : (
             <View
@@ -350,63 +349,42 @@ function handleDatePickerDismiss() {
           )
         )}
         ListFooterComponent={
-          isLoading ? (
-            <View style={[styles.messageBubble, styles.systemBubble]}>
-              <Text style={styles.systemText}>{t("assistente.analizzo")}</Text>
-            </View>
-          ) : null
+          isLoading ? <PuntiniAttesa /> : null
         }
       />
 
       {pendingExpense && (
-        <View style={styles.expenseCard}>
-          <Text variant="labelSmall" style={styles.cardLabel}>{t("assistente.importo")}</Text>
-          <Text variant="headlineMedium" style={styles.cardAmount}>
-            {importoIn(pendingExpense.amount, pendingExpense.currency)}
-          </Text>
-          <Text style={styles.confirmationDetail}>
-            {t("assistente.descrizione", { testo: pendingExpense.description })}
-          </Text>
-          <View style={styles.categoryRow}>
-            <MaterialCommunityIcons
-              name={iconaPerCategoria(pendingExpense.category_name, pendingExpense.category_group) as any}
-              size={18}
-              color="#2ECC71"
-            />
-            <Text style={styles.confirmationDetail}>
-              {" "}{nomeCategoria(pendingExpense.category_name)}
+        //la stessa card dell'esito: confermando cambiano solo intestazione e colore
+        <View style={[styles.savedCard, styles.pendingCard]}>
+          <View style={[styles.savedHeader, styles.pendingHeader]}>
+            <MaterialCommunityIcons name="clock-outline" size={20} color={colors.textMuted} />
+            <Text style={styles.pendingTitle}>
+              {pendingExpense.recurring ? t("assistente.abbonamentoDaConfermare") : t("assistente.spesaDaConfermare")}
             </Text>
           </View>
-          <Pressable onPress={() => setShowPicker(true)} style={styles.dateRow}>
-            <MaterialCommunityIcons name="calendar-outline" size={18} color={colors.textMuted} />
-            <Text style={styles.confirmationDetail}>
-              {" "}{pendingExpense.recurring ? t("assistente.primoAddebito") : t("assistente.data")}:{" "}
+          {corpoSpesa(pendingExpense)}
+          {/* un tocco sulla riga apre subito il calendario */}
+          <CampoData
+            value={fromDateString(pendingExpense.date)}
+            onChange={(data) => setPendingExpense({ ...pendingExpense, date: toDateString(data) })}
+            style={styles.pendingLine}
+            accessibilityLabel={pendingExpense.recurring ? t("assistente.primoAddebito") : t("assistente.data")}
+          >
+            <MaterialCommunityIcons name="calendar-outline" size={20} color={colors.textMuted} />
+            <Text style={styles.pendingLineLabel}>
+              {pendingExpense.recurring ? t("assistente.primoAddebito") : t("assistente.data")}
+            </Text>
+            <Text style={styles.pendingLineValue}>
               {fromDateString(pendingExpense.date).toLocaleDateString(localeAttuale())}
             </Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} style={styles.dateChevron} />
-          </Pressable>
-          {showPicker && (
-            <SelettoreData
-              value={fromDateString(pendingExpense.date)}
-              mode="date"
-              display="default"
-              onValueChange={handleDateSelected}
-              onDismiss={handleDatePickerDismiss}
-            />
-        )}
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
+          </CampoData>
           {pendingExpense.recurring && (
-            <>
-            <Text style={styles.confirmationDetail}>
-              {t("assistente.ricorrenza", { frequenza: frequenza(pendingExpense.frequency) })}
-            </Text>
-            <View style={styles.switchRow}>
-            <Text> {t("assistente.rinnovoAutomatico")}</Text>
-            <Switch
-              value={autoRenew}
-              onValueChange={setAutoRenew}
-            />
+            <View style={styles.pendingLine}>
+              <MaterialCommunityIcons name="autorenew" size={20} color={colors.textMuted} />
+              <Text style={styles.pendingLineLabel}>{t("assistente.rinnovoAutomatico")}</Text>
+              <Switch value={autoRenew} onValueChange={setAutoRenew} />
             </View>
-            </>
           )}
           <View style={styles.cardActions}>
             <Button mode="text" onPress={handleCancel}>{t("comune.annulla")}</Button>
@@ -420,19 +398,29 @@ function handleDatePickerDismiss() {
         <TextInput
           value={expenseText}
           onChangeText={setExpenseText}
-          placeholder={t("assistente.segnaposto")}
+          //bloccato da una spesa da confermare: il campo dice cosa fare, non solo che e' grigio
+          placeholder={pendingExpense ? t("assistente.confermaPrima") : t("assistente.segnaposto")}
           mode="outlined"
           style={styles.textInput}
-          disabled={isLoading || pendingExpense !== null}
+          disabled={bloccato}
+          onSubmitEditing={handleSend}
+          returnKeyType="send"
         />
-        <IconButton
-          icon="send"
-          iconColor="#2ECC71"
-          accessibilityLabel={t("assistente.invia")}
+        {/* cerchio pieno come le icone dell'app, grigio finche' non c'e' niente da inviare */}
+        <Pressable
+          style={[styles.sendButton, !puoInviare && styles.sendButtonDisabled]}
           onPress={handleSend}
-          disabled={isLoading || pendingExpense !== null}
-          size={38}
-        />
+          disabled={!puoInviare}
+          accessibilityRole="button"
+          accessibilityLabel={t("assistente.invia")}
+          accessibilityState={{ disabled: !puoInviare }}
+        >
+          <MaterialCommunityIcons
+            name="send"
+            size={22}
+            color={puoInviare ? colors.textOnPrimary : colors.disabledText}
+          />
+        </Pressable>
       </View>
     </KeyboardAvoidingView>
     <ConfirmDialog
@@ -446,5 +434,43 @@ function handleDatePickerDismiss() {
     </SafeAreaView>
     </View>
     </Portal.Host>
+  );
+}
+
+//i tre puntini delle chat mentre l'assistente risponde; chi usa un lettore
+//di schermo sente "Sto analizzando"
+function PuntiniAttesa() {
+  const styles = useStili(creaStili);
+  const { t } = useTranslation();
+  //useState e non useRef: i valori si creano una volta e si leggono nel disegno
+  const [valori] = useState(() => [0, 1, 2].map(() => new Animated.Value(0.3)));
+
+  useEffect(() => {
+    const animazione = Animated.loop(
+      Animated.stagger(
+        150,
+        valori.map((valore) =>
+          Animated.sequence([
+            Animated.timing(valore, { toValue: 1, duration: 300, useNativeDriver: true }),
+            Animated.timing(valore, { toValue: 0.3, duration: 300, useNativeDriver: true }),
+          ])
+        )
+      )
+    );
+    animazione.start();
+    return () => animazione.stop();
+  }, [valori]);
+
+  return (
+    <View
+      style={[styles.messageBubble, styles.systemBubble, styles.puntini]}
+      accessible
+      accessibilityLabel={t("assistente.analizzo")}
+      accessibilityLiveRegion="polite"
+    >
+      {valori.map((valore, i) => (
+        <Animated.View key={i} style={[styles.puntino, { opacity: valore }]} />
+      ))}
+    </View>
   );
 }

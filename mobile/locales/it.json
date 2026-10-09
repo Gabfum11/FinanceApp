@@ -342,7 +342,6 @@
     "titoloModificaAbbonamento": "Modifica abbonamento",
     "tipoSpesa": "Spesa",
     "tipoAbbonamento": "Abbonamento",
-    "importo": "IMPORTO",
     "valuta": "Valuta {{valuta}}: tocca per cambiarla",
     "anteprima": "≈ {{importo}} · cambio del {{data}}",
     "ricalcolato": " (ricalcolato a ogni rinnovo)",
@@ -363,7 +362,6 @@
     "prossimoAddebito": "Prossimo addebito",
     "primoAddebito": "Primo addebito",
     "oggiData": "Oggi, {{data}}",
-    "descrizione": "Descrizione",
     "esempioDescrizione": "Es. Esselunga",
     "salvaModifiche": "Salva modifiche",
     "salvaAbbonamento": "Salva abbonamento",
@@ -415,8 +413,10 @@
     "descrizione": "Descrizione: {{testo}}",
     "primoAddebito": "Primo addebito",
     "data": "Data",
-    "ricorrenza": "Ricorrenza: {{frequenza}}",
     "rinnovoAutomatico": "Rinnovo automatico",
+    "spesaDaConfermare": "Spesa da confermare",
+    "abbonamentoDaConfermare": "Abbonamento da confermare",
+    "confermaPrima": "Conferma o annulla la spesa qui sopra",
     "segnaposto": "Es. \"Spesa 40 euro ieri\"",
     "chiudiTitolo": "Chiudere l'assistente?",
     "chiudiProposta": "La spesa proposta non è ancora stata salvata e andrà persa.",
@@ -583,9 +583,6 @@
     "nonDisponibile": "Condivisione non disponibile su questo dispositivo.",
     "errore": "Non è stato possibile esportare i dati. Riprova.",
     "erroreGenerico": "Errore durante l'esportazione. Riprova."
-  },
-  "data": {
-    "scegli": "Scegli la data"
   },
   "notifiche": {
     "canale": "Promemoria abbonamenti"

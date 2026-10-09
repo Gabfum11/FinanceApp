@@ -14,7 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { Text, IconButton, ActivityIndicator, Portal, Switch, Menu, Searchbar } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { SelettoreData } from "@/components/SelettoreData";
+import { CampoData } from "@/components/CampoData";
 import { apiFetch } from "@/utils/apiFetch";
 import { fromDateString, toDateString } from "@/utils/date";
 import { creaStili, coloriSpesa } from "../styles/add-expense.styles";
@@ -142,7 +142,6 @@ export default function AddExpenseScreen() {
   const [categories, setCategories] = useState<CategoryGroup[]>([]);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [cercaCategoria, setCercaCategoria] = useState("");
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -312,11 +311,6 @@ export default function AddExpenseScreen() {
     window.addEventListener("keydown", tasto);
     return () => window.removeEventListener("keydown", tasto);
   });
-
-  function handleDateSelected(event: any, selectedDate: Date) {
-    setShowDatePicker(false);
-    setDate(selectedDate);
-  }
 
   function formatDate(d: Date) {
     const isToday = toDateString(d) === toDateString(new Date());
@@ -622,17 +616,16 @@ export default function AddExpenseScreen() {
             <Text variant="bodySmall" style={styles.fieldLabel}>
               {!isSubscription ? t("spesa.data") : isEditing ? t("spesa.prossimoAddebito") : t("spesa.primoAddebito")}
             </Text>
-              <Pressable
+              <CampoData
+                value={date}
+                onChange={setDate}
+                onApri={() => setIsAmountFocused(false)}
                 style={styles.field}
-                onPress={() => {
-                  setIsAmountFocused(false);
-                  setShowDatePicker(true);
-                }}
               >
                 <MaterialCommunityIcons name="calendar-outline" size={20} color={colors.keypadText} />
                 <Text style={styles.fieldText}>{formatDate(date)}</Text>
                 <MaterialCommunityIcons name="chevron-down" size={20} color={colors.label} />
-              </Pressable>
+              </CampoData>
           </View>
 
           <View>
@@ -693,16 +686,6 @@ export default function AddExpenseScreen() {
           </Pressable>
         ))}
       </View>
-      )}
-
-      {showDatePicker && (
-        <SelettoreData
-          value={date}
-          mode="date"
-          display="default"
-          onValueChange={handleDateSelected}
-          onDismiss={() => setShowDatePicker(false)}
-        />
       )}
 
       <Modal

@@ -342,7 +342,6 @@
     "titoloModificaAbbonamento": "Edit subscription",
     "tipoSpesa": "Expense",
     "tipoAbbonamento": "Subscription",
-    "importo": "AMOUNT",
     "valuta": "Currency {{valuta}}: tap to change it",
     "anteprima": "≈ {{importo}} · rate of {{data}}",
     "ricalcolato": " (recalculated at every renewal)",
@@ -363,7 +362,6 @@
     "prossimoAddebito": "Next charge",
     "primoAddebito": "First charge",
     "oggiData": "Today, {{data}}",
-    "descrizione": "Description",
     "esempioDescrizione": "E.g. Tesco",
     "salvaModifiche": "Save changes",
     "salvaAbbonamento": "Save subscription",
@@ -415,8 +413,10 @@
     "descrizione": "Description: {{testo}}",
     "primoAddebito": "First charge",
     "data": "Date",
-    "ricorrenza": "Repeats: {{frequenza}}",
     "rinnovoAutomatico": "Automatic renewal",
+    "spesaDaConfermare": "Expense to confirm",
+    "abbonamentoDaConfermare": "Subscription to confirm",
+    "confermaPrima": "Confirm or cancel the expense above",
     "segnaposto": "E.g. \"Groceries 40 yesterday\"",
     "chiudiTitolo": "Close the assistant?",
     "chiudiProposta": "The proposed expense hasn't been saved yet and will be lost.",
@@ -583,9 +583,6 @@
     "nonDisponibile": "Sharing isn't available on this device.",
     "errore": "Couldn't export your data. Please try again.",
     "erroreGenerico": "Something went wrong while exporting. Please try again."
-  },
-  "data": {
-    "scegli": "Choose a date"
   },
   "notifiche": {
     "canale": "Subscription reminders"

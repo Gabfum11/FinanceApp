@@ -96,9 +96,12 @@ export const creaStili = (colors: Colori) =>
         color: colors.textMuted,
         marginBottom: 2,
     },
+    //in corsivo e a 15 si leggevano poco: dritti, piu' grandi e marcati
     example: {
         color: colors.primaryDark,
-        fontStyle: "italic",
+        fontSize: fontSize.base,
+        fontWeight: fontWeight.semibold,
+        lineHeight: 24,
     },
     // card di esito dopo il salvataggio
     savedCard: {
@@ -145,28 +148,41 @@ export const creaStili = (colors: Colori) =>
         fontSize: fontSize.base,
         color: colors.text,
     },
-    expenseCard:{
-        backgroundColor: colors.surface,
-        borderRadius: 20,
-        padding: 20,
-        marginVertical: 8,
+    //spesa da confermare: la card dell'esito, staccata dalla chat come
+    //elemento flottante e con l'intestazione grigia finche' non si conferma
+    pendingCard: {
         marginHorizontal: 16, // allineata ai messaggi della chat
-        gap: 6,
+        marginVertical: 8,
+        borderRadius: 20,
+        borderWidth: 0,
         ...floatingShadow,
     },
-    cardLabel: {
-    opacity: 0.5,
+    pendingHeader: {
+        backgroundColor: colors.surfaceAlt,
     },
-    cardAmount: {
-    color: colors.primary,
-    fontWeight: fontWeight.bold,
+    pendingTitle: {
+        fontWeight: fontWeight.bold,
+        color: colors.textSecondary,
     },
-    confirmationDetail: {
-    marginTop: 4,
+    //righe modificabili sotto la spesa: data e rinnovo
+    pendingLine: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        minHeight: 48,
+        paddingHorizontal: 14,
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
     },
-    undoButton: {
-    marginTop: 12,
-    alignSelf: "flex-start",
+    pendingLineLabel: {
+        flex: 1,
+        fontSize: fontSize.md,
+        color: colors.textSecondary,
+    },
+    pendingLineValue: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
+        color: colors.text,
     },
     cardActions: {
         flexDirection: "row",
@@ -174,7 +190,9 @@ export const creaStili = (colors: Colori) =>
         justifyContent: "flex-end",
         alignItems: "center",
         gap: 6,
-        marginTop: 12,
+        paddingHorizontal: 14,
+        paddingTop: 12,
+        paddingBottom: 14,
     },
     userText:{
         color:colors.textOnPrimary
@@ -192,24 +210,26 @@ export const creaStili = (colors: Colori) =>
         flex:1,
         borderRadius:16
     },
-    switchRow:{
-        flexDirection: "row",
-        justifyContent: "space-between",
+    sendButton: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
         alignItems: "center",
-        marginTop: 8,
-        marginBottom: 4,
+        justifyContent: "center",
+        backgroundColor: colors.primary,
     },
-    categoryRow: {
+    sendButtonDisabled: {
+        backgroundColor: colors.disabled,
+    },
+    puntini: {
         flexDirection: "row",
-        alignItems: "center",
-        marginTop: 4,
+        gap: 5,
+        paddingVertical: 16,
     },
-    dateRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginTop: 4,
-    },
-    dateChevron: {
-        marginLeft: "auto",
+    puntino: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: colors.textMuted,
     },
 })
