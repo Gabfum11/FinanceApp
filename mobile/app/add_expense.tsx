@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useSchermoLargo } from "@/utils/layout";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Text, IconButton, ActivityIndicator, Portal, Switch, Menu } from "react-native-paper";
+import { Text, IconButton, ActivityIndicator, Portal, Switch, Menu, Searchbar } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SelettoreData } from "@/components/SelettoreData";
@@ -58,6 +58,11 @@ const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "backspace"
 //stesso testo del server: lo riconosce e propone di scrivere a mano la cifra convertita
 const CAMBIO_NON_DISPONIBILE = "Exchange rate unavailable";
 const MAX_DECIMALS = 2;
+
+//"Caffè" va trovato anche digitando "caffe": togliamo accenti e maiuscole
+function normalize(text: string): string {
+  return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+}
 
 export default function AddExpenseScreen() {
   const styles = useStili(creaStili);
@@ -136,6 +141,7 @@ export default function AddExpenseScreen() {
 
   const [categories, setCategories] = useState<CategoryGroup[]>([]);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [cercaCategoria, setCercaCategoria] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -222,6 +228,35 @@ export default function AddExpenseScreen() {
     loadCategories();
   }, []);
 
+  //riaprendo il foglio si riparte dall'elenco completo, non dall'ultima ricerca
+  function chiudiCategorie() {
+    setShowCategoryPicker(false);
+    setCercaCategoria("");
+  }
+
+  //si cerca nel nome tradotto e in quello italiano, nel gruppo ("casa" trova
+  //le bollette) e nelle parole chiave del server ("netflix" trova Abbonamenti digitali)
+  const sezioniCategorie = useMemo(() => {
+    const q = normalize(cercaCategoria.trim());
+    return categories
+      .map((gruppo) => {
+        const nelGruppo =
+          normalize(gruppo.name).includes(q) || normalize(nomeCategoria(gruppo.name)).includes(q);
+        return {
+          title: gruppo.name,
+          data: !q || nelGruppo
+            ? gruppo.children
+            : gruppo.children.filter(
+                (c) =>
+                  normalize(c.name).includes(q) ||
+                  normalize(nomeCategoria(c.name)).includes(q) ||
+                  normalize(c.keywords ?? "").includes(q)
+              ),
+        };
+      })
+      .filter((sezione) => sezione.data.length > 0);
+  }, [categories, cercaCategoria]);
+
   function focusAmount() {
     // la tastiera di sistema della Descrizione e il tastierino non devono convivere
     Keyboard.dismiss();
@@ -261,7 +296,7 @@ export default function AddExpenseScreen() {
     if (!largo || typeof window === "undefined") return;
     function tasto(evento: KeyboardEvent) {
       if (evento.key === "Escape") {
-        if (showCategoryPicker) setShowCategoryPicker(false);
+        if (showCategoryPicker) chiudiCategorie();
         else router.back();
         return;
       }
@@ -674,9 +709,9 @@ export default function AddExpenseScreen() {
         visible={showCategoryPicker}
         transparent
         animationType={largo ? "fade" : "slide"}
-        onRequestClose={() => setShowCategoryPicker(false)}
+        onRequestClose={chiudiCategorie}
       >
-        <Pressable style={[styles.modalOverlay, largo && styles.modalOverlayLargo]} onPress={() => setShowCategoryPicker(false)}>
+        <Pressable style={[styles.modalOverlay, largo && styles.modalOverlayLargo]} onPress={chiudiCategorie}>
           {/* il Pressable interno intercetta il tap così non chiude il foglio */}
           <Pressable
             style={[styles.modalSheet, !largo && { paddingBottom: Math.max(28, margineSotto + 12) }, largo && styles.modalSheetLargo]}
@@ -694,16 +729,23 @@ export default function AddExpenseScreen() {
                 mode="contained-tonal"
                 containerColor={colors.surfaceAlt}
                 iconColor={colors.text}
-                onPress={() => setShowCategoryPicker(false)}
+                onPress={chiudiCategorie}
                 accessibilityLabel={t("comune.chiudi")}
                 style={styles.modalChiudi}
               />
             </View>
+            {/* sul computer si scrive subito; sul telefono la tastiera coprirebbe l'elenco */}
+            <Searchbar
+              placeholder={t("spesa.cercaCategoria")}
+              value={cercaCategoria}
+              onChangeText={setCercaCategoria}
+              autoFocus={largo}
+              style={styles.categorySearch}
+              inputStyle={styles.categorySearchInput}
+            />
             <SectionList
-              sections={categories.map((gruppo) => ({
-                title: gruppo.name,
-                data: gruppo.children,
-              }))}
+              sections={sezioniCategorie}
+              keyboardShouldPersistTaps="handled"
               keyExtractor={(item) => item.id.toString()}
               stickySectionHeadersEnabled
               renderSectionHeader={({ section }) => (
@@ -728,7 +770,7 @@ export default function AddExpenseScreen() {
                   accessibilityState={{ selected: category?.id === item.id }}
                   onPress={() => {
                     setCategory(item);
-                    setShowCategoryPicker(false);
+                    chiudiCategorie();
                   }}
                 >
                   <IconaCategoria categoria={item.name} gruppo={section.title} dimensione={34} />
@@ -746,7 +788,11 @@ export default function AddExpenseScreen() {
                 </Pressable>
               )}
               ListEmptyComponent={
-                <Text style={styles.categoryRow}>{t("spesa.nessunaCategoria")}</Text>
+                <Text style={styles.categoryEmpty}>
+                  {cercaCategoria.trim()
+                    ? t("spesa.nessunaCategoriaTrovata", { testo: cercaCategoria.trim() })
+                    : t("spesa.nessunaCategoria")}
+                </Text>
               }
             />
           </Pressable>

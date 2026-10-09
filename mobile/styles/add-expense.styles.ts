@@ -336,6 +336,24 @@ export const creaStili = (tokens: Colori) => {
     width: 44,
     height: 44,
   },
+  //come la ricerca di Transazioni
+  categorySearch: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+  },
+  categorySearchInput: {
+    fontSize: fontSize.md,
+    minHeight: 0,
+  },
+  categoryEmpty: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    textAlign: "center",
+    color: colors.label,
+    fontSize: fontSize.md,
+  },
   //intestazione di gruppo: deve leggersi come etichetta, non come voce da toccare
   categoryGroupHeader: {
     flexDirection: "row",

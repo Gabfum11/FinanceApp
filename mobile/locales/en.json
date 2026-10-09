@@ -353,6 +353,8 @@
     "categoria": "Category",
     "selezionaCategoria": "Choose a category",
     "nessunaCategoria": "No categories available.",
+    "cercaCategoria": "Search category",
+    "nessunaCategoriaTrovata": "No category matches “{{testo}}”. Try a more general word, or pick Other.",
     "frequenza": "Frequency",
     "rinnovoAutomatico": "Automatic renewal",
     "rinnovoAutomaticoSi": "The expense is logged automatically at every renewal",
@@ -426,7 +428,6 @@
   "abbonamenti": {
     "scadeOggi": "Due today",
     "alMese": "Per month",
-    "allAnno": "Per year",
     "esclusiValuta_one": "{{count}} subscription in another currency not included",
     "esclusiValuta_other": "{{count}} subscriptions in another currency not included",
     "scadeDomani": "Due tomorrow",

@@ -353,6 +353,8 @@
     "categoria": "Categoria",
     "selezionaCategoria": "Seleziona categoria",
     "nessunaCategoria": "Nessuna categoria disponibile.",
+    "cercaCategoria": "Cerca categoria",
+    "nessunaCategoriaTrovata": "Nessuna categoria per «{{testo}}». Prova con una parola più generica, oppure scegli Altro.",
     "frequenza": "Frequenza",
     "rinnovoAutomatico": "Rinnovo automatico",
     "rinnovoAutomaticoSi": "La spesa viene registrata da sola a ogni rinnovo",
@@ -426,7 +428,6 @@
   "abbonamenti": {
     "scadeOggi": "Scade oggi",
     "alMese": "Al mese",
-    "allAnno": "All'anno",
     "esclusiValuta_one": "Escluso {{count}} abbonamento in un'altra valuta",
     "esclusiValuta_other": "Esclusi {{count}} abbonamenti in un'altra valuta",
     "scadeDomani": "Scade domani",
