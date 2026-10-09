@@ -91,7 +91,7 @@ export const creaStili = (colors: Colori) =>
         gap: 4,
     },
     examplesLabel: {
-        fontSize: fontSize.xs,
+        fontSize: fontSize.base,
         fontWeight: fontWeight.semibold,
         color: colors.textMuted,
         marginBottom: 2,
