@@ -405,6 +405,7 @@
     "msg_rimborso_parziale": "{{importo}} refunded on {{data}}",
     "msg_rimborso_totale": "Fully refunded on {{data}}",
     "msg_doppione": "Probably already added",
+    "msg_forse_doppione": "Maybe it's “{{nome}}” from {{giorno}} ({{simile}})",
     "msg_abbonamento": "Already recorded by the subscription",
     "msg_non_spesa": "Probably not an expense",
     "selezionate_one": "{{count}} expense selected",

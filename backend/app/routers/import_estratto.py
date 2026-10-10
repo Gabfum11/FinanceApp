@@ -12,7 +12,9 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.business_logic import import_categorie, security
-from app.business_logic.import_confronto import CATEGORIA, NON_SPESA, Entrata, RigaImport, confronta
+from app.business_logic.import_confronto import (
+    CATEGORIA, GIORNI_FORSE_NOME, NON_SPESA, Entrata, RigaImport, confronta,
+)
 from app.business_logic.import_lettura import MAX_BYTE, FileNonLeggibile, Movimento, leggi_estratto
 from app.business_logic.import_pulizia import (
     BONIFICO, NON_SPESA as TIPO_NON_SPESA, PAGAMENTO, esercente, motivo, pulisci_nome, tipo_movimento,
@@ -72,6 +74,9 @@ def _riga_json(riga: RigaImport, categorie: dict[int, models.Category]) -> dict:
         "messaggio": riga.messaggio,
         "rimborso_data": riga.rimborso_data.isoformat() if riga.rimborso_data else None,
         "rimborso_importo": riga.rimborso_importo,
+        "simile_nome": riga.simile_nome,
+        "simile_data": riga.simile_data.isoformat() if riga.simile_data else None,
+        "simile_importo": riga.simile_importo,
         "selezionata": riga.selezionata,
     }
 
@@ -116,8 +121,8 @@ def anteprima(request: Request, file: UploadFile = File(...), db: Session = Depe
     esistenti = (
         db.query(models.Expense)
         .filter(models.Expense.user_id == current_user.id,
-                models.Expense.date >= dal - timedelta(days=3),
-                models.Expense.date <= al + timedelta(days=3))
+                models.Expense.date >= dal - timedelta(days=GIORNI_FORSE_NOME),
+                models.Expense.date <= al + timedelta(days=GIORNI_FORSE_NOME))
         .all()
     )
     confronta(righe, entrate, esistenti)

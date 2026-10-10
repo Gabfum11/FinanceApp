@@ -405,6 +405,7 @@
     "msg_rimborso_parziale": "Rimborsati {{importo}} il {{data}}",
     "msg_rimborso_totale": "Rimborsata tutta il {{data}}",
     "msg_doppione": "Probabilmente è già stata inserita",
+    "msg_forse_doppione": "Forse è «{{nome}}» del {{giorno}} ({{simile}})",
     "msg_abbonamento": "Già registrata dall'abbonamento",
     "msg_non_spesa": "Probabilmente non è una spesa",
     "selezionate_one": "{{count}} spesa selezionata",

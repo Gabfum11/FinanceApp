@@ -3,7 +3,7 @@ from datetime import date
 from types import SimpleNamespace
 
 from app.business_logic.import_confronto import (
-    ABBONAMENTO, DOPPIONE, RIMBORSO_PARZIALE, RIMBORSO_TOTALE, Entrata, RigaImport, confronta,
+    ABBONAMENTO, DOPPIONE, FORSE_DOPPIONE, RIMBORSO_PARZIALE, RIMBORSO_TOTALE, Entrata, RigaImport, confronta,
 )
 
 
@@ -12,8 +12,8 @@ def riga(indice, giorno, importo, esercente="conad"):
                       esercente=esercente, tipo="pagamento", nome=esercente.title(), importo=importo)
 
 
-def spesa(id, giorno, importo, subscription_id=None, original_currency=None):
-    return SimpleNamespace(id=id, date=date(2026, 9, giorno), amount=importo,
+def spesa(id, giorno, importo, subscription_id=None, original_currency=None, descrizione="Spesa"):
+    return SimpleNamespace(id=id, date=date(2026, 9, giorno), amount=importo, description=descrizione,
                            subscription_id=subscription_id, original_currency=original_currency)
 
 
@@ -41,10 +41,10 @@ def test_doppione_entro_un_giorno():
     assert (r.messaggio, r.selezionata) == (DOPPIONE, False)
 
 
-def test_importo_diverso_non_e_doppione():
+def test_importo_diverso_non_e_doppione_sicuro():
     r = riga(0, 8, 55.01, "q8")
     confronta([r], [], [spesa(1, 8, 55.0)])
-    assert r.messaggio is None
+    assert r.messaggio == FORSE_DOPPIONE
 
 
 def test_ogni_spesa_copre_una_sola_riga():
@@ -58,6 +58,46 @@ def test_righe_uguali_nello_stesso_file_restano_entrambe():
     prima, seconda = riga(0, 8, 55.0, "q8"), riga(1, 8, 55.0, "q8")
     confronta([prima, seconda], [], [])
     assert [prima.messaggio, seconda.messaggio] == [None, None]
+
+
+def test_stesso_nome_importo_diverso_e_forse_doppione():
+    #la banca addebita 21,96 (18 + IVA), a mano si era scritto 20 due giorni dopo
+    r = riga(0, 14, 21.96, "anthropic claude sub")
+    confronta([r], [], [spesa(1, 16, 20.0, descrizione="Claude abbonamento")])
+    assert (r.messaggio, r.selezionata) == (FORSE_DOPPIONE, False)
+    assert (r.simile_nome, r.simile_data, r.simile_importo) == ("Claude abbonamento", date(2026, 9, 16), 20.0)
+
+
+def test_importo_vicino_pochi_giorni_dopo_e_forse_doppione():
+    #il bowling inserito la sera, la banca lo registra due giorni dopo e con qualche euro in piu'
+    r = riga(0, 6, 8.0, "funny dreams srl")
+    confronta([r], [], [spesa(1, 4, 7.0, descrizione="Bowling")])
+    assert r.messaggio == FORSE_DOPPIONE
+
+
+def test_importi_lontani_senza_nome_in_comune_restano_nuovi():
+    caffe = riga(0, 8, 30.0, "ristorante da mario")
+    confronta([caffe], [], [spesa(1, 8, 1.20, descrizione="Caffè")])
+    assert caffe.messaggio is None
+
+
+def test_nome_in_comune_ma_troppo_lontano_resta_nuovo():
+    r = riga(0, 20, 21.96, "anthropic claude sub")
+    confronta([r], [], [spesa(1, 14, 20.0, descrizione="Claude abbonamento")])
+    assert r.messaggio is None
+
+
+def test_parole_generiche_non_bastano():
+    r = riga(0, 8, 50.0, "pagamento abbonamento palestra")
+    confronta([r], [], [spesa(1, 8, 9.99, descrizione="Abbonamento Spotify")])
+    assert r.messaggio is None
+
+
+def test_il_doppione_sicuro_vince_sul_forse():
+    #la prima riga somiglia per nome alla spesa, la seconda e' identica: la spesa va alla seconda
+    simile, identica = riga(0, 8, 12.0, "q8 easy"), riga(1, 9, 50.0, "q8")
+    confronta([simile, identica], [], [spesa(1, 9, 50.0, descrizione="Q8 easy benzina")])
+    assert [simile.messaggio, identica.messaggio] == [None, DOPPIONE]
 
 
 def test_rimborso_totale():

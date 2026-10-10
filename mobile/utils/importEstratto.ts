@@ -10,6 +10,7 @@ export type Messaggio =
   | "rimborso_parziale"
   | "rimborso_totale"
   | "doppione"
+  | "forse_doppione"
   | "abbonamento"
   | "non_spesa";
 
@@ -31,6 +32,10 @@ export type RigaImport = {
   messaggio: Messaggio | null;
   rimborso_data: string | null;
   rimborso_importo: number | null;
+  /** la spesa gia' inserita a cui somiglia, solo con forse_doppione */
+  simile_nome: string | null;
+  simile_data: string | null;
+  simile_importo: number | null;
   selezionata: boolean;
 };
 

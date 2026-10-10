@@ -19,6 +19,7 @@ const ICONE: Record<Messaggio, keyof typeof MaterialCommunityIcons.glyphMap> = {
   rimborso_parziale: "undo-variant",
   rimborso_totale: "undo-variant",
   doppione: "content-copy",
+  forse_doppione: "help-circle",
   abbonamento: "autorenew",
   non_spesa: "information",
 };
@@ -45,6 +46,8 @@ export function RigaImportata({ riga, separata, onCambiaSelezione, onModifica }:
     rimborso_parziale: [colors.primaryDark, colors.primarySoft],
     rimborso_totale: [colors.primaryDark, colors.primarySoft],
     doppione: [colors.msgBlu, colors.msgBluSoft],
+    //arancione come "categoria": decide l'utente
+    forse_doppione: [colors.msgArancio, colors.msgArancioSoft],
     abbonamento: [colors.msgBlu, colors.msgBluSoft],
     non_spesa: [colors.textMuted, colors.surfaceAlt],
   };
@@ -55,6 +58,9 @@ export function RigaImportata({ riga, separata, onCambiaSelezione, onModifica }:
     ? t(`importa.msg_${riga.messaggio}`, {
         importo: riga.rimborso_importo != null ? importo(riga.rimborso_importo) : "",
         data: riga.rimborso_data ? giornoBreve(riga.rimborso_data) : "",
+        nome: riga.simile_nome ?? "",
+        giorno: riga.simile_data ? giornoBreve(riga.simile_data) : "",
+        simile: riga.simile_importo != null ? importo(riga.simile_importo) : "",
       })
     : null;
 

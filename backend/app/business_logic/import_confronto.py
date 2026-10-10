@@ -1,9 +1,11 @@
 """Le righe importate confrontate con quello che TrackIt sa gia'.
 
-Nell'ordine: spese create dagli abbonamenti, spese gia' inserite, rimborsi
-arrivati nello stesso file. Ogni spesa esistente copre al massimo una riga:
+Nell'ordine: spese create dagli abbonamenti, spese gia' inserite, spese che
+somigliano soltanto (importo arrotondato, giorno sbagliato), rimborsi arrivati
+nello stesso file. Ogni spesa esistente copre al massimo una riga:
 due pieni da 55 euro nel file e uno solo in TrackIt lasciano dentro l'altro.
 """
+import re
 from dataclasses import dataclass
 from datetime import date
 
@@ -11,12 +13,19 @@ CATEGORIA = "categoria"
 RIMBORSO_PARZIALE = "rimborso_parziale"
 RIMBORSO_TOTALE = "rimborso_totale"
 DOPPIONE = "doppione"
+FORSE_DOPPIONE = "forse_doppione"
 ABBONAMENTO = "abbonamento"
 NON_SPESA = "non_spesa"
 
 GIORNI_ABBONAMENTO = 3
 GIORNI_DOPPIONE = 1
 GIORNI_RIMBORSO = 60
+#chi inserisce a mano arrotonda e sbaglia giorno: la banca registra anche dopo
+GIORNI_FORSE_IMPORTO = 3
+GIORNI_FORSE_NOME = 5
+SCARTO_FORSE = 0.25
+#parole che stanno in troppi nomi per dire che due spese sono la stessa
+PAROLE_GENERICHE = {"abbonamento", "pagamento", "acquisto", "carta", "presso", "spesa", "spese"}
 #il cambio della banca non e' mai identico al nostro
 TOLLERANZA_VALUTA = 0.05
 
@@ -36,6 +45,9 @@ class RigaImport:
     importo_originale: float | None = None
     rimborso_data: date | None = None
     rimborso_importo: float | None = None
+    simile_nome: str | None = None
+    simile_data: date | None = None
+    simile_importo: float | None = None
 
 
 @dataclass
@@ -61,6 +73,17 @@ def _doppione(spesa, riga: RigaImport) -> bool:
     return _stesso_importo(spesa.amount, riga.importo) and abs((spesa.date - riga.data).days) <= GIORNI_DOPPIONE
 
 
+def _parole(testo: str) -> set[str]:
+    return {p for p in re.findall(r"[^\W\d_]{4,}", testo.lower()) if p not in PAROLE_GENERICHE}
+
+
+def _forse_doppione(spesa, riga: RigaImport) -> bool:
+    giorni = abs((spesa.date - riga.data).days)
+    if giorni <= GIORNI_FORSE_IMPORTO and abs(spesa.amount - riga.importo) <= SCARTO_FORSE * max(spesa.amount, riga.importo):
+        return True
+    return giorni <= GIORNI_FORSE_NOME and bool(_parole(spesa.description) & _parole(f"{riga.nome} {riga.testo}"))
+
+
 def _piu_vicina(esistenti, usate: set, riga: RigaImport, regola):
     candidate = [s for s in esistenti if s.id not in usate and regola(s, riga)]
     return min(candidate, key=lambda s: abs((s.date - riga.data).days), default=None)
@@ -68,15 +91,21 @@ def _piu_vicina(esistenti, usate: set, riga: RigaImport, regola):
 
 def confronta(righe: list[RigaImport], entrate: list[Entrata], esistenti: list) -> None:
     usate: set = set()
-    for riga in sorted(righe, key=lambda r: (r.data, r.indice)):
-        if riga.messaggio is not None:
-            continue
-        for regola, messaggio in ((_abbonamento, ABBONAMENTO), (_doppione, DOPPIONE)):
-            trovata = _piu_vicina(esistenti, usate, riga, regola)
-            if trovata:
-                usate.add(trovata.id)
-                riga.messaggio, riga.selezionata = messaggio, False
-                break
+    ordinate = sorted(righe, key=lambda r: (r.data, r.indice))
+    #prima tutti gli abbinamenti sicuri, poi i dubbi: una spesa che somiglia a
+    #una riga non deve venire tolta alla riga che le e' identica
+    for regole in (((_abbonamento, ABBONAMENTO), (_doppione, DOPPIONE)), ((_forse_doppione, FORSE_DOPPIONE),)):
+        for riga in ordinate:
+            if riga.messaggio is not None:
+                continue
+            for regola, messaggio in regole:
+                trovata = _piu_vicina(esistenti, usate, riga, regola)
+                if trovata:
+                    usate.add(trovata.id)
+                    riga.messaggio, riga.selezionata = messaggio, False
+                    if messaggio == FORSE_DOPPIONE:
+                        riga.simile_nome, riga.simile_data, riga.simile_importo = trovata.description, trovata.date, trovata.amount
+                    break
 
     for entrata in sorted(entrate, key=lambda e: e.data):
         candidate = [
