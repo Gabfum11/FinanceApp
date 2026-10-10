@@ -51,6 +51,9 @@ export function RigaImportata({ riga, separata, onCambiaSelezione, onModifica }:
     abbonamento: [colors.msgBlu, colors.msgBluSoft],
     non_spesa: [colors.textMuted, colors.surfaceAlt],
   };
+  //un'app rimasta in cache puo' ricevere dal server un messaggio che non conosce:
+  //meglio un colore neutro che una pagina bianca
+  const colori = (riga.messaggio && coloriMessaggio[riga.messaggio]) || coloriMessaggio.non_spesa;
   const meta = [riga.categoria_nome ? nomeCategoria(riga.categoria_nome) : null, giornoBreve(riga.data)]
     .filter(Boolean)
     .join(" · ");
@@ -90,9 +93,9 @@ export function RigaImportata({ riga, separata, onCambiaSelezione, onModifica }:
         <Text style={[styles.rigaNome, !riga.selezionata && styles.rigaNomeEsclusa]}>{riga.nome}</Text>
         <Text style={styles.rigaMeta}>{meta}</Text>
         {riga.messaggio && (
-          <View style={[styles.messaggio, { backgroundColor: coloriMessaggio[riga.messaggio][1] }]}>
-            <MaterialCommunityIcons name={ICONE[riga.messaggio]} size={14} color={coloriMessaggio[riga.messaggio][0]} />
-            <Text style={[styles.messaggioTesto, { color: coloriMessaggio[riga.messaggio][0] }]}>{testoMessaggio}</Text>
+          <View style={[styles.messaggio, { backgroundColor: colori[1] }]}>
+            <MaterialCommunityIcons name={ICONE[riga.messaggio] ?? "information"} size={14} color={colori[0]} />
+            <Text style={[styles.messaggioTesto, { color: colori[0] }]}>{testoMessaggio}</Text>
           </View>
         )}
       </View>
