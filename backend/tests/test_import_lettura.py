@@ -96,6 +96,36 @@ def test_due_colonne_addebiti_accrediti_con_righe_sopra():
     ]
 
 
+def con_dimensione_sbagliata(contenuto: bytes) -> bytes:
+    """Lo stesso file, ma con il foglio che dichiara di essere grande una cella."""
+    import re
+    import zipfile
+    entrata, uscita = zipfile.ZipFile(io.BytesIO(contenuto)), io.BytesIO()
+    with zipfile.ZipFile(uscita, "w") as nuovo:
+        for voce in entrata.infolist():
+            dati = entrata.read(voce.filename)
+            if voce.filename.startswith("xl/worksheets/"):
+                dati = re.sub(rb'<dimension ref="[^"]*"', b'<dimension ref="A1:A1"', dati)
+            nuovo.writestr(voce, dati)
+    return uscita.getvalue()
+
+
+def test_foglio_che_dichiara_una_dimensione_sbagliata():
+    #l'export di Postepay ("ListaMovimenti.xlsx") dice A1:A1: la lettura a
+    #righe si fermava alla prima e il file risultava non riconosciuto
+    contenuto = con_dimensione_sbagliata(xlsx([
+        ["Lista movimenti"],
+        [],
+        ["Data Contabile", "Data Valuta", "Importo (euro)", "Descrizione operazioni"],
+        [datetime(2026, 9, 27), datetime(2026, 9, 27), -4.0, "P2P A ROSSI   MARIO per cocktail"],
+        [datetime(2026, 9, 29), datetime(2026, 9, 26), -4.0, "Pagamento Google Pay PASSION FRUIT 26/09/2026 23.33 BARI Op. 673184"],
+    ]))
+    assert leggi_estratto(contenuto, OGGI) == [
+        Movimento(date(2026, 9, 27), "P2P A ROSSI   MARIO per cocktail", 4.0, True),
+        Movimento(date(2026, 9, 29), "Pagamento Google Pay PASSION FRUIT 26/09/2026 23.33 BARI Op. 673184", 4.0, True),
+    ]
+
+
 def test_una_colonna_con_segno_e_descrizione_su_due_colonne():
     contenuto = xlsx([
         ["Elenco movimenti"], ["Esportato il 01/10/2026"], [], [], [], [],

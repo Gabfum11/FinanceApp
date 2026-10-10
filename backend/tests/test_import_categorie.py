@@ -37,6 +37,11 @@ def utente(db, make_user):
     return make_user(email="io@example.com")
 
 
+def coppie(nomi):
+    """(descrizione, chiave del negozio) come le prepara il router."""
+    return [(n, n.lower()) for n in nomi]
+
+
 def risposta_ai(risultati):
     contenuto = json.dumps({"risultati": risultati})
     return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=contenuto))])
@@ -59,14 +64,28 @@ def test_memoria_degli_import_vince_su_tutto(db, categorie, utente):
                           descrizione_banca="POS 4521 03/08/26 15:42 GAMMA SRL MILANO CARTA *1234"))
     db.commit()
     with patch.object(categorization.groq_client.chat.completions, "create") as ai:
-        proposte = proponi(["Gamma Srl Milano"], utente, db)
+        proposte = proponi([("Gamma Srl Milano", "gamma srl milano")], utente, db)
+    #"Palestra" nel testo della banca non c'era: l'ha scritto l'utente, si riprende
     assert proposte == {"Gamma Srl Milano": Proposta("Palestra Gamma", categorie["palestra"])}
+    ai.assert_not_called()
+
+
+@pytest.mark.parametrize("descrizione", ["Amazon", "Amazon Mktp"])
+def test_memoria_senza_rinomina_tiene_il_dettaglio_nuovo(db, categorie, utente, descrizione):
+    #"Amazon" e' il nome corto dei vecchi import, "Amazon Mktp" quello lungo:
+    #nessuno dei due e' una scelta dell'utente, quindi vince la descrizione nuova
+    db.add(models.Expense(user_id=utente, description=descrizione, amount=29.99, date=date(2026, 8, 6),
+                          category_id=categorie["spesa"], descrizione_banca="AMZN Mktp IT*2K3"))
+    db.commit()
+    with patch.object(categorization.groq_client.chat.completions, "create") as ai:
+        proposte = proponi([("Amazon Cuffie Bluetooth", "amazon")], utente, db)
+    assert proposte == {"Amazon Cuffie Bluetooth": Proposta("Amazon Cuffie Bluetooth", categorie["spesa"])}
     ai.assert_not_called()
 
 
 def test_regole_senza_ai(db, categorie, utente):
     with patch.object(categorization.groq_client.chat.completions, "create") as ai:
-        proposte = proponi(["Conad Superstore"], utente, db)
+        proposte = proponi([("Conad Superstore", "conad superstore")], utente, db)
     assert proposte["Conad Superstore"] == Proposta("Conad Superstore", categorie["spesa"])
     ai.assert_not_called()
 
@@ -74,27 +93,27 @@ def test_regole_senza_ai(db, categorie, utente):
 def test_ai_per_i_nomi_rimasti_con_i_controlli(db, categorie, utente):
     risposta = risposta_ai([
         {"originale": "Autogrill Spa Villoresi Est", "nome": "Autogrill", "categoria": "Ristoranti e bar"},
-        {"originale": "Gamma Srl", "nome": "Palestra Gamma", "categoria": "Palestra"},
-        {"originale": "Ms Srl", "nome": "Ms Srl", "categoria": "Categoria inventata"},
+        {"originale": "Gamma Srl", "categoria": "Palestra"},
+        {"originale": "Ms Srl", "categoria": "Categoria inventata"},
     ])
     with patch.object(categorization.groq_client.chat.completions, "create", return_value=risposta):
-        proposte = proponi(["Gamma Srl", "Autogrill Spa Villoresi Est", "Ms Srl"], utente, db)
-    assert proposte["Autogrill Spa Villoresi Est"] == Proposta("Autogrill", categorie["bar"])
-    #"Palestra" non c'era: il nome resta quello delle regole, la categoria si tiene
+        proposte = proponi(coppie(["Gamma Srl", "Autogrill Spa Villoresi Est", "Ms Srl"]), utente, db)
+    #l'AI sceglie solo la categoria: anche se accorcia il nome, resta quello intero
+    assert proposte["Autogrill Spa Villoresi Est"] == Proposta("Autogrill Spa Villoresi Est", categorie["bar"])
     assert proposte["Gamma Srl"] == Proposta("Gamma Srl", categorie["palestra"])
     assert proposte["Ms Srl"] == Proposta("Ms Srl", None)
 
 
 def test_ai_che_non_risponde(db, categorie, utente):
     with patch.object(categorization.groq_client.chat.completions, "create", side_effect=TimeoutError):
-        proposte = proponi(["Gamma Srl"], utente, db)
+        proposte = proponi(coppie(["Gamma Srl"]), utente, db)
     assert proposte["Gamma Srl"] == Proposta("Gamma Srl", None)
 
 
 def test_cosa_parte_verso_l_ai(db, categorie, utente):
     with patch.object(categorization.groq_client.chat.completions, "create",
                       return_value=risposta_ai([])) as ai:
-        proponi(["Zeta Srl", "Gamma Srl", "Gamma Srl"], utente, db)
+        proponi(coppie(["Zeta Srl", "Gamma Srl", "Gamma Srl"]), utente, db)
     argomenti = ai.call_args.kwargs
     inviati = json.loads(argomenti["messages"][1]["content"])
     #una volta sola, in ordine alfabetico
@@ -106,7 +125,7 @@ def test_al_massimo_cento_nomi(db, categorie, utente):
     nomi = [f"Negozio {chr(65 + i // 26)}{chr(65 + i % 26)}" for i in range(120)]
     with patch.object(categorization.groq_client.chat.completions, "create",
                       return_value=risposta_ai([])) as ai:
-        proposte = proponi(nomi, utente, db)
+        proposte = proponi(coppie(nomi), utente, db)
     assert len(json.loads(ai.call_args.kwargs["messages"][1]["content"])) == 100
     assert len(proposte) == 120
     assert all(p.categoria_id is None for p in proposte.values())

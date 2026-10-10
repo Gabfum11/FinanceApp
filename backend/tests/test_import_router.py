@@ -74,13 +74,15 @@ def test_anteprima_righe_e_messaggi(client, db, categorie, utente):
     assert dati["dal"] == "2026-09-02" and dati["al"] == "2026-09-18"
     per_nome = {r["nome"]: r for r in dati["righe"]}
     #le entrate non diventano righe
-    assert set(per_nome) == {"Conad Superstore Roma", "Gamma Srl Milano", "Amazon",
+    assert set(per_nome) == {"Conad Superstore Roma", "Gamma Srl Milano", "Amazon Mktp",
                              "Bonifico a Bianchi Giulia", "Prelievo Bancomat"}
     assert per_nome["Conad Superstore Roma"]["categoria_id"] == categorie["spesa"]
     assert per_nome["Conad Superstore Roma"]["messaggio"] is None
     assert per_nome["Gamma Srl Milano"]["messaggio"] == "categoria"
-    assert per_nome["Amazon"]["messaggio"] == "rimborso_totale"
-    assert per_nome["Amazon"]["selezionata"] is False
+    #"Amazon Mktp" e "Amazon Eu" sono lo stesso negozio: il rimborso si collega
+    assert per_nome["Amazon Mktp"]["messaggio"] == "rimborso_totale"
+    assert per_nome["Amazon Mktp"]["esercente"] == "amazon"
+    assert per_nome["Amazon Mktp"]["selezionata"] is False
     assert per_nome["Bonifico a Bianchi Giulia"]["messaggio"] == "categoria"
     assert per_nome["Prelievo Bancomat"]["messaggio"] == "non_spesa"
     #all'AI non arrivano bonifici ne' righe gia' risolte
@@ -88,6 +90,22 @@ def test_anteprima_righe_e_messaggi(client, db, categorie, utente):
     assert "Bonifico a Bianchi Giulia" not in inviati and "Conad Superstore Roma" not in inviati
     #privacy: nei nomi inviati non restano cifre (importi, date, carte, riferimenti)
     assert inviati and all(not any(c.isdigit() for c in nome) for nome in inviati)
+
+
+def test_dei_pagamenti_a_persone_all_ai_arriva_solo_il_motivo(client, db, categorie, utente):
+    contenuto = xlsx([["Data", "Descrizione", "Importo"],
+                      ["02/09/2026", "P2P A ROSSI   MARIO per spesa conad", "-4,00"],
+                      ["03/09/2026", "P2P A VERDI   ANGELO per cocktail", "-5,00"],
+                      ["04/09/2026", "P2P A BIANCHI   GIULIA", "-1,00"]])
+    with patch.object(import_categorie, "chiedi_ai", return_value={}) as ai:
+        risposta = client.post("/import/anteprima", files={"file": ("e.xlsx", contenuto, TIPO_XLSX)},
+                               headers={"X-Local-Date": OGGI})
+    per_nome = {r["nome"]: r for r in risposta.json()["righe"]}
+    #"spesa conad" la riconoscono le parole chiave: la categoria arriva senza AI
+    assert per_nome["P2P a Rossi Mario per spesa conad"]["categoria_id"] == categorie["spesa"]
+    inviati = ai.call_args.args[0]
+    assert inviati == ["cocktail"]
+    assert per_nome["P2P a Bianchi Giulia"]["categoria_id"] is None
 
 
 def test_anteprima_non_scrive_niente(client, db, categorie, utente):

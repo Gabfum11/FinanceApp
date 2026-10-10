@@ -180,6 +180,9 @@ def _celle_xlsx(contenuto: bytes) -> list[list]:
         fogli = []
         for foglio in libro.worksheets:
             righe = []
+            #alcune banche (Postepay) dichiarano il foglio grande A1:A1: senza
+            #questo si leggerebbe solo la prima riga. Il tetto sotto resta
+            foglio.reset_dimensions()
             for riga in foglio.iter_rows(max_col=MAX_COLONNE, values_only=True):
                 if len(righe) >= MAX_RIGHE_FOGLIO:
                     raise FileNonLeggibile("troppe_righe")

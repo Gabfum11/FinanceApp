@@ -124,6 +124,6 @@ def test_parola_chiave_dentro_un_altra_parola_non_conta(db, make_user):
     db.commit()
     utente = make_user(email="io@example.com")
     with patch.object(import_categorie, "chiedi_ai", return_value={}):
-        proposte = proponi(["Gastronomia Rossi", "Gas Naturale Spa"], utente, db)
+        proposte = proponi([("Gastronomia Rossi", "gastronomia rossi"), ("Gas Naturale Spa", "gas naturale spa")], utente, db)
     assert proposte["Gastronomia Rossi"].categoria_id is None
     assert proposte["Gas Naturale Spa"].categoria_id == gas.id

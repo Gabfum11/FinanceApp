@@ -15,7 +15,7 @@ from app.business_logic import import_categorie, security
 from app.business_logic.import_confronto import CATEGORIA, NON_SPESA, Entrata, RigaImport, confronta
 from app.business_logic.import_lettura import MAX_BYTE, FileNonLeggibile, Movimento, leggi_estratto
 from app.business_logic.import_pulizia import (
-    NON_SPESA as TIPO_NON_SPESA, PAGAMENTO, chiave_esercente, pulisci_nome, tipo_movimento,
+    BONIFICO, NON_SPESA as TIPO_NON_SPESA, PAGAMENTO, esercente, motivo, pulisci_nome, tipo_movimento,
 )
 from app.business_logic.oggi import oggi
 from app.database import get_db
@@ -40,13 +40,16 @@ def righe_da_movimenti(movimenti: list[Movimento], giorno: date) -> tuple[list[R
         #conferma li rifiuterebbe facendo fallire tutto l'import
         if movimento.data > giorno:
             continue
-        nome = pulisci_nome(movimento.testo)[:MAX_NOME]
+        #la chiave corta riconosce il negozio ("STORNO AMAZON EU" e' il rimborso
+        #di "AMZN Mktp IT"), la descrizione lunga fa ricordare l'acquisto
+        chiave = esercente(movimento.testo)
         if not movimento.uscita:
-            entrate.append(Entrata(movimento.data, chiave_esercente(nome), movimento.importo))
+            entrate.append(Entrata(movimento.data, chiave, movimento.importo))
             continue
+        nome = pulisci_nome(movimento.testo)[:MAX_NOME]
         tipo = tipo_movimento(movimento.testo)
         riga = RigaImport(indice=len(righe), data=movimento.data, testo=movimento.testo,
-                          esercente=chiave_esercente(nome), tipo=tipo, nome=nome, importo=movimento.importo)
+                          esercente=chiave, tipo=tipo, nome=nome, importo=movimento.importo)
         if tipo == TIPO_NON_SPESA:
             riga.messaggio, riga.selezionata = NON_SPESA, False
         righe.append(riga)
@@ -94,13 +97,20 @@ def anteprima(request: Request, file: UploadFile = File(...), db: Session = Depe
     #i rinnovi scaduti devono esistere come spese, o non si riconoscerebbero
     run_due_renewals(db, current_user.id, giorno)
 
-    #i bonifici contengono nomi di persone: non vanno ne' all'AI ne' in memoria
-    da_proporre = [r.nome for r in righe if r.tipo == PAGAMENTO]
+    #i bonifici contengono nomi di persone: non vanno ne' all'AI ne' in memoria.
+    #Del bonifico si propone solo il motivo ("cocktail"), se c'e', senza chiave:
+    #la memoria degli import lo cercherebbe tra i negozi
+    motivi = {r.indice: motivo(r.testo) for r in righe if r.tipo == BONIFICO}
+    da_proporre = [(r.nome, r.esercente) for r in righe if r.tipo == PAGAMENTO]
+    da_proporre += [(m, None) for m in motivi.values() if m]
     proposte = import_categorie.proponi(da_proporre, current_user.id, db)
     for riga in righe:
         if riga.tipo == PAGAMENTO:
             proposta = proposte[riga.nome]
             riga.nome, riga.categoria_id = proposta.nome[:MAX_NOME], proposta.categoria_id
+        elif motivi.get(riga.indice):
+            #il nome resta "P2P a ... per cocktail": dal motivo si prende solo la categoria
+            riga.categoria_id = proposte[motivi[riga.indice]].categoria_id
 
     dal, al = min(r.data for r in righe), max(r.data for r in righe)
     esistenti = (

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.business_logic import categorization
-from app.business_logic.import_pulizia import chiave_esercente, pulisci_nome
+from app.business_logic.import_pulizia import esercente, pulisci_nome
 from app.logging_config import get_logger
 from app.state import consuma_quota_groq
 
@@ -22,13 +22,11 @@ MAX_NOMI_AI = 100
 TEMPO_AI = 20
 
 ISTRUZIONI = (
-    "Ricevi un array JSON di nomi di negozi o servizi presi da un estratto conto. "
-    'Per ognuno rispondi con "originale" (il nome ricevuto, identico), '
-    '"nome" (lo stesso nome reso piu\' leggibile togliendo solo parole inutili come forme '
-    "societarie, numeri di filiale o localita': non aggiungere mai parole che non ci sono) e "
+    "Ricevi un array JSON di descrizioni di spese prese da un estratto conto. "
+    'Per ognuna rispondi con "originale" (la descrizione ricevuta, identica) e '
     '"categoria" (una delle voci elencate sotto, scritta esattamente com\'e\', oppure null '
     "se non sei sicuro: meglio null che una categoria sbagliata). "
-    'Rispondi solo con un JSON nella forma {"risultati": [{"originale": "...", "nome": "...", '
+    'Rispondi solo con un JSON nella forma {"risultati": [{"originale": "...", '
     '"categoria": "..."}]}. Categorie, raggruppate per ambito: '
 )
 
@@ -44,16 +42,19 @@ def _parole(testo: str) -> set[str]:
 
 
 def nome_ammesso(proposto: str, originale: str) -> bool:
-    """L'AI puo' solo togliere parole: ogni parola del nome proposto deve esserci gia'."""
+    """Ogni parola del nome proposto c'e' gia' nell'originale: e' un accorciamento, non un nome nuovo."""
     parole = _parole(proposto)
     return bool(parole) and parole <= _parole(originale)
 
 
-def memoria_import(user_id: int, db: Session) -> dict[str, tuple[str, int]]:
-    """Esercente gia' importato -> nome e categoria scelti l'ultima volta.
+def memoria_import(user_id: int, db: Session) -> dict[str, tuple[str | None, int]]:
+    """Esercente gia' importato -> descrizione e categoria dell'ultima volta.
 
-    Il testo della banca cambia ogni mese (data, ora, riferimenti): si confronta
-    il nome pulito, che resta uguale.
+    Il testo della banca cambia ogni mese (data, ora, riferimenti, dettaglio
+    dell'acquisto): si confronta la chiave del negozio, che resta uguale.
+    La descrizione si ricorda solo se l'utente l'ha riscritta: se e' ancora
+    quella presa dalla banca (o il vecchio nome corto, che ne e' un pezzo),
+    vince il dettaglio del nuovo acquisto. None = descrizione non ricordata.
     """
     righe = (
         db.query(models.Expense.descrizione_banca, models.Expense.description, models.Expense.category_id)
@@ -66,9 +67,13 @@ def memoria_import(user_id: int, db: Session) -> dict[str, tuple[str, int]]:
         .order_by(models.Expense.date.desc(), models.Expense.id.desc())
         .all()
     )
-    memoria: dict[str, tuple[str, int]] = {}
+    memoria: dict[str, tuple[str | None, int]] = {}
     for testo, descrizione, category_id in righe:
-        memoria.setdefault(chiave_esercente(pulisci_nome(testo)), (descrizione, category_id))
+        chiave = esercente(testo)
+        if chiave in memoria:
+            continue
+        riscritta = not nome_ammesso(descrizione, pulisci_nome(testo))
+        memoria[chiave] = (descrizione if riscritta else None, category_id)
     return memoria
 
 
@@ -138,7 +143,12 @@ def chiedi_ai(nomi: list[str], per_gruppo: dict[str, list[str]]) -> dict[str, di
     return {v["originale"]: v for v in voci if isinstance(v, dict) and isinstance(v.get("originale"), str)}
 
 
-def proponi(nomi: list[str], user_id: int, db: Session) -> dict[str, Proposta]:
+def proponi(righe: list[tuple[str, str | None]], user_id: int, db: Session) -> dict[str, Proposta]:
+    """Per ogni (descrizione, chiave del negozio) la proposta, per descrizione.
+
+    Chiave None: non e' un negozio (il motivo di un bonifico), la memoria degli
+    import non si consulta.
+    """
     memoria = memoria_import(user_id, db)
     memoria_manuale = categorization.memoria_categorie(user_id, db)
     per_nome, per_gruppo = _sottocategorie(db)
@@ -146,10 +156,12 @@ def proponi(nomi: list[str], user_id: int, db: Session) -> dict[str, Proposta]:
 
     proposte: dict[str, Proposta] = {}
     per_ai: list[str] = []
-    for nome in dict.fromkeys(nomi):
-        ricordato = memoria.get(chiave_esercente(nome))
+    for nome, chiave in righe:
+        if nome in proposte:
+            continue
+        ricordato = memoria.get(chiave) if chiave else None
         if ricordato:
-            proposte[nome] = Proposta(ricordato[0], ricordato[1])
+            proposte[nome] = Proposta(ricordato[0] or nome, ricordato[1])
             continue
         categoria = categorization.cerca_in_memoria(nome, memoria_manuale) or _da_regole(nome, regole)
         proposte[nome] = Proposta(nome, categoria)
@@ -159,12 +171,9 @@ def proponi(nomi: list[str], user_id: int, db: Session) -> dict[str, Proposta]:
     #oltre il tetto i nomi restano "da scegliere": meglio che una richiesta enorme
     per_ai = sorted(per_ai)[:MAX_NOMI_AI]
     risposte = chiedi_ai(per_ai, per_gruppo)
+    #all'AI solo la categoria: accorciando il nome toglierebbe proprio il
+    #dettaglio che fa ricordare l'acquisto
     for nome in per_ai:
-        voce = risposte.get(nome, {})
-        proposto = voce.get("nome")
-        categoria = voce.get("categoria")
-        proposte[nome] = Proposta(
-            proposto.strip() if isinstance(proposto, str) and nome_ammesso(proposto, nome) else nome,
-            per_nome.get(categoria) if isinstance(categoria, str) else None,
-        )
+        categoria = risposte.get(nome, {}).get("categoria")
+        proposte[nome] = Proposta(nome, per_nome.get(categoria) if isinstance(categoria, str) else None)
     return proposte
