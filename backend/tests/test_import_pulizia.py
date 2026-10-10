@@ -36,6 +36,11 @@ def test_tipo_movimento(testo, tipo):
     ("BONIFICO A FAVORE DI BIANCHI GIULIA", "Bonifico a Bianchi Giulia"),
     ("PRELIEVO BANCOMAT 100,00", "Prelievo Bancomat"),
     ("Pagamento carta SUMUP *BAR CENTRAL", "Bar Central"),
+    #il portafoglio non e' il negozio: il nome vero viene dopo
+    ("Pagamento Google Pay SHAKE UP 3 16/09/2026 10.33", "Shake Up"),
+    ("PAGAMENTO APPLE PAY BAR CENTRAL 12/09/2026", "Bar Central"),
+    ("Samsung Pay CONAD SUPERSTORE", "Conad Superstore"),
+    ("GOOGLE *YOUTUBE PREMIUM", "Google"),
 ])
 def test_pulisci_nome(testo, nome):
     assert pulisci_nome(testo) == nome

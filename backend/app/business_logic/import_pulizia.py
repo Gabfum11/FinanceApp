@@ -27,6 +27,10 @@ _PERSONA = re.compile(r"\b(?:SATISPAY|PAYPAL)\s*\*\s*[A-Z]+\s+[A-Z]+\s*$")
 #da queste parole in poi la banca scrive codici: mandato, riferimento, IBAN
 _RIFERIMENTI = re.compile(r"\b(?:CID|MANDATO|RIF|RIFERIMENTO|IBAN|CRO|TRN|COD|CODICE|ID\s+ADDEBITO)\b.*$")
 
+#portafogli del telefono: dicono come si e' pagato, non dove. Vanno tolti
+#prima dei marchi, se no "GOOGLE PAY SHAKE UP" diventerebbe "Google"
+_PORTAFOGLI = re.compile(r"\b(?:GOOGLE\s*PAY|G\s*PAY|APPLE\s*PAY|SAMSUNG\s*PAY)\b")
+
 #marchi noti: il nome giusto vince su qualunque pulizia
 ALIAS = [
     (re.compile(r"\bAMZN\b|\bAMAZON\b"), "Amazon"),
@@ -81,7 +85,7 @@ def _codice(parola: str) -> bool:
 
 
 def pulisci_nome(testo: str) -> str:
-    maiuscolo = " ".join(testo.upper().split())
+    maiuscolo = " ".join(_PORTAFOGLI.sub(" ", testo.upper()).split())
     for regola, nome in ALIAS:
         if regola.search(maiuscolo):
             return nome
@@ -95,7 +99,8 @@ def pulisci_nome(testo: str) -> str:
     parole = [p for p in pulito.split() if re.search(r"\w", p) and not _codice(p)]
     while parole and parole[0] in _PREFISSI:
         parole.pop(0)
-    while parole and parole[-1] in _SUFFISSI:
+    #"SHAKE UP 3": un numero corto in coda e' il punto vendita, non il nome
+    while parole and (parole[-1] in _SUFFISSI or (parole[-1].isdigit() and len(parole) > 1)):
         parole.pop()
     if not parole:
         return _maiuscole(" ".join(testo.split()))[:60]
