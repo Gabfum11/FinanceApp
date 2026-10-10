@@ -380,6 +380,7 @@
     "sceltaTitolo": "Scegli l'estratto conto",
     "sceltaTesto": "Excel (.xlsx, .xls) o CSV, scaricato dalla banca",
     "sceltaPulsante": "Scegli file",
+    "sceltaAiuto": "Ce l'hai su WhatsApp o nella mail? Salvalo prima nei Download del telefono.",
     "sceltaNota": "Leggiamo da soli le colonne di data, descrizione e importo. Le entrate non vengono importate.",
     "analisi": "Analizziamo l'estratto…",
     "analisiLenta": "Può volerci fino a un minuto.",

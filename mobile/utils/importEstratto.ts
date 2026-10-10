@@ -57,7 +57,9 @@ export function scegliFile(): Promise<File | null> {
     }
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".xlsx,.xls,.csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    //niente accept: sul telefono i file arrivati da WhatsApp o dalla mail
+    //possono avere un tipo generico e il filtro li nasconderebbe. Un file
+    //sbagliato lo scarta comunque il server con "non_riconosciuto"
     input.onchange = () => resolve(input.files?.[0] ?? null);
     input.addEventListener("cancel", () => resolve(null));
     input.click();

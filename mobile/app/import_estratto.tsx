@@ -223,6 +223,7 @@ export default function ImportEstratto() {
             </Pressable>
           </View>
           <Text style={styles.nota}>{t("importa.sceltaNota")}</Text>
+          <Text style={styles.nota}>{t("importa.sceltaAiuto")}</Text>
         </View>
       )}
 
