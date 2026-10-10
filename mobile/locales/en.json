@@ -374,7 +374,8 @@
   },
   "importa": {
     "titolo": "Import transactions",
-    "ingresso": "Lots of transactions? Import your bank statement",
+    "ingresso": "Import your bank statement",
+    "ingressoSotto": "Lots of transactions? Add them all at once",
     "ingressoHome": "Have a bank statement? Import it",
     "sceltaTitolo": "Choose your bank statement",
     "sceltaTesto": "Excel (.xlsx, .xls) or CSV, downloaded from your bank",

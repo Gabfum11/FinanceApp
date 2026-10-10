@@ -374,7 +374,8 @@
   },
   "importa": {
     "titolo": "Importa movimenti",
-    "ingresso": "Hai molti movimenti? Importa l'estratto conto",
+    "ingresso": "Importa l'estratto conto",
+    "ingressoSotto": "Hai molti movimenti? Caricali tutti insieme",
     "ingressoHome": "Hai un estratto conto? Importalo",
     "sceltaTitolo": "Scegli l'estratto conto",
     "sceltaTesto": "Excel (.xlsx, .xls) o CSV, scaricato dalla banca",

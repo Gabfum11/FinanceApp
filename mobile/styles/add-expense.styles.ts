@@ -79,18 +79,42 @@ export const creaStili = (tokens: Colori) => {
   },
   //ingresso all'import dell'estratto: sempre visibile, ma sotto il titolo e
   //senza riempimento, per non competere con il tastierino
+  // card e non semplice testo: bordo, icona su cerchio e freccia dicono
+  // subito che si può toccare
   rigaImport: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    minHeight: 44,
+    gap: 12,
+    minHeight: 56,
     marginHorizontal: 16,
+    marginTop: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+  },
+  rigaImportIcona: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rigaImportTesti: {
+    flex: 1,
+    gap: 2,
   },
   rigaImportTesto: {
     color: colors.darkGreen,
     fontWeight: fontWeight.semibold,
     fontSize: fontSize.sm,
+  },
+  rigaImportSotto: {
+    color: colors.textSecondary,
+    fontSize: fontSize.xs,
   },
 
   scrollContent: {

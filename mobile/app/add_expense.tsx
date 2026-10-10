@@ -429,8 +429,14 @@ export default function AddExpenseScreen() {
           onPress={() => router.replace("/import_estratto")}
           accessibilityRole="link"
         >
-          <MaterialCommunityIcons name="tray-arrow-down" size={18} color={tokens.primaryDark} />
-          <Text style={styles.rigaImportTesto}>{t("importa.ingresso")}</Text>
+          <View style={styles.rigaImportIcona}>
+            <MaterialCommunityIcons name="tray-arrow-down" size={20} color={tokens.primaryDark} />
+          </View>
+          <View style={styles.rigaImportTesti}>
+            <Text style={styles.rigaImportTesto}>{t("importa.ingresso")}</Text>
+            <Text style={styles.rigaImportSotto}>{t("importa.ingressoSotto")}</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color={colors.chevron} />
         </Pressable>
       )}
 
