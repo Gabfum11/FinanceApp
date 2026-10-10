@@ -2,6 +2,7 @@ from datetime import date, datetime
 from datetime import date as date_type #serve dove un campo si chiama "date" e oscura il tipo
 from pydantic import BaseModel,Field,EmailStr
 from typing import Literal
+from uuid import UUID
 #schema in entrata(create) -> verifica che i dati che l'utente manda sono nel formato che ci si aspetta
 #schema in uscita(out) -> verifica se il sistema restituisce solo ciò che è appropriato da mostrare nella forma giusta
 
@@ -231,3 +232,18 @@ class ExchangeRateOut(BaseModel):
     to_currency: str
     rate: float
     date: date_type #il giorno del tasso usato: nel fine settimana e' l'ultimo pubblicato
+
+
+class RigaConferma(BaseModel):
+    """Una riga dell'estratto che l'utente ha scelto di importare."""
+    data: date
+    importo: float = Field(gt=0, le=1_000_000)
+    descrizione: str = Field(min_length=1, max_length=100)
+    #obbligatoria: le righe senza categoria si sistemano prima di importare
+    categoria_id: int
+    testo_banca: str = Field(min_length=1, max_length=300)
+
+
+class ImportConferma(BaseModel):
+    codice: UUID
+    righe: list[RigaConferma] = Field(min_length=1, max_length=2000)

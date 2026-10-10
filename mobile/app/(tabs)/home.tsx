@@ -530,6 +530,15 @@ export default function HomeScreen() {
             <MaterialCommunityIcons name="plus" size={18} color={colors.surfaceDark} />
             <Text style={styles.emptyPulsanteTesto}>{t("schede.aggiungi")}</Text>
           </Pressable>
+          {/* chi arriva con mesi di movimenti parte subito con i dati veri */}
+          <Pressable
+            style={({ pressed }) => [styles.linkExpenses, pressed && styles.premuto]}
+            onPress={() => router.push("/import_estratto")}
+            accessibilityRole="link"
+          >
+            <MaterialCommunityIcons name="tray-arrow-down" size={18} color={colors.primaryDark} />
+            <Text style={styles.linkExpensesTesto}>{t("importa.ingressoHome")}</Text>
+          </Pressable>
         </View>
       )}
       </>

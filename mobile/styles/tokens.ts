@@ -75,6 +75,13 @@ const chiaro = {
   dangerSoft: "#FDEAEA",
   /** sfondo tenue dei messaggi informativi (istruzioni via email) */
   infoSoft: "#FDF3E7",
+  /** messaggi della schermata di import: "Scegliere la categoria" e pulsante bloccato.
+   *  Piu' scuro di warningText, che sul suo sfondo arrivava a 2,9:1 */
+  msgArancio: "#9A6200",
+  msgArancioSoft: "#FDF3E1",
+  /** messaggi "gia' inserita" e "gia' registrata dall'abbonamento" */
+  msgBlu: "#2F5FA8",
+  msgBluSoft: "#E8F0FB",
 
   // --- componenti disabilitati ---
   disabled: "#DCDCE0",
@@ -138,6 +145,10 @@ const scuro: Colori = {
   dangerDark: "#FF8F82",
   dangerSoft: "#3A1F1C",
   infoSoft: "#3A2E1C",
+  msgArancio: "#F0BE62",
+  msgArancioSoft: "#3A2F1A",
+  msgBlu: "#93B9F2",
+  msgBluSoft: "#1C2A3D",
 
   disabled: "#2A3530",
   disabledText: "#6B756F",

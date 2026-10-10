@@ -72,6 +72,7 @@ function Contenuto() {
           {/* sul computer si aprono sopra la pagina, che resta visibile dietro */}
           <Stack.Screen name="add_expense" options={{ presentation: largo ? "transparentModal" : "modal", headerShown: false }} />
           <Stack.Screen name="assistant" options={{ presentation: largo ? "transparentModal" : "modal", headerShown: false }} />
+          <Stack.Screen name="import_estratto" options={{ presentation: largo ? "transparentModal" : "modal", headerShown: false }} />
           <Stack.Screen name="verify_email" options={{ headerShown: false }} />
           <Stack.Screen name="resetPassword" options={{ headerShown: false }} />
           <Stack.Screen name="all_expenses" options={{ headerShown: false }} />

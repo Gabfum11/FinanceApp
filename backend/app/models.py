@@ -87,6 +87,13 @@ class Expense(Base):
     subscription_id = Column(Integer, ForeignKey("subscriptions.id", ondelete="SET NULL"), nullable=True, index=True)
     subscription = relationship("Subscriptions")
 
+    #testo originale della riga dell'estratto conto, solo per le spese importate:
+    #la memoria degli import lo ripulisce e lo riconosce nei caricamenti successivi
+    descrizione_banca = Column(String, nullable=True)
+    #codice del caricamento che ha creato la spesa: "Annulla" cancella tutte
+    #le spese con lo stesso codice, e una conferma ripetuta non crea doppioni
+    importazione_id = Column(String(36), nullable=True, index=True)
+
     owner = relationship("User", back_populates="expenses") #permette facilmente di ottenere il proprietario partendo da una spesa
     category = relationship("Category", back_populates="expenses") #se aggiungi una spesa, sqlalchemy aggiorna automaticamente la lista di spese della categoria, e viceversa
 

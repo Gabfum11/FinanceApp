@@ -77,6 +77,21 @@ export const creaStili = (tokens: Colori) => {
   headerSpacer: {
     width: 48,
   },
+  //ingresso all'import dell'estratto: sempre visibile, ma sotto il titolo e
+  //senza riempimento, per non competere con il tastierino
+  rigaImport: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    minHeight: 44,
+    marginHorizontal: 16,
+  },
+  rigaImportTesto: {
+    color: colors.darkGreen,
+    fontWeight: fontWeight.semibold,
+    fontSize: fontSize.sm,
+  },
 
   scrollContent: {
     paddingBottom: 24,

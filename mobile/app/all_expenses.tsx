@@ -1,7 +1,8 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { SectionList, View, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { IconButton, Text, Searchbar } from "react-native-paper";
+import { IconButton, Text, Searchbar, Snackbar } from "react-native-paper";
+import { annullaImport } from "@/utils/importEstratto";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
@@ -70,6 +71,20 @@ export default function ExpenseList() {
     const [gruppoDiCategoria, setGruppoDiCategoria] = useState<Map<number, Gruppo>>(new Map());
     //id della spesa in attesa di conferma: null quando il dialogo e' chiuso
     const [daEliminare, setDaEliminare] = useState<number | null>(null);
+    //arrivando dall'import: quante spese sono entrate e il codice per annullarle
+    const { importate, codice } = useLocalSearchParams<{ importate?: string; codice?: string }>();
+    const [avvisoImport, setAvvisoImport] = useState<string | null>(null);
+    useEffect(() => {
+        if (importate && codice) setAvvisoImport(t("importa.importate", { count: Number(importate) }));
+    }, [importate, codice]);
+
+    async function annullaUltimoImport() {
+        if (!codice) return;
+        const riuscito = await annullaImport(codice);
+        router.setParams({ importate: undefined, codice: undefined });
+        setAvvisoImport(riuscito ? t("importa.annullato") : t("importa.erroreAnnulla"));
+        if (riuscito) loadExpenses();
+    }
 
     //i chip mostrano i gruppi, non le sottocategorie: con 46 voci sarebbero
     //troppi da scorrere. Compaiono solo i gruppi che hanno spese registrate
@@ -353,6 +368,15 @@ export default function ExpenseList() {
             )
         }
         />
+
+        <Snackbar
+            visible={avvisoImport !== null}
+            onDismiss={() => setAvvisoImport(null)}
+            duration={8000}
+            action={importate && codice ? { label: t("comune.annulla"), onPress: annullaUltimoImport } : undefined}
+        >
+            {avvisoImport}
+        </Snackbar>
 
         <ConfirmDialog
             visible={daEliminare !== null}

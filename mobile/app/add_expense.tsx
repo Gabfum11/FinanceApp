@@ -420,6 +420,20 @@ export default function AddExpenseScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
+      {/* solo per una spesa nuova: in modifica non ha senso importare.
+          replace e non push: da "Importa" l'indietro torna alla pagina di
+          partenza, non a una "Nuova spesa" vuota */}
+      {!isEditing && (
+        <Pressable
+          style={({ pressed }) => [styles.rigaImport, pressed && { opacity: 0.7 }]}
+          onPress={() => router.replace("/import_estratto")}
+          accessibilityRole="link"
+        >
+          <MaterialCommunityIcons name="tray-arrow-down" size={18} color={tokens.primaryDark} />
+          <Text style={styles.rigaImportTesto}>{t("importa.ingresso")}</Text>
+        </Pressable>
+      )}
+
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}

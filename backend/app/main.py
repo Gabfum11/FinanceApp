@@ -11,7 +11,7 @@ from slowapi import _rate_limit_exceeded_handler
 from app.database import get_db
 from app.logging_config import get_logger, setup_logging
 from app.state import limiter
-from app.routers import expenses, categories, auth, subscriptions, budget, export, internal, cambi, assistant
+from app.routers import expenses, categories, auth, subscriptions, budget, export, internal, cambi, assistant, import_estratto
 
 #prima di creare l'app, così anche i messaggi di avvio passano dal formato scelto
 setup_logging()
@@ -134,6 +134,7 @@ app.include_router(export.router)
 app.include_router(internal.router)
 app.include_router(cambi.router)
 app.include_router(assistant.router)
+app.include_router(import_estratto.router)
 @app.get("/")
 def read_root():
     return {"message": "Finance App API is running"}
