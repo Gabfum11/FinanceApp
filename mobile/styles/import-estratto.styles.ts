@@ -7,6 +7,9 @@ export const creaStili = (colors: Colori) =>
     header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 4, paddingTop: 8 },
     headerTitle: { flex: 1, textAlign: "center", fontWeight: fontWeight.bold },
     headerSpacer: { width: 48 },
+    //sul computer: titolo allineato a sinistra, la ✕ la mette FinestraComputer
+    headerComputer: { minHeight: 64, justifyContent: "center", paddingLeft: spacing.lg, paddingRight: 64 },
+    headerTitoloComputer: { fontWeight: fontWeight.bold },
     passo: { textAlign: "center", fontSize: fontSize.xs, color: colors.textMuted, marginBottom: spacing.sm },
 
     // --- scelta del file ---
@@ -15,12 +18,17 @@ export const creaStili = (colors: Colori) =>
       borderWidth: 2, borderStyle: "dashed", borderColor: colors.border, borderRadius: radius.lg,
       paddingVertical: spacing.xl, paddingHorizontal: spacing.md, alignItems: "center", gap: spacing.sm,
     },
+    riquadroFileComputer: { paddingVertical: 40 },
+    riquadroFileSopra: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+    oppure: { fontSize: fontSize.sm, color: colors.textMuted, marginVertical: 2 },
     iconaFile: {
       width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primarySoft,
       alignItems: "center", justifyContent: "center",
     },
     sceltaTitolo: { fontSize: fontSize.base, fontWeight: fontWeight.bold, color: colors.text },
     nota: { fontSize: fontSize.sm, color: colors.textMuted, textAlign: "center" },
+    notaRiga: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
+    notaTesto: { flex: 1, fontSize: fontSize.sm, lineHeight: 20, color: colors.textMuted },
     pulsante: {
       minHeight: 46, borderRadius: radius.pill, backgroundColor: colors.primary, paddingHorizontal: spacing.xl,
       flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm,

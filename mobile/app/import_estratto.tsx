@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Pressable, ScrollView, View } from "react-native";
+import { AccessibilityInfo, Platform, Pressable, ScrollView, View } from "react-native";
 import { ActivityIndicator, IconButton, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -13,6 +13,7 @@ import { RigaImportata } from "@/components/RigaImportata";
 import { FoglioModificaImport, type CategoriaScelta, type Gruppo } from "@/components/FoglioModificaImport";
 import { apiFetch } from "@/utils/apiFetch";
 import { usePreferenze } from "@/utils/preferenze";
+import { useSchermoLargo } from "@/utils/layout";
 import { localeAttuale } from "@/utils/date";
 import {
   chiediAnteprima,
@@ -56,6 +57,10 @@ export default function ImportEstratto() {
   const [erroreInvio, setErroreInvio] = useState(false);
   const [gruppi, setGruppi] = useState<Gruppo[]>([]);
   const [inModifica, setInModifica] = useState<{ indice: number; inFila: boolean; totale: number } | null>(null);
+  const largo = useSchermoLargo();
+  //sul computer il file si puo' anche trascinare nel riquadro tratteggiato
+  const riquadro = useRef<View>(null);
+  const [sopraRiquadro, setSopraRiquadro] = useState(false);
   const lista = useRef<ScrollView>(null);
   //posizione verticale di ogni riga, per scorrere fino alla prima da sistemare
   const posizioni = useRef<Map<number, number>>(new Map());
@@ -118,6 +123,37 @@ export default function ImportEstratto() {
       if (richiesta.current === controllo) richiesta.current = null;
     }
   }
+
+  useEffect(() => {
+    if (!largo || Platform.OS !== "web" || fase !== "scelta") return;
+    //su react-native-web il ref di una View e' il div della pagina
+    const nodo = riquadro.current as unknown as HTMLElement | null;
+    if (!nodo) return;
+    //dragenter/dragleave scattano anche entrando nei figli: si contano
+    let dentro = 0;
+    const entra = (e: DragEvent) => { e.preventDefault(); dentro++; setSopraRiquadro(true); };
+    const sopra = (e: DragEvent) => e.preventDefault();
+    const esce = () => { dentro = Math.max(0, dentro - 1); if (dentro === 0) setSopraRiquadro(false); };
+    const lascia = (e: DragEvent) => {
+      e.preventDefault();
+      dentro = 0;
+      setSopraRiquadro(false);
+      const file = e.dataTransfer?.files?.[0];
+      if (!file) return;
+      setNomeFile(file.name);
+      analizza(file);
+    };
+    nodo.addEventListener("dragenter", entra);
+    nodo.addEventListener("dragover", sopra);
+    nodo.addEventListener("dragleave", esce);
+    nodo.addEventListener("drop", lascia);
+    return () => {
+      nodo.removeEventListener("dragenter", entra);
+      nodo.removeEventListener("dragover", sopra);
+      nodo.removeEventListener("dragleave", esce);
+      nodo.removeEventListener("drop", lascia);
+    };
+  }, [largo, fase]);
 
   function cambiaSelezione(indice: number) {
     setRighe((attuali) => attuali.map((r) => (r.indice === indice ? { ...r, selezionata: !r.selezionata } : r)));
@@ -193,27 +229,48 @@ export default function ImportEstratto() {
   }
 
   return (
-    <FinestraComputer conChiudi={false}>
+    //sul computer e' una finestra: titolo a sinistra e ✕ a destra, come le altre
+    <FinestraComputer conChiudi={largo}>
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <View style={styles.header}>
-        <IconButton
-          icon="chevron-left"
-          size={28}
-          onPress={() => (fase === "caricamento" ? annullaAnalisi() : router.back())}
-          accessibilityLabel={t("comune.indietro")}
-        />
-        <Text variant="titleMedium" style={styles.headerTitle}>{t("importa.titolo")}</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {largo ? (
+        <View style={styles.headerComputer}>
+          <Text variant="titleMedium" style={styles.headerTitoloComputer} accessibilityRole="header">
+            {t("importa.titolo")}
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.header}>
+          <IconButton
+            icon="chevron-left"
+            size={28}
+            onPress={() => (fase === "caricamento" ? annullaAnalisi() : router.back())}
+            accessibilityLabel={t("comune.indietro")}
+          />
+          <Text variant="titleMedium" style={styles.headerTitle}>{t("importa.titolo")}</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+      )}
 
       {fase === "scelta" && (
         <View style={styles.scelta}>
-          <View style={styles.riquadroFile}>
+          <View
+            ref={riquadro}
+            style={[styles.riquadroFile, largo && styles.riquadroFileComputer, sopraRiquadro && styles.riquadroFileSopra]}
+          >
             <View style={styles.iconaFile}>
-              <MaterialCommunityIcons name="file-excel" size={30} color={colors.primaryDark} />
+              <MaterialCommunityIcons
+                name={sopraRiquadro ? "tray-arrow-down" : "file-excel"}
+                size={30}
+                color={colors.primaryDark}
+              />
             </View>
-            <Text style={styles.sceltaTitolo}>{t("importa.sceltaTitolo")}</Text>
+            <Text style={styles.sceltaTitolo}>
+              {sopraRiquadro
+                ? t("importa.sceltaRilascia")
+                : largo ? t("importa.sceltaTitoloComputer") : t("importa.sceltaTitolo")}
+            </Text>
             <Text style={styles.nota}>{t("importa.sceltaTesto")}</Text>
+            {largo && <Text style={styles.oppure}>{t("importa.sceltaOppure")}</Text>}
             <Pressable
               style={({ pressed }) => [styles.pulsante, pressed && styles.premuto]}
               onPress={scegli}
@@ -222,8 +279,12 @@ export default function ImportEstratto() {
               <Text style={styles.pulsanteTesto}>{t("importa.sceltaPulsante")}</Text>
             </Pressable>
           </View>
-          <Text style={styles.nota}>{t("importa.sceltaNota")}</Text>
-          <Text style={styles.nota}>{t("importa.sceltaAiuto")}</Text>
+          <View style={styles.notaRiga}>
+            <MaterialCommunityIcons name="information-outline" size={18} color={colors.textMuted} />
+            <Text style={styles.notaTesto}>{t("importa.sceltaNota")}</Text>
+          </View>
+          {/* WhatsApp e Download riguardano il telefono: sul computer il file si trascina */}
+          {!largo && <Text style={styles.nota}>{t("importa.sceltaAiuto")}</Text>}
         </View>
       )}
 
