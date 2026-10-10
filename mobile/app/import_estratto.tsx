@@ -279,12 +279,6 @@ export default function ImportEstratto() {
               <Text style={styles.pulsanteTesto}>{t("importa.sceltaPulsante")}</Text>
             </Pressable>
           </View>
-          <View style={styles.notaRiga}>
-            <MaterialCommunityIcons name="information-outline" size={18} color={colors.textMuted} />
-            <Text style={styles.notaTesto}>{t("importa.sceltaNota")}</Text>
-          </View>
-          {/* WhatsApp e Download riguardano il telefono: sul computer il file si trascina */}
-          {!largo && <Text style={styles.nota}>{t("importa.sceltaAiuto")}</Text>}
         </View>
       )}
 

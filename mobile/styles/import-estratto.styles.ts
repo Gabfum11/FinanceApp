@@ -27,8 +27,6 @@ export const creaStili = (colors: Colori) =>
     },
     sceltaTitolo: { fontSize: fontSize.base, fontWeight: fontWeight.bold, color: colors.text },
     nota: { fontSize: fontSize.sm, color: colors.textMuted, textAlign: "center" },
-    notaRiga: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
-    notaTesto: { flex: 1, fontSize: fontSize.sm, lineHeight: 20, color: colors.textMuted },
     pulsante: {
       minHeight: 46, borderRadius: radius.pill, backgroundColor: colors.primary, paddingHorizontal: spacing.xl,
       flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm,
