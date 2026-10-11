@@ -126,11 +126,12 @@ def _righe(db: Session, utente: models.User, inizio: date, fine: date, categoria
     ids = _categorie_cercate(db, categoria)
     if ids is not None:
         query = query.filter(models.Expense.category_id.in_(ids))
+    righe = query.all()
     if testo:
-        #% e _ scritti dall'utente vanno cercati come caratteri, non come jolly
-        letterale = str(testo).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        query = query.filter(models.Expense.description.ilike(f"%{letterale}%", escape="\\"))
-    return query.all()
+        #la descrizione e' cifrata nel database: si cerca dopo averla letta
+        cercato = str(testo).casefold()
+        righe = [r for r in righe if cercato in r.description.casefold()]
+    return righe
 
 
 def _filtri(categoria, testo) -> dict:

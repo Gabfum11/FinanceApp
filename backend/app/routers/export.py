@@ -102,11 +102,10 @@ def export_expenses(db: Session = Depends(get_db), current_user: models.User = D
 @router.get("/subscriptions.csv")
 def export_subscriptions(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
     lingua = lingua_valida(current_user.language)
-    abbonamenti = (
-        db.query(models.Subscriptions)
-        .filter(models.Subscriptions.user_id == current_user.id)
-        .order_by(models.Subscriptions.description)
-        .all()
+    #la descrizione e' cifrata nel database: si ordina dopo averla letta
+    abbonamenti = sorted(
+        db.query(models.Subscriptions).filter(models.Subscriptions.user_id == current_user.id).all(),
+        key=lambda s: s.description,
     )
 
     righe = []

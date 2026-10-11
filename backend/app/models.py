@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base 
+from app.business_logic.cifratura import TestoCifrato, NumeroCifrato
 
 
 class User(Base):
@@ -15,7 +16,7 @@ class User(Base):
     #id stabile dell'account Google: l'email puo' cambiare, questo no perche' e' un identificativo univoco generato da Google, serverà per login con Google. Se l'utente entra solo con email/password, resta null
     google_id = Column(String, index=True, unique=True, nullable=True) #vuoto se l'utente si registra normalmente, non con Google
     nickname = Column(String, nullable=True)
-    monthly_budget = Column(Float, nullable=True)
+    monthly_budget = Column(NumeroCifrato, nullable=True)
     budget_start_day = Column(Integer, nullable=True, default=1)
     is_active = Column(Boolean, default=True) 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -65,7 +66,7 @@ class Expense(Base):
     __tablename__ = "expenses"
 
     id = Column(Integer, primary_key=True, index=True)
-    description = Column(String, nullable=False)
+    description = Column(TestoCifrato, nullable=False)
     amount = Column(Float, nullable=False)
     date = Column(Date, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -89,7 +90,7 @@ class Expense(Base):
 
     #testo originale della riga dell'estratto conto, solo per le spese importate:
     #la memoria degli import lo ripulisce e lo riconosce nei caricamenti successivi
-    descrizione_banca = Column(String, nullable=True)
+    descrizione_banca = Column(TestoCifrato, nullable=True)
     #codice del caricamento che ha creato la spesa: "Annulla" cancella tutte
     #le spese con lo stesso codice, e una conferma ripetuta non crea doppioni
     importazione_id = Column(String(36), nullable=True, index=True)
@@ -101,7 +102,7 @@ class Subscriptions(Base):
     __tablename__ = "subscriptions"
 
     id = Column(Integer, primary_key=True, index=True)
-    description = Column(String, nullable=False)
+    description = Column(TestoCifrato, nullable=False)
     amount = Column(Float, nullable=False)
     frequency = Column(String, nullable=False)
     next_date = Column(Date, nullable=False)
@@ -156,7 +157,7 @@ class BudgetHistory(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     #vuoto = da qui in poi nessun budget: serve a tenere fermo un periodo quando
     #si corregge quello prima, se allora un budget non c'era
-    amount = Column(Float, nullable=True)
+    amount = Column(NumeroCifrato, nullable=True)
     #un ciclo usa l'ultima riga con valid_from entro la sua fine: un budget
     #cambiato a meta' mese vale per tutto quel mese, non per i precedenti
     valid_from = Column(Date, nullable=False)
