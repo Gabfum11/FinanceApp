@@ -56,7 +56,9 @@ def list_expenses(limit: int | None = Query(None, gt=0, le=500), db: Session = D
     #limit e' opzionale: senza, l'endpoint si comporta come prima. Serve alla Home,
     #che mostra solo le ultime spese e non deve scaricare tutto lo storico
     run_due_renewals(db, current_user.id, giorno) #i rinnovi scaduti devono comparire tra le spese
-    query = db.query(models.Expense).filter(models.Expense.user_id==current_user.id).order_by(models.Expense.created_at.desc())
+    #per data della spesa, non di inserimento: un estratto importato oggi non deve coprire le spese recenti.
+    #A parita' di giorno resta in cima l'ultima inserita (id piu' alto)
+    query = db.query(models.Expense).filter(models.Expense.user_id==current_user.id).order_by(models.Expense.date.desc(), models.Expense.id.desc())
     if limit is not None:
         query = query.limit(limit)
     expenses = query.all() #estrae le righe della tabella expense

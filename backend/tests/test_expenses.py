@@ -92,6 +92,18 @@ class TestLimiteSullaLista:
         limitate = client.get("/expenses/?limit=3").json()
         assert [e["id"] for e in limitate] == [e["id"] for e in tutte[:3]]
 
+    def test_ordinate_per_data_non_per_inserimento(self, client, db_session, utente):
+        """Una spesa vecchia inserita per ultima (es. da un estratto) non deve finire in cima."""
+        db = db_session()
+        db.add(models.Expense(description="Oggi", amount=1.0, date=date.today(), user_id=utente))
+        db.add(models.Expense(description="Oggi bis", amount=2.0, date=date.today(), user_id=utente))
+        db.add(models.Expense(description="Mese scorso", amount=3.0, date=date.today() - timedelta(days=30), user_id=utente))
+        db.commit()
+        db.close()
+
+        descrizioni = [e["description"] for e in client.get("/expenses/?limit=3").json()]
+        assert descrizioni == ["Oggi bis", "Oggi", "Mese scorso"]
+
     def test_limite_piu_grande_del_totale(self, client, dieci_spese):
         assert len(client.get("/expenses/?limit=100").json()) == 10
 
