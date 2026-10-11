@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Image, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { IconButton, Text } from "react-native-paper";
+import { useSchermoStretto } from "@/utils/layout";
 import { useTranslation } from "react-i18next";
 import { ModuloAccesso, ModuloRegistrazione } from "@/components/ModuliAccesso";
 import { useStili } from "@/utils/tema";
@@ -19,9 +20,9 @@ type Props = {
 };
 
 /**
- * Accesso e registrazione sopra la landing, sul computer: chi legge la pagina
- * non la perde di vista, e passa da un modulo all'altro senza cambiare pagina.
- * Sul telefono i pulsanti portano ancora a /login e /register, a schermo intero.
+ * Accesso e registrazione sopra la landing, sul computer e sul telefono: chi
+ * legge la pagina non la perde di vista, e passa da un modulo all'altro senza
+ * cambiare pagina. /login e /register restano per chi ci arriva da un link.
  *
  * Esc, un clic fuori e la ✕ chiudono, come nelle altre finestre del computer.
  *
@@ -33,6 +34,8 @@ export function FinestraAccesso({ modo, onCambia, onDismiss }: Props) {
   const { t } = useTranslation();
   const styles = useStili(creaStili);
   const velo = useStili(creaStiliVelo);
+  //sul telefono i 24px di margine intorno rubano spazio al modulo
+  const stretto = useSchermoStretto();
   //l'errore sta sotto il modulo, vicino al pulsante: una Snackbar finirebbe
   //in fondo alla pagina, dietro il velo della finestra
   const [errore, setErrore] = useState("");
@@ -51,10 +54,10 @@ export function FinestraAccesso({ modo, onCambia, onDismiss }: Props) {
 
   return (
     <Modal visible={modo !== null} transparent animationType="fade" onRequestClose={onDismiss}>
-      <View style={velo.velo}>
+      <View style={[velo.velo, stretto && styles.veloStretto]}>
         <Pressable style={velo.fuori} onPress={onDismiss} accessibilityLabel={t("comune.chiudi")} />
         <View style={[velo.finestra, styles.finestra]} role="dialog" aria-modal>
-          <ScrollView contentContainerStyle={styles.contenuto} keyboardShouldPersistTaps="handled">
+          <ScrollView contentContainerStyle={[styles.contenuto, stretto && styles.contenutoStretto]} keyboardShouldPersistTaps="handled">
             <View style={styles.marchio}>
               <Image source={LOGO} style={styles.logo} accessibilityIgnoresInvertColors />
               <Text style={styles.nomeApp}>TrackIt</Text>
@@ -92,6 +95,13 @@ const creaStili = (colors: Colori) =>
     },
     contenuto: {
       padding: spacing.xl,
+    },
+    veloStretto: {
+      padding: spacing.md,
+    },
+    contenutoStretto: {
+      padding: spacing.lg,
+      paddingTop: spacing.xl,
     },
     marchio: {
       flexDirection: "row",

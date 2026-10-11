@@ -4,7 +4,6 @@ import { Text } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { apertaDallaHome } from "@/utils/avvio";
 import { useStili, useTema } from "@/utils/tema";
 import { fontSize, fontWeight, spacing, type Colori } from "@/styles/tokens";
 
@@ -19,13 +18,13 @@ export function TornaAllaLanding() {
   const { t } = useTranslation();
   const { colors } = useTema();
   const styles = useStili(creaStili);
-  // La landing c'e' solo nel browser (app/index.tsx): nell'app aperta dall'icona
-  // sulla Home "/" rimanda al login, e la freccia girerebbe in tondo.
+  // La landing c'e' solo nel browser (app/index.tsx), anche aperto dall'icona
+  // sulla Home: nell'app nativa "/" rimanda al login, e la freccia girerebbe in tondo.
   // Si decide dopo il primo disegno: la pagina statica e' generata senza
   // browser, e un valore diverso al primo disegno non combacerebbe con lei
   const [disponibile, setDisponibile] = useState(false);
   useEffect(() => {
-    setDisponibile(Platform.OS === "web" && !apertaDallaHome());
+    setDisponibile(Platform.OS === "web");
   }, []);
 
   if (!disponibile) return null;

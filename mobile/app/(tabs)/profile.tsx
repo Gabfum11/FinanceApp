@@ -1,4 +1,4 @@
-import { View, Pressable } from "react-native";
+import { View, Pressable, Platform } from "react-native";
 import { Text, Dialog, Portal, TextInput, ActivityIndicator, Snackbar, Switch, RadioButton } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { esportaCsv } from "@/utils/exportData";
@@ -22,6 +22,11 @@ import { VALUTE, LINGUE, simbolo, type Valuta, type Lingua } from "@/utils/forma
 import { useTranslation } from "react-i18next";
 import { useStili, useTema } from "@/utils/tema";
 import { DIALOGO_LARGO, useSchermoLargo } from "@/utils/layout";
+
+//dopo il logout (o l'account eliminato): nel browser, anche dall'icona sulla
+//Home, si torna alla landing; "/" la mostra a chi non ha fatto l'accesso.
+//Nell'app nativa la landing non c'e' e si va al login
+const DOPO_USCITA = Platform.OS === "web" ? "/" : "/login";
 
 
 
@@ -134,7 +139,7 @@ export default function ProfileScreen() {
             await dimenticaDispositivo(false);
             //i token in uso sono appena stati invalidati: vanno buttati anche qui
             await cancellaSessione();
-            router.replace("/login");
+            router.replace(DOPO_USCITA);
         } catch {
             //senza rete la revoca non parte: l'utente resta dov'e'
         } finally {
@@ -168,7 +173,7 @@ export default function ProfileScreen() {
             await dimenticaDispositivo(false);
             //l'account non esiste piu': i token vanno buttati anche qui
             await cancellaSessione();
-            router.replace("/login");
+            router.replace(DOPO_USCITA);
         } catch {
             setDeleteError(t("errori.rete"));
         } finally {
@@ -203,7 +208,7 @@ export default function ProfileScreen() {
         await dimenticaDispositivo();
         //il server revoca il refresh token: copiato altrove, non varrebbe piu'
         await chiudiSessione();
-        router.replace("/login");
+        router.replace(DOPO_USCITA);
     }
 
     //disconnetti ed elimina: sotto le sezioni sul telefono, sotto l'account sul computer.

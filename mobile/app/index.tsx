@@ -1,20 +1,18 @@
-import { Redirect, useRouter, type Href } from "expo-router";
+import { Redirect, type Href } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, ActivityIndicator, Platform } from "react-native";
 import { haSessione, rinnovaSeInScadenza } from "@/utils/session";
 import { presentazioneVista } from "@/utils/presentazione";
-import { apertaDallaHome, segnaPaginaPronta } from "@/utils/avvio";
+import { segnaPaginaPronta } from "@/utils/avvio";
 import { Landing } from "@/components/Landing";
 
 // La porta d'ingresso: chi ha una sessione va alla home, gli altri vedono
-// - nel browser: la landing, ogni volta (e' anche la pagina che legge Google)
-// - nell'app installata (telefono o icona sulla Home): la presentazione la
-//   prima volta, poi il login. Aprendo l'app ogni giorno una landing darebbe
-//   solo fastidio
+// - nel browser, anche aperto dall'icona sulla Home: la landing, ogni volta
+//   (e' anche la pagina che legge Google); dopo un logout si torna qui
+// - nell'app nativa: la presentazione la prima volta, poi il login
 const NEL_BROWSER = Platform.OS === "web";
 
 export default function Index() {
-  const router = useRouter();
   //null finche' non si sa dove andare; "landing" per restare qui
   const [destinazione, setDestinazione] = useState<Href | "landing" | null>(null);
 
@@ -23,7 +21,7 @@ export default function Index() {
       const sessione = await haSessione(); //asincrono: sul telefono legge dall'archivio cifrato
 
       if (sessione) setDestinazione("/(tabs)/home");
-      else if (NEL_BROWSER && !apertaDallaHome()) setDestinazione("landing");
+      else if (NEL_BROWSER) setDestinazione("landing");
       //chi ha gia' visto la presentazione non deve rivederla
       else setDestinazione((await presentazioneVista()) ? "/login" : "/presentazione");
 
@@ -45,9 +43,8 @@ export default function Index() {
   if (destinazione && destinazione !== "landing") return <Redirect href={destinazione} />;
 
   //nel browser la landing c'e' gia' durante il controllo: e' quella scritta
-  //nell'HTML, e chi deve andare altrove non la vede perche' +html.tsx la nasconde.
-  //push e non replace: "indietro" nel browser dal login riporta qui
-  if (NEL_BROWSER) return <Landing vai={(pagina) => router.push(pagina)} />;
+  //nell'HTML, e chi deve andare altrove non la vede perche' +html.tsx la nasconde
+  if (NEL_BROWSER) return <Landing />;
 
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>

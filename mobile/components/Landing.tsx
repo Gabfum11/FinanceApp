@@ -3,7 +3,6 @@ import { View, Image, ScrollView, Platform } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import type { Href } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useTranslation } from "react-i18next";
 import Svg, { Circle } from "react-native-svg";
@@ -18,7 +17,7 @@ import { FinestraContatto } from "@/components/FinestraContatto";
 import { FinestraAccesso, type ModoAccesso } from "@/components/FinestraAccesso";
 import { creaStili } from "@/styles/presentazione.styles";
 import { useStili, useTema } from "@/utils/tema";
-import { LARGHEZZA_CONTENUTO, useSchermoLargo } from "@/utils/layout";
+import { LARGHEZZA_CONTENUTO } from "@/utils/layout";
 
 // La pagina che vede nel browser chi non ha fatto l'accesso: cosa fa TrackIt
 // e il pulsante per registrarsi. Le illustrazioni sono le stesse delle pagine
@@ -312,26 +311,16 @@ function IllustrazioneAssistente() {
 // In alto la domanda e il pulsante per registrarsi, con accanto la chat
 // dell'assistente; sotto le quattro cose che fa TrackIt, due per riga (una
 // sotto l'altra sul telefono); in fondo i collegamenti.
-// "vai" decide come si cambia pagina: dalla pagina principale si aggiunge alla
-// cronologia, cosi' "indietro" nel browser riporta qui.
-// Sul computer accesso e registrazione si aprono in una finestra sopra la
-// landing (FinestraAccesso); sul telefono restano pagine intere
-export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
+// Accesso e registrazione si aprono in una finestra sopra la landing
+// (FinestraAccesso), sul computer e sul telefono
+export function Landing() {
   const styles = useStili(creaStili);
   const { t } = useTranslation();
   const [contatto, setContatto] = useState(false);
   const [accesso, setAccesso] = useState<ModoAccesso | null>(null);
-  //letto solo al clic: durante la build la finestra non esiste, e il disegno
-  //della pagina non deve dipendere dalla sua larghezza
-  const largo = useSchermoLargo();
 
   //stabile: la finestra la usa per ascoltare Esc solo mentre e' aperta
   const chiudiAccesso = useCallback(() => setAccesso(null), []);
-
-  function apri(modo: ModoAccesso) {
-    if (largo) setAccesso(modo);
-    else vai(modo === "accesso" ? "/login" : "/register");
-  }
 
   //l'illustrazione e' un'immagine con una descrizione: i suoi testi sono
   //importi di esempio, che letti uno per uno da un lettore di schermo non dicono nulla
@@ -357,7 +346,7 @@ export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
             </View>
             <View style={styles.pcAzioni}>
               <SelettoreLingua scuro />
-              <Button mode="outlined" textColor={styles.pcNomeApp.color} style={styles.pcAccedi} onPress={() => apri("accesso")}>
+              <Button mode="outlined" textColor={styles.pcNomeApp.color} style={styles.pcAccedi} onPress={() => setAccesso("accesso")}>
                 {t("presentazione.p1.hoAccount")}
               </Button>
             </View>
@@ -368,7 +357,7 @@ export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
               <Text style={styles.pcSottotitolo}>{t("presentazione.p1.testo")}</Text>
               <Button
                 mode="contained"
-                onPress={() => apri("registrazione")}
+                onPress={() => setAccesso("registrazione")}
                 style={styles.pcCrea}
                 labelStyle={[styles.buttonLabel, styles.pcCreaTesto]}
               >
@@ -421,7 +410,7 @@ export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
             <Text style={styles.piedeVoce} role="link" onPress={() => setContatto(true)}>
               {t("profilo.contattaci")}
             </Text>
-            <Text style={styles.piedeVoce} role="link" onPress={() => apri("accesso")}>
+            <Text style={styles.piedeVoce} role="link" onPress={() => setAccesso("accesso")}>
               {t("accesso.accedi")}
             </Text>
           </View>

@@ -252,7 +252,7 @@ export default function Presentazione() {
     }
   }
 
-  if (largo) return <Landing vai={esci} />;
+  if (largo) return <Landing />;
 
   return (
     <View style={styles.container} onLayout={(e) => setSpazio({ width: e.nativeEvent.layout.width, altezza: e.nativeEvent.layout.height })}>

@@ -9,7 +9,7 @@ import type { PropsWithChildren } from "react";
 const BASE = process.env.EXPO_BASE_URL ?? "";
 
 // La pagina principale e' la landing, gia' scritta nell'HTML. Chi ha gia' fatto
-// l'accesso, chi apre dall'icona sulla Home e chi usa il tema scuro non deve
+// l'accesso e chi usa il tema scuro non deve
 // vederla nemmeno per un attimo: prima che il browser disegni qualcosa si
 // controlla localStorage e, se serve, si nasconde la pagina. La fa riapparire
 // l'app (utils/avvio.web.ts) quando ha deciso cosa mostrare; dopo 5 secondi
@@ -22,9 +22,7 @@ const SCRIPT_AVVIO = `(function () {
     if (percorso !== base) return;
     var s = window.localStorage;
     var nascondi =
-      s.getItem("token") || s.getItem("refresh_token") || s.getItem("tema_scuro") === "1" ||
-      (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
-      navigator.standalone === true;
+      s.getItem("token") || s.getItem("refresh_token") || s.getItem("tema_scuro") === "1";
     if (!nascondi) return;
     var stile = document.createElement("style");
     stile.id = "avvio-nascosto";
