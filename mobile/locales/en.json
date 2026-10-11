@@ -428,7 +428,16 @@
     "importate_one": "{{count}} expense imported",
     "importate_other": "{{count}} expenses imported",
     "annullato": "Import undone",
-    "erroreAnnulla": "We couldn't undo. You can delete the expenses one by one."
+    "erroreAnnulla": "We couldn't undo. You can delete the expenses one by one.",
+    "esciCaricamentoTitolo": "Stop reading the file?",
+    "esciCaricamentoTesto": "We're still reading your bank statement. If you leave now, you'll have to choose it again.",
+    "esciCaricamentoConferma": "Stop and leave",
+    "esciCaricamentoAnnulla": "Keep waiting",
+    "esciControlloTitolo": "Leave without importing?",
+    "esciControlloTesto_one": "The expense read from the file won't be saved and your choices will be lost.",
+    "esciControlloTesto_other": "The {{count}} expenses read from the file won't be saved and your choices will be lost.",
+    "esciControlloConferma": "Leave without importing",
+    "esciControlloAnnulla": "Keep reviewing"
   },
   "spese": {
     "titolo": "Transactions",

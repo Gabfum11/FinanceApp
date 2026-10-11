@@ -428,7 +428,16 @@
     "importate_one": "{{count}} spesa importata",
     "importate_other": "{{count}} spese importate",
     "annullato": "Import annullato",
-    "erroreAnnulla": "Non siamo riusciti ad annullare. Puoi eliminare le spese una per una."
+    "erroreAnnulla": "Non siamo riusciti ad annullare. Puoi eliminare le spese una per una.",
+    "esciCaricamentoTitolo": "Interrompere la lettura?",
+    "esciCaricamentoTesto": "Stiamo ancora leggendo l'estratto conto. Se esci ora, dovrai sceglierlo di nuovo.",
+    "esciCaricamentoConferma": "Interrompi ed esci",
+    "esciCaricamentoAnnulla": "Continua ad aspettare",
+    "esciControlloTitolo": "Uscire senza importare?",
+    "esciControlloTesto_one": "La spesa letta dal file non verrà salvata e le scelte che hai fatto andranno perse.",
+    "esciControlloTesto_other": "Le {{count}} spese lette dal file non verranno salvate e le scelte che hai fatto andranno perse.",
+    "esciControlloConferma": "Esci senza importare",
+    "esciControlloAnnulla": "Continua a controllare"
   },
   "spese": {
     "titolo": "Transazioni",

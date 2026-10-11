@@ -15,6 +15,7 @@ import { apiFetch } from "@/utils/apiFetch";
 import { usePreferenze } from "@/utils/preferenze";
 import { useSchermoLargo } from "@/utils/layout";
 import { localeAttuale } from "@/utils/date";
+import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import {
   chiediAnteprima,
   confermaImport,
@@ -72,6 +73,27 @@ export default function ImportEstratto() {
   const selezionate = righe.filter((r) => r.selezionata);
   const mancanti = daScegliere(righe);
   const totale = selezionate.reduce((somma, r) => somma + r.importo, 0);
+
+  //uscire mentre il file si legge o mentre si controllano le spese fa perdere
+  //il lavoro: ogni uscita (freccia, indietro, ✕, Esc, clic fuori) chiede prima
+  const { lasciaUscire, dialogo: dialogoUscita } = useConfirmDiscard(
+    fase === "caricamento" || fase === "controllo",
+    fase === "caricamento"
+      ? {
+          title: t("importa.esciCaricamentoTitolo"),
+          message: t("importa.esciCaricamentoTesto"),
+          confirmLabel: t("importa.esciCaricamentoConferma"),
+          cancelLabel: t("importa.esciCaricamentoAnnulla"),
+          icon: "timer-sand",
+        }
+      : {
+          title: t("importa.esciControlloTitolo"),
+          message: t("importa.esciControlloTesto", { count: righe.length }),
+          confirmLabel: t("importa.esciControlloConferma"),
+          cancelLabel: t("importa.esciControlloAnnulla"),
+          icon: "file-document-remove",
+        },
+  );
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setMovimentoRidotto).catch(() => {});
@@ -216,6 +238,7 @@ export default function ImportEstratto() {
       setErroreInvio(true);
       return;
     }
+    lasciaUscire();
     router.replace({ pathname: "/all_expenses", params: { importate: String(importate), codice: anteprima.codice } });
   }
 
@@ -441,6 +464,7 @@ export default function ImportEstratto() {
           />
         </>
       )}
+      <ConfirmDialog {...dialogoUscita} />
     </SafeAreaView>
     </FinestraComputer>
   );
