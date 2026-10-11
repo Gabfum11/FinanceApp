@@ -29,12 +29,19 @@ type CategoryStat = {
 //come si leggono le cifre della legenda: la scelta resta sul telefono
 const CHIAVE_CIFRE = "statistiche_cifre";
 type Cifre = "importi" | "percentuali";
+//mese (ciclo di budget) o anno di calendario: anche questa scelta resta sul telefono
+const CHIAVE_VISTA = "statistiche_vista";
+type Vista = "mese" | "anno";
 
+//l'anno va sempre scritto, tornando indietro di oltre 12 mesi non si capiva dove si era;
+//sulla prima data solo se il ciclo scavalca l'anno
 function formatCycleLabel(cycleStart: string, cycleEnd: string): string {
   const start = new Date(cycleStart);
   const end = new Date(cycleEnd);
   const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
-  return `${start.toLocaleDateString(localeAttuale(), opts)} - ${end.toLocaleDateString(localeAttuale(), opts)}`;
+  const conAnno: Intl.DateTimeFormatOptions = { ...opts, year: "numeric" };
+  const inizio = start.toLocaleDateString(localeAttuale(), start.getFullYear() === end.getFullYear() ? opts : conAnno);
+  return `${inizio} - ${end.toLocaleDateString(localeAttuale(), conAnno)}`;
 }
 
 export default function StatsScreen() {
@@ -54,7 +61,10 @@ export default function StatsScreen() {
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [vista, setVista] = useState<Vista>("mese");
   const [cycleOffset, setCycleOffset] = useState(0);
+  const [yearOffset, setYearOffset] = useState(0);
+  const annoMostrato = new Date().getFullYear() + yearOffset;
   const [stats, setStats] = useState<CategoryStat[]>([]);
   const [cycleStart, setCycleStart] = useState<string | null>(null);
   const [cycleEnd, setCycleEnd] = useState<string | null>(null);
@@ -74,7 +84,9 @@ export default function StatsScreen() {
   async function loadStats() {
     try {
       setLoading(true);
-      const response = await apiFetch(`/expenses/stats?cycle_offset=${cycleOffset}`);
+      const response = await apiFetch(
+        vista === "anno" ? `/expenses/stats?year=${annoMostrato}` : `/expenses/stats?cycle_offset=${cycleOffset}`
+      );
       if (response.ok) {
         const data = await response.json();
         setStats(data.categories);
@@ -106,7 +118,7 @@ export default function StatsScreen() {
     useCallback(() => {
       loadStats();
       loadBudget();
-    }, [cycleOffset])
+    }, [vista, cycleOffset, yearOffset])
   );
 
   useEffect(() => {
@@ -115,11 +127,21 @@ export default function StatsScreen() {
         if (valore === "importi" || valore === "percentuali") setCifre(valore);
       })
       .catch(() => {});
+    AsyncStorage.getItem(CHIAVE_VISTA)
+      .then((valore) => {
+        if (valore === "mese" || valore === "anno") setVista(valore);
+      })
+      .catch(() => {});
   }, []);
 
   function scegliCifre(nuove: Cifre) {
     setCifre(nuove);
     AsyncStorage.setItem(CHIAVE_CIFRE, nuove).catch(() => {});
+  }
+
+  function scegliVista(nuova: Vista) {
+    setVista(nuova);
+    AsyncStorage.setItem(CHIAVE_VISTA, nuova).catch(() => {});
   }
 
   function apriModificaBudget() {
@@ -163,7 +185,9 @@ export default function StatsScreen() {
   const total = stats.reduce((sum, item) => sum + item.total, 0);
   //nei mesi passati il budget e' quello che valeva allora: cambiarlo oggi non
   //riscrive l'avanzo dei mesi gia' chiusi
-  const meseInCorso = cycleOffset === 0;
+  //nella vista anno il budget non c'e' (e' mensile): niente fetta "disponibile" ne' matita
+  const meseInCorso = vista === "mese" && cycleOffset === 0;
+  const periodoInCorso = vista === "mese" ? cycleOffset === 0 : yearOffset === 0;
   const avanzo = meseInCorso ? budgetRemaining : budgetMensile != null ? budgetMensile - total : null;
   const remaining = avanzo != null ? Math.max(avanzo, 0) : 0;
   //le percentuali sono parti di cio' che la ciambella rappresenta: il budget, se
@@ -172,7 +196,15 @@ export default function StatsScreen() {
   const percentuale = (valore: number) => (baseCiambella > 0 ? Math.round((valore / baseCiambella) * 100) : 0);
   //la cifra di una riga della legenda, come l'utente ha scelto di leggerla
   const cifra = (valore: number) => (cifre === "importi" ? importo(valore) : `${percentuale(valore)}%`);
-  const periodo = cycleStart && cycleEnd ? formatCycleLabel(cycleStart, cycleEnd) : "";
+  const periodo = vista === "anno"
+    ? String(annoMostrato)
+    : cycleStart && cycleEnd ? formatCycleLabel(cycleStart, cycleEnd) : "";
+  //l'anno in corso non e' finito: si dice fino a quando arrivano le spese
+  const notaPeriodo = vista === "anno" && yearOffset === 0
+    ? t("statistiche.finoAOggi", {
+        inizio: new Date(annoMostrato, 0, 1).toLocaleDateString(localeAttuale(), { day: "numeric", month: "short" }),
+      })
+    : "";
   const pieData = [
     ...stats.map((item) => ({
       value: item.total,
@@ -204,17 +236,34 @@ export default function StatsScreen() {
   return (
     <View style={styles.container}>
       <PaginaScorrevole style={styles.content} sopraBarra>
+        {/* Mese | Anno: stesso controllo segmentato dell'interruttore € / % */}
+        <View style={[styles.cifre, styles.vista]} accessibilityRole="radiogroup" accessibilityLabel={t("statistiche.vista")}>
+          {(["mese", "anno"] as const).map((voce) => (
+            <Pressable
+              key={voce}
+              style={[styles.cifraVoce, styles.vistaVoce, vista === voce && styles.cifraScelta]}
+              onPress={() => scegliVista(voce)}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: vista === voce }}
+            >
+              <Text style={[styles.cifraTesto, vista === voce && styles.cifraTestoScelto]}>{t(`statistiche.${voce}`)}</Text>
+            </Pressable>
+          ))}
+        </View>
         <View style={styles.selectorRow}>
           <FrecciaPeriodo
             icona="chevron-left"
-            onPress={() => setCycleOffset((prev) => prev - 1)}
+            onPress={() => (vista === "anno" ? setYearOffset : setCycleOffset)((prev) => prev - 1)}
             etichetta={t("statistiche.periodoPrima")}
           />
-          <Text style={styles.periodo} accessibilityRole="header">{periodo}</Text>
+          <View style={styles.periodoTesti}>
+            <Text style={styles.periodo} accessibilityRole="header">{periodo}</Text>
+            {notaPeriodo !== "" && <Text style={styles.periodoNota}>{notaPeriodo}</Text>}
+          </View>
           <FrecciaPeriodo
             icona="chevron-right"
-            onPress={() => setCycleOffset((prev) => prev + 1)}
-            disabilitata={cycleOffset >= 0}
+            onPress={() => (vista === "anno" ? setYearOffset : setCycleOffset)((prev) => prev + 1)}
+            disabilitata={periodoInCorso}
             etichetta={t("statistiche.periodoDopo")}
           />
         </View>
@@ -256,14 +305,16 @@ export default function StatsScreen() {
                 <MaterialCommunityIcons name="chart-donut" size={30} color={colors.primaryDark} />
               </View>
               <Text style={styles.emptyTitle}>
-                {cycleOffset === 0 ? t("statistiche.nessunaMese") : t("statistiche.nessunaPeriodo")}
+                {!periodoInCorso
+                  ? t("statistiche.nessunaPeriodo")
+                  : vista === "anno" ? t("statistiche.nessunaAnno") : t("statistiche.nessunaMese")}
               </Text>
               <Text style={styles.emptyHint}>
-                {cycleOffset === 0 ? t("statistiche.compaionoBreve") : t("statistiche.nessunaPeriodoDettaglio")}
+                {periodoInCorso ? t("statistiche.compaionoBreve") : t("statistiche.nessunaPeriodoDettaglio")}
               </Text>
               {/* un pulsante vero al posto di "tocca +": prima toccare il riquadro
                   funzionava, ma niente lo faceva capire */}
-              {cycleOffset === 0 && (
+              {periodoInCorso && (
                 <Pressable
                   style={({ pressed }) => [styles.aggiungi, pressed && styles.premuto]}
                   onPress={() => router.push("/add_expense")}
@@ -336,7 +387,7 @@ export default function StatsScreen() {
             niente da confrontare. Nel periodo in corso senza budget resta l'invito
             qui sotto, che porta alla schermata completa con il giorno di inizio */}
         <View style={largo ? styles.colonnaLaterale : undefined}>
-        {!loading && stats.length > 0 && (cycleOffset < 0 || budgetMensile != null) && (
+        {!loading && stats.length > 0 && vista === "mese" && (cycleOffset < 0 || budgetMensile != null) && (
           <View style={[styles.budgetRiga, largo && styles.senzaMargine]}>
             <IconaCerchio icona="cash" sfondo={colors.primary} dimensione={32} />
             <View style={styles.budgetTesti}>
@@ -371,7 +422,7 @@ export default function StatsScreen() {
         </View>
 
         {/* solo nel mese in corso: per i mesi passati il budget di allora non si ricostruisce */}
-        {!loading && cycleOffset === 0 && stats.length > 0 && budgetImpostato === false && (
+        {!loading && meseInCorso && stats.length > 0 && budgetImpostato === false && (
           //pillola e non scritta verde: prima non sembrava toccabile e si leggeva a fatica
           <Pressable
             style={({ pressed }) => [styles.budgetHint, pressed && styles.premuto]}

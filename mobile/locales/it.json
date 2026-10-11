@@ -568,7 +568,12 @@
     "erroreBudget": "Non è stato possibile salvare il budget",
     "usato": "Hai usato il {{percentuale}}% del budget.",
     "categoria": "Categoria",
-    "importo": "Importo"
+    "importo": "Importo",
+    "vista": "Periodo delle statistiche",
+    "mese": "Mese",
+    "anno": "Anno",
+    "finoAOggi": "{{inizio}} – oggi",
+    "nessunaAnno": "Nessuna spesa quest'anno"
   },
   "valute": {
     "EUR": "Euro",

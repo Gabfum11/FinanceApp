@@ -568,7 +568,12 @@
     "erroreBudget": "Couldn't save the budget",
     "usato": "You've used {{percentuale}}% of your budget.",
     "categoria": "Category",
-    "importo": "Amount"
+    "importo": "Amount",
+    "vista": "Statistics period",
+    "mese": "Month",
+    "anno": "Year",
+    "finoAOggi": "{{inizio}} – today",
+    "nessunaAnno": "No expenses this year"
   },
   "valute": {
     "EUR": "Euro",

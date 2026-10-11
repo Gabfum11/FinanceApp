@@ -67,11 +67,15 @@ def list_expenses(limit: int | None = Query(None, gt=0, le=500), db: Session = D
     return expenses
 
 @router.get("/stats", response_model=schemas.StatsOut)
-def get_stats(cycle_offset: int = 0, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
+def get_stats(cycle_offset: int = 0, year: int | None = Query(None, ge=2000, le=2200), db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
     run_due_renewals(db, current_user.id, giorno)
-    reference_date = giorno - relativedelta(months=-cycle_offset)
-    start_day = current_user.budget_start_day or 1
-    cycle_start, cycle_end = get_budget_cycle(reference_date, start_day)
+    if year is not None:
+        #la vista Anno va per anno di calendario, non per cicli di budget
+        cycle_start, cycle_end = date(year, 1, 1), date(year, 12, 31)
+    else:
+        reference_date = giorno - relativedelta(months=-cycle_offset)
+        start_day = current_user.budget_start_day or 1
+        cycle_start, cycle_end = get_budget_cycle(reference_date, start_day)
 
     #le spese puntano a una sottocategoria, ma il grafico va aggregato per gruppo:
     #con 47 sottocategorie avrebbe altrettante fette, illeggibili. Il gruppo si
@@ -94,7 +98,13 @@ def get_stats(cycle_offset: int = 0, db: Session = Depends(get_db), current_user
     ).group_by(gruppo).order_by(func.sum(models.Expense.amount).desc()).all()
 
     #il ciclo in corso usa il budget attuale; quelli chiusi il loro, dallo storico
-    budget = current_user.monthly_budget if cycle_offset == 0 else budget_del_ciclo(db, current_user.id, cycle_end)
+    #il budget e' mensile: su un anno non c'e' un "quanto resta"
+    if year is not None:
+        budget = None
+    elif cycle_offset == 0:
+        budget = current_user.monthly_budget
+    else:
+        budget = budget_del_ciclo(db, current_user.id, cycle_end)
 
     return {
         "cycle_start": cycle_start,

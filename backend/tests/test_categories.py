@@ -143,6 +143,19 @@ class TestStatisticheAggregate:
         totale = sum(c["total"] for c in client.get("/expenses/stats").json()["categories"])
         assert totale == 583.0
 
+    def test_vista_anno_somma_tutto_l_anno_senza_budget(self, client, utente, spese_su_piu_sottocategorie):
+        from datetime import date
+
+        anno = date.today().year
+        #una spesa dell'anno prima non deve entrare
+        client.post("/expenses/", json={"description": "Vecchia", "amount": 99.0,
+                                        "date": f"{anno - 1}-12-31", "category_id": spese_su_piu_sottocategorie["Bar e caffè"]})
+        dati = client.get(f"/expenses/stats?year={anno}").json()
+        assert dati["cycle_start"] == f"{anno}-01-01"
+        assert dati["cycle_end"] == f"{anno}-12-31"
+        assert dati["budget"] is None
+        assert sum(c["total"] for c in dati["categories"]) == 583.0
+
     def test_una_categoria_senza_gruppo_resta_a_se(self, client, utente, db_session):
         """Le categorie non ancora inserite nella gerarchia non devono sparire."""
         from datetime import date

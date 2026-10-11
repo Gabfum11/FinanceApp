@@ -29,6 +29,22 @@ export const creaStili = (colors: Colori) =>
         color: colors.text,
         fontVariant: ["tabular-nums"],
     },
+    periodoTesti: {
+        alignItems: "center",
+    },
+    //sotto l'anno in corso: "1 gen – oggi"
+    periodoNota: {
+        fontSize: fontSize.sm,
+        color: colors.textMuted,
+    },
+    //selettore Mese | Anno: a tutta larghezza sopra le frecce
+    vista: {
+        marginBottom: 16,
+    },
+    vistaVoce: {
+        flex: 1,
+        height: 40,
+    },
     freccia: {
         width: 44,
         height: 44,
