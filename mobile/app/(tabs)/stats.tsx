@@ -236,36 +236,49 @@ export default function StatsScreen() {
   return (
     <View style={styles.container}>
       <PaginaScorrevole style={styles.content} sopraBarra>
-        {/* Mese | Anno: stesso controllo segmentato dell'interruttore € / % */}
-        <View style={[styles.cifre, styles.vista]} accessibilityRole="radiogroup" accessibilityLabel={t("statistiche.vista")}>
-          {(["mese", "anno"] as const).map((voce) => (
-            <Pressable
-              key={voce}
-              style={[styles.cifraVoce, styles.vistaVoce, vista === voce && styles.cifraScelta]}
-              onPress={() => scegliVista(voce)}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: vista === voce }}
-            >
-              <Text style={[styles.cifraTesto, vista === voce && styles.cifraTestoScelto]}>{t(`statistiche.${voce}`)}</Text>
-            </Pressable>
-          ))}
-        </View>
-        <View style={styles.selectorRow}>
-          <FrecciaPeriodo
-            icona="chevron-left"
-            onPress={() => (vista === "anno" ? setYearOffset : setCycleOffset)((prev) => prev - 1)}
-            etichetta={t("statistiche.periodoPrima")}
-          />
-          <View style={styles.periodoTesti}>
-            <Text style={styles.periodo} accessibilityRole="header">{periodo}</Text>
-            {notaPeriodo !== "" && <Text style={styles.periodoNota}>{notaPeriodo}</Text>}
+        <View style={styles.barraPeriodo}>
+          {/* Mese | Anno: stesso controllo segmentato dell'interruttore € / % */}
+          <View style={styles.cifre} accessibilityRole="radiogroup" accessibilityLabel={t("statistiche.vista")}>
+            {(["mese", "anno"] as const).map((voce) => (
+              <Pressable
+                key={voce}
+                style={[styles.cifraVoce, styles.vistaVoce, vista === voce && styles.cifraScelta]}
+                onPress={() => scegliVista(voce)}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: vista === voce }}
+              >
+                <Text style={[styles.cifraTesto, vista === voce && styles.cifraTestoScelto]}>{t(`statistiche.${voce}`)}</Text>
+              </Pressable>
+            ))}
           </View>
-          <FrecciaPeriodo
-            icona="chevron-right"
-            onPress={() => (vista === "anno" ? setYearOffset : setCycleOffset)((prev) => prev + 1)}
-            disabilitata={periodoInCorso}
-            etichetta={t("statistiche.periodoDopo")}
-          />
+          <View style={styles.navigatore}>
+            <FrecciaPeriodo
+              icona="chevron-left"
+              onPress={() => (vista === "anno" ? setYearOffset : setCycleOffset)((prev) => prev - 1)}
+              etichetta={t("statistiche.periodoPrima")}
+            />
+            <View style={styles.periodoTesti}>
+              <Text style={styles.periodo} accessibilityRole="header">{periodo}</Text>
+              {notaPeriodo !== "" && <Text style={styles.periodoNota}>{notaPeriodo}</Text>}
+            </View>
+            <FrecciaPeriodo
+              icona="chevron-right"
+              onPress={() => (vista === "anno" ? setYearOffset : setCycleOffset)((prev) => prev + 1)}
+              disabilitata={periodoInCorso}
+              etichetta={t("statistiche.periodoDopo")}
+            />
+          </View>
+          {!periodoInCorso && (
+            <Pressable
+              style={({ pressed }) => [styles.oggi, pressed && styles.premuto]}
+              onPress={() => (vista === "anno" ? setYearOffset : setCycleOffset)(0)}
+              accessibilityRole="button"
+              accessibilityLabel={t("statistiche.tornaAOggi")}
+            >
+              <MaterialCommunityIcons name="calendar-today" size={18} color={colors.primaryDark} />
+              <Text style={styles.oggiTesto}>{t("statistiche.oggi")}</Text>
+            </Pressable>
+          )}
         </View>
         <View style={largo ? styles.rigaLarga : undefined}>
         <View style={[styles.card, largo && styles.cardLarga]}>
@@ -476,8 +489,8 @@ export default function StatsScreen() {
   );
 }
 
-//freccia per cambiare periodo: un cerchio da 44px. Quella del mese futuro resta
-//senza cerchio, cosi' si vede che non si puo' toccare
+//freccia per cambiare periodo, 44px da toccare dentro la pillola del navigatore.
+//Quella del periodo futuro e' grigia: non si puo' toccare
 function FrecciaPeriodo({ icona, onPress, disabilitata = false, etichetta }: {
   icona: string;
   onPress: () => void;
@@ -488,7 +501,7 @@ function FrecciaPeriodo({ icona, onPress, disabilitata = false, etichetta }: {
   const { colors } = useTema();
   return (
     <Pressable
-      style={({ pressed }) => [styles.freccia, disabilitata && styles.frecciaSpenta, pressed && styles.premuto]}
+      style={({ pressed }) => [styles.freccia, pressed && styles.premuto]}
       onPress={onPress}
       disabled={disabilitata}
       accessibilityRole="button"

@@ -572,6 +572,8 @@
     "vista": "Periodo delle statistiche",
     "mese": "Mese",
     "anno": "Anno",
+    "oggi": "Oggi",
+    "tornaAOggi": "Torna al periodo in corso",
     "finoAOggi": "{{inizio}} – oggi",
     "nessunaAnno": "Nessuna spesa quest'anno"
   },

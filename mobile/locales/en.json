@@ -572,6 +572,8 @@
     "vista": "Statistics period",
     "mese": "Month",
     "anno": "Year",
+    "oggi": "Today",
+    "tornaAOggi": "Back to the current period",
     "finoAOggi": "{{inizio}} – today",
     "nessunaAnno": "No expenses this year"
   },

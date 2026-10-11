@@ -16,12 +16,25 @@ export const creaStili = (colors: Colori) =>
         fontSize: fontSize.xxxl,
         marginBottom: 16,
     },
-    //frecce ai lati e date al centro, tutte sulla stessa linea
-    selectorRow: {
+    //Mese | Anno e navigatore del periodo sulla stessa riga; se non ci stanno
+    //(telefono) il navigatore va a capo, sempre centrati
+    barraPeriodo: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 12,
+        marginBottom: 16,
+    },
+    //frecce e date in un'unica pillola: l'occhio non deve andare ai bordi dello schermo
+    navigatore: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: 16,
+        padding: 2,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     periodo: {
         fontSize: fontSize.base,
@@ -29,7 +42,9 @@ export const creaStili = (colors: Colori) =>
         color: colors.text,
         fontVariant: ["tabular-nums"],
     },
+    //larghezza minima: passando da un mese all'altro le frecce non si spostano
     periodoTesti: {
+        minWidth: 150,
         alignItems: "center",
     },
     //sotto l'anno in corso: "1 gen – oggi"
@@ -37,12 +52,8 @@ export const creaStili = (colors: Colori) =>
         fontSize: fontSize.sm,
         color: colors.textMuted,
     },
-    //selettore Mese | Anno: a tutta larghezza sopra le frecce
-    vista: {
-        marginBottom: 16,
-    },
     vistaVoce: {
-        flex: 1,
+        minWidth: 76,
         height: 40,
     },
     freccia: {
@@ -51,13 +62,21 @@ export const creaStili = (colors: Colori) =>
         borderRadius: radius.pill,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
     },
-    frecciaSpenta: {
-        backgroundColor: "transparent",
-        borderColor: "transparent",
+    //"Oggi": compare solo lontano dal periodo in corso e ci riporta con un tocco
+    oggi: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        height: 44,
+        paddingHorizontal: 14,
+        borderRadius: radius.pill,
+        backgroundColor: colors.primarySoft,
+    },
+    oggiTesto: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.bold,
+        color: colors.primaryDark,
     },
     //riscontro al tocco, uguale per frecce, matita e pillole
     premuto: {
@@ -95,15 +114,10 @@ export const creaStili = (colors: Colori) =>
         alignItems: "center",
         justifyContent: "center",
     },
-    //la voce scelta in rilievo sulla guida grigia, come i controlli segmentati
-    //di iOS; il testo verde scuro la distingue anche nel tema scuro
+    //la voce scelta piena di verde: nel tema scuro il rilievo bianco su grigio
+    //quasi non si vedeva
     cifraScelta: {
-        backgroundColor: colors.surface,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.12,
-        shadowRadius: 3,
-        elevation: 2,
+        backgroundColor: colors.primary,
     },
     cifraTesto: {
         fontSize: fontSize.md,
@@ -111,7 +125,7 @@ export const creaStili = (colors: Colori) =>
         color: colors.textMuted,
     },
     cifraTestoScelto: {
-        color: colors.primaryDark,
+        color: colors.surfaceDark,
     },
     //sul computer: card a sinistra, budget e resto in una colonna a destra
     rigaLarga: {
