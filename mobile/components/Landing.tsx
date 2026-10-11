@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { View, Image, ScrollView, Platform } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -15,9 +15,10 @@ import { nomeCategoria } from "@/utils/categorie";
 import { colorePerGruppo } from "@/utils/categoryIcons";
 import { IconaCategoria } from "@/components/IconaCategoria";
 import { FinestraContatto } from "@/components/FinestraContatto";
+import { FinestraAccesso, type ModoAccesso } from "@/components/FinestraAccesso";
 import { creaStili } from "@/styles/presentazione.styles";
 import { useStili, useTema } from "@/utils/tema";
-import { LARGHEZZA_CONTENUTO } from "@/utils/layout";
+import { LARGHEZZA_CONTENUTO, useSchermoLargo } from "@/utils/layout";
 
 // La pagina che vede nel browser chi non ha fatto l'accesso: cosa fa TrackIt
 // e il pulsante per registrarsi. Le illustrazioni sono le stesse delle pagine
@@ -312,11 +313,25 @@ function IllustrazioneAssistente() {
 // dell'assistente; sotto le quattro cose che fa TrackIt, due per riga (una
 // sotto l'altra sul telefono); in fondo i collegamenti.
 // "vai" decide come si cambia pagina: dalla pagina principale si aggiunge alla
-// cronologia, cosi' "indietro" nel browser riporta qui
+// cronologia, cosi' "indietro" nel browser riporta qui.
+// Sul computer accesso e registrazione si aprono in una finestra sopra la
+// landing (FinestraAccesso); sul telefono restano pagine intere
 export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
   const styles = useStili(creaStili);
   const { t } = useTranslation();
   const [contatto, setContatto] = useState(false);
+  const [accesso, setAccesso] = useState<ModoAccesso | null>(null);
+  //letto solo al clic: durante la build la finestra non esiste, e il disegno
+  //della pagina non deve dipendere dalla sua larghezza
+  const largo = useSchermoLargo();
+
+  //stabile: la finestra la usa per ascoltare Esc solo mentre e' aperta
+  const chiudiAccesso = useCallback(() => setAccesso(null), []);
+
+  function apri(modo: ModoAccesso) {
+    if (largo) setAccesso(modo);
+    else vai(modo === "accesso" ? "/login" : "/register");
+  }
 
   //l'illustrazione e' un'immagine con una descrizione: i suoi testi sono
   //importi di esempio, che letti uno per uno da un lettore di schermo non dicono nulla
@@ -342,7 +357,7 @@ export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
             </View>
             <View style={styles.pcAzioni}>
               <SelettoreLingua scuro />
-              <Button mode="outlined" textColor={styles.pcNomeApp.color} style={styles.pcAccedi} onPress={() => vai("/login")}>
+              <Button mode="outlined" textColor={styles.pcNomeApp.color} style={styles.pcAccedi} onPress={() => apri("accesso")}>
                 {t("presentazione.p1.hoAccount")}
               </Button>
             </View>
@@ -353,7 +368,7 @@ export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
               <Text style={styles.pcSottotitolo}>{t("presentazione.p1.testo")}</Text>
               <Button
                 mode="contained"
-                onPress={() => vai("/register")}
+                onPress={() => apri("registrazione")}
                 style={styles.pcCrea}
                 labelStyle={[styles.buttonLabel, styles.pcCreaTesto]}
               >
@@ -406,7 +421,7 @@ export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
             <Text style={styles.piedeVoce} role="link" onPress={() => setContatto(true)}>
               {t("profilo.contattaci")}
             </Text>
-            <Text style={styles.piedeVoce} role="link" onPress={() => vai("/login")}>
+            <Text style={styles.piedeVoce} role="link" onPress={() => apri("accesso")}>
               {t("accesso.accedi")}
             </Text>
           </View>
@@ -417,6 +432,7 @@ export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
       </View>
 
       <FinestraContatto visible={contatto} onDismiss={() => setContatto(false)} />
+      <FinestraAccesso modo={accesso} onCambia={setAccesso} onDismiss={chiudiAccesso} />
     </ScrollView>
   );
 }
