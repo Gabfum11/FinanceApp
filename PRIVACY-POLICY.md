@@ -191,7 +191,14 @@ Proteggiamo i tuoi dati con misure tecniche adeguate, tra cui:
 - sessioni di accesso con scadenza, revocabili cambiando la password o con
   "disconnetti tutti i dispositivi";
 - limiti al numero di tentativi di accesso;
-- database raggiungibile solo dal server dell'app.
+- database raggiungibile solo dal server dell'app;
+- descrizioni di spese e abbonamenti, testo importato dall'estratto conto e
+  budget cifrati nel database con una chiave conservata separatamente, sul
+  server dell'app: chi accede al database non può leggerli. Il server li
+  decifra solo per mostrarli a te e per far funzionare l'app.
+
+Non consultiamo i tuoi dati, salvo tua richiesta (per esempio per
+l'assistenza) o obbligo di legge.
 
 ---
 
