@@ -17,8 +17,8 @@ Italia
 Email: gabrifu03@gmail.com
 
 Per qualsiasi domanda sui tuoi dati o per esercitare i tuoi diritti puoi
-scrivere a questo indirizzo, oppure usare la voce **Profilo → Contattaci**
-nell'app.
+scrivere a questo indirizzo, oppure usare il modulo **Contattaci** (in fondo
+alla pagina iniziale o nel Profilo).
 
 ---
 
@@ -50,6 +50,13 @@ di non inserire informazioni più dettagliate del necessario.
 
 Quando ti registri o reimposti la password, ti inviamo per email un codice a
 6 cifre. Il codice scade dopo 10 minuti e viene cancellato dopo l'uso.
+
+### Messaggi del modulo «Scrivici»
+
+Se ci scrivi dal modulo di contatto (anche senza account) riceviamo il tuo
+indirizzo email, l'argomento, il testo del messaggio e il nome del browser
+che usi, per poterti rispondere. Il messaggio non viene salvato nel database:
+arriva per email alla casella del supporto.
 
 ### Dati tecnici di sicurezza
 
@@ -90,6 +97,7 @@ TrackIt non contiene pubblicità e non usa strumenti di analisi.
 | Verificare la tua email e reimpostare la password | email, codici di verifica | esecuzione del contratto (art. 6.1.b) |
 | Fornire le funzioni dell'app (spese, abbonamenti, budget, esportazioni) | spese, abbonamenti, budget | esecuzione del contratto (art. 6.1.b) |
 | Interpretare le frasi scritte nell'assistente | il testo che scrivi nell'assistente | esecuzione del contratto (art. 6.1.b) |
+| Rispondere ai messaggi del modulo «Scrivici» | email, argomento, testo, browser | misure su tua richiesta (art. 6.1.b) |
 | Proteggere il servizio da abusi e malfunzionamenti | indirizzo IP, registri tecnici | legittimo interesse alla sicurezza (art. 6.1.f) |
 
 Non usiamo i tuoi dati per pubblicità, profilazione o decisioni automatizzate,
@@ -107,7 +115,7 @@ secondo le nostre istruzioni, salvo dove indicato diversamente.
 |---|---|---|
 | Supabase | ospita il database | Unione Europea (Irlanda) |
 | Render | ospita il server dell'app | Unione Europea (Germania) |
-| Brevo (Sendinblue SAS) | invia le email con i codici di verifica | Unione Europea (Francia) |
+| Brevo (Sendinblue SAS) | invia le email con i codici di verifica e i messaggi del modulo «Scrivici» | Unione Europea (Francia) |
 | Groq UK Limited | elabora il testo dell'assistente | Stati Uniti |
 | Google | gestisce l'accesso con Google | Stati Uniti |
 
@@ -146,6 +154,8 @@ dettagli sulla tua salute.
 - I dati del tuo account, le spese e gli abbonamenti restano finché il tuo
   account esiste.
 - I codici di verifica scadono dopo 10 minuti e vengono cancellati dopo l'uso.
+- I messaggi del modulo «Scrivici» restano nella casella email del supporto
+  per il tempo necessario a rispondere e poi vengono cancellati.
 - Se elimini l'account, tutti i tuoi dati (account, spese, abbonamenti, codici
   di verifica) vengono cancellati **immediatamente e definitivamente**. Non
   conserviamo copie di backup da cui possano essere recuperati.

@@ -11,6 +11,15 @@ export const creaStili = (colors: Colori) =>
     padding:24,
     paddingBottom:48,
   },
+  //sul telefono: «← Indietro» a sinistra, la lingua a destra
+  barraAlta: {
+    flexDirection:"row",
+    alignItems:"center",
+    minHeight:44,
+  },
+  selettore: {
+    marginLeft:"auto",
+  },
   logoContainer: {
     alignItems:"center",
     marginBottom:100,

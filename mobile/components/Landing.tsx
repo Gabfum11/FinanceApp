@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { View, Image, ScrollView, Platform } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -14,7 +14,7 @@ import { localeDi, type Lingua } from "@/utils/formato";
 import { nomeCategoria } from "@/utils/categorie";
 import { colorePerGruppo } from "@/utils/categoryIcons";
 import { IconaCategoria } from "@/components/IconaCategoria";
-import { contattaSupporto } from "@/utils/support";
+import { FinestraContatto } from "@/components/FinestraContatto";
 import { creaStili } from "@/styles/presentazione.styles";
 import { useStili, useTema } from "@/utils/tema";
 import { LARGHEZZA_CONTENUTO } from "@/utils/layout";
@@ -316,6 +316,7 @@ function IllustrazioneAssistente() {
 export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
   const styles = useStili(creaStili);
   const { t } = useTranslation();
+  const [contatto, setContatto] = useState(false);
 
   //l'illustrazione e' un'immagine con una descrizione: i suoi testi sono
   //importi di esempio, che letti uno per uno da un lettore di schermo non dicono nulla
@@ -402,7 +403,7 @@ export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
             <Text style={styles.piedeVoce} role="link" onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}>
               {t("presentazione.piede.privacy")}
             </Text>
-            <Text style={styles.piedeVoce} role="link" onPress={() => contattaSupporto()}>
+            <Text style={styles.piedeVoce} role="link" onPress={() => setContatto(true)}>
               {t("profilo.contattaci")}
             </Text>
             <Text style={styles.piedeVoce} role="link" onPress={() => vai("/login")}>
@@ -414,6 +415,8 @@ export function Landing({ vai }: { vai: (destinazione: Href) => void }) {
           </Text>
         </View>
       </View>
+
+      <FinestraContatto visible={contatto} onDismiss={() => setContatto(false)} />
     </ScrollView>
   );
 }

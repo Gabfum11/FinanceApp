@@ -240,15 +240,6 @@ export const creaStili = (colors: Colori) =>
         color: colors.textSecondary,
         paddingHorizontal: spacing.lg,
     },
-    //l'indirizzo staccato dal testo: si legge e si trascrive piu' facilmente.
-    //Blu e non verde: il verde nell'app segnala un'azione, questo e' solo testo
-    supportEmail: {
-        marginTop: spacing.md,
-        fontSize: fontSize.base,
-        fontWeight: fontWeight.semibold,
-        color: colors.link,
-        textAlign: "center",
-    },
     deleteWarning: {
         marginBottom: spacing.lg,
         lineHeight: 20,

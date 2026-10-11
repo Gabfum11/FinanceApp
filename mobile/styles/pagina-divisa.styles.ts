@@ -116,8 +116,15 @@ export const creaStili = (colors: Colori) =>
       paddingVertical: 32,
       paddingHorizontal: 48,
     },
+    //«← Indietro» a sinistra (se c'e'), la lingua sempre a destra
     lingua: {
-      alignItems: "flex-end",
+      flexDirection: "row",
+      alignItems: "center",
+      minHeight: 44,
+    },
+    //a destra anche quando la freccia non c'e'
+    selettore: {
+      marginLeft: "auto",
     },
     modulo: {
       flex: 1,

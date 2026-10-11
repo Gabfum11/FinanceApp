@@ -3,7 +3,7 @@ import { Text, Dialog, Portal, TextInput, ActivityIndicator, Snackbar, Switch, R
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { esportaCsv } from "@/utils/exportData";
 import { impostaPromemoria, promemoriaAttivi, dimenticaDispositivo, NOTIFICHE_DISPONIBILI } from "@/utils/notifications";
-import { contattaSupporto, SUPPORT_EMAIL } from "@/utils/support";
+import { FinestraContatto } from "@/components/FinestraContatto";
 import * as WebBrowser from "expo-web-browser";
 import { PRIVACY_URL } from "@/config";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -85,16 +85,6 @@ export default function ProfileScreen() {
             setMessaggio(t("profilo.valutaSenzaTassi"));
         } else {
             setMessaggio(t("profilo.valutaErrore"));
-        }
-    }
-
-    async function handleContatta() {
-        setShowSupportDialog(false);
-        const esito = await contattaSupporto();
-        if (esito === "copiato") {
-            setMessaggio(t("profilo.nessunaEmail", { email: SUPPORT_EMAIL }));
-        } else if (esito === "errore") {
-            setMessaggio(t("profilo.scrivici", { email: SUPPORT_EMAIL }));
         }
     }
 
@@ -533,26 +523,14 @@ export default function ProfileScreen() {
                     />
                 </Dialog>
 
-                <Dialog
-                    visible={showSupportDialog}
-                    onDismiss={() => setShowSupportDialog(false)}
-                    style={[finestra.finestra, largo && DIALOGO_LARGO]}
-                >
-                    <IconaDialogo nome="email" />
-                    <Dialog.Title style={[finestra.titolo, finestra.titoloCentrato]}>{t("profilo.supportoTitolo")}</Dialog.Title>
-                    <Dialog.Content>
-                        <Text style={[finestra.testo, finestra.testoCentrato]}>
-                            {t("profilo.supportoTesto")}
-                        </Text>
-                        <Text style={styles.supportEmail} selectable>{SUPPORT_EMAIL}</Text>
-                    </Dialog.Content>
-                    <PulsantiDialogo
-                        conferma={t("profilo.mandaEmail")}
-                        onConferma={handleContatta}
-                        onAnnulla={() => setShowSupportDialog(false)}
-                    />
-                </Dialog>
             </Portal>
+
+            {/* ha il suo Portal: compare sopra il profilo come le altre finestre */}
+            <FinestraContatto
+                visible={showSupportDialog}
+                onDismiss={() => setShowSupportDialog(false)}
+                emailIniziale={email}
+            />
 
             <Snackbar
       wrapperStyle={{ marginBottom: spazioBarra }} visible={!!messaggio} onDismiss={() => setMessaggio("")}>

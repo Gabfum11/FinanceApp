@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from datetime import date as date_type #serve dove un campo si chiama "date" e oscura il tipo
-from pydantic import BaseModel,Field,EmailStr
+from pydantic import BaseModel,Field,EmailStr,field_validator
 from typing import Literal
 from uuid import UUID
 #schema in entrata(create) -> verifica che i dati che l'utente manda sono nel formato che ci si aspetta
@@ -247,3 +247,24 @@ class RigaConferma(BaseModel):
 class ImportConferma(BaseModel):
     codice: UUID
     righe: list[RigaConferma] = Field(min_length=1, max_length=2000)
+
+
+class MessaggioContatto(BaseModel):
+    """Il modulo «Scrivici»: si invia anche senza account, dalla landing."""
+    #serve per rispondere: chi scrive dalla landing non ha un account da cui leggerla
+    email: EmailStr
+    argomento: Literal["problema", "idea", "domanda", "altro"]
+    messaggio: str = Field(..., min_length=1, max_length=2000)
+    #campo nascosto nel modulo: una persona non lo vede e lo lascia vuoto,
+    #i bot che compilano ogni campo lo riempiono
+    sito: str = Field("", max_length=200)
+    #il browser di chi scrive: per capire subito dove guardare se segnala un problema
+    browser: str | None = Field(None, max_length=300)
+
+    @field_validator("messaggio")
+    @classmethod
+    def non_solo_spazi(cls, valore: str) -> str:
+        valore = valore.strip()
+        if not valore:
+            raise ValueError("Il messaggio è vuoto")
+        return valore

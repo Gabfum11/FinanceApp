@@ -45,7 +45,8 @@
     "dataFutura": "The next charge must be a future date",
     "cambio": "Exchange rate unavailable right now",
     "nonTrovato": "Item not found: it may have been deleted",
-    "troppiRinnovi": "Too many past renewals from that date. Pick a more recent one."
+    "troppiRinnovi": "Too many past renewals from that date. Pick a more recent one.",
+    "nonInviato": "Message not sent. Please try again shortly."
   },
   "accesso": {
     "legaleGoogle": "By continuing with Google you confirm you've read the ",
@@ -606,8 +607,6 @@
     "rivediTutorial": "Watch the tour again",
     "contattaci": "Contact us",
     "privacy": "Privacy policy",
-    "nessunaEmail": "No email app found. Address copied: {{email}}",
-    "scrivici": "Write to us at {{email}}",
     "disconnettiTutti": "Log out of all devices",
     "eliminaAccount": "Delete account",
     "esciTitolo": "Log out",
@@ -619,9 +618,6 @@
     "collegatoGoogle": "Your account is linked to Google.",
     "passwordErrata": "Wrong password.",
     "eliminaErrore": "Couldn't delete the account. Please try again.",
-    "supportoTitolo": "Feedback and support",
-    "supportoTesto": "Contact us with any question at",
-    "mandaEmail": "Send email",
     "temaScuro": "Dark theme"
   },
   "modificaProfilo": {
@@ -653,5 +649,25 @@
   },
   "notifiche": {
     "canale": "Subscription reminders"
+  },
+  "contatto": {
+    "titolo": "Write to us",
+    "sottotitolo": "A question, a problem, an idea? We read every message and reply by email.",
+    "email": "Your email",
+    "emailNonValida": "Check the email address",
+    "argomento": "What is it about?",
+    "argomenti": {
+      "problema": "Problem",
+      "idea": "Idea",
+      "domanda": "Question",
+      "altro": "Other"
+    },
+    "messaggio": "Message",
+    "legale": "By sending you confirm you have read the ",
+    "legaleBrowser": ". We attach your browser name, so we know where to look.",
+    "invia": "Send",
+    "errore": "Message not sent. Please try again shortly.",
+    "inviatoTitolo": "Message sent",
+    "inviatoTesto": "Thank you! We'll reply to {{email}}."
   }
 }

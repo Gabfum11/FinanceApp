@@ -3,6 +3,7 @@ import { Image, View } from "react-native";
 import { Text } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import { SelettoreLingua } from "@/components/SelettoreLingua";
+import { TornaAllaLanding } from "@/components/TornaAllaLanding";
 import { usePreferenze } from "@/utils/preferenze";
 import { useSchermoLargo } from "@/utils/layout";
 import { creaStili } from "@/styles/pagina-divisa.styles";
@@ -17,7 +18,9 @@ const LOGO = require("../assets/images/logo/trackit-icon-rounded-180.png");
 //
 // Logo e selettore della lingua stanno qui: le schermate li nascondono quando
 // sono dentro la pagina divisa (useSchermoLargo), per non mostrarli due volte.
-export function PaginaDivisa({ children }: { children: ReactNode }) {
+// Con indietro, sopra il modulo c'e' «← Indietro» verso la landing (accesso e
+// registrazione): sulla stessa riga della lingua, che resta a destra.
+export function PaginaDivisa({ children, indietro = false }: { children: ReactNode; indietro?: boolean }) {
   const styles = useStili(creaStili);
   const largo = useSchermoLargo();
   const { t } = useTranslation();
@@ -55,7 +58,10 @@ export function PaginaDivisa({ children }: { children: ReactNode }) {
 
       <View style={styles.lato}>
         <View style={styles.lingua}>
-          <SelettoreLingua />
+          {indietro && <TornaAllaLanding />}
+          <View style={styles.selettore}>
+            <SelettoreLingua />
+          </View>
         </View>
         <View style={styles.modulo}>{children}</View>
       </View>

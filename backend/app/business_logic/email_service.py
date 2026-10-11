@@ -33,3 +33,40 @@ async def send_otp_email(to_email: str, code: str, purpose: str, lingua: str | N
             },
         )
     response.raise_for_status() #senza, un rifiuto di Brevo (chiave sbagliata, mittente non verificato) passerebbe inosservato
+
+
+#dove arrivano i messaggi del modulo «Scrivici»: se non e' impostata, alla
+#casella che manda i codici, che e' la stessa del supporto
+SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL") or SENDER_EMAIL
+
+ARGOMENTI = {"problema": "Problema", "idea": "Idea", "domanda": "Domanda", "altro": "Altro"}
+
+
+async def send_contact_email(email: str, argomento: str, messaggio: str, browser: str | None):
+    #l'inizio del messaggio nell'oggetto: nella casella si capisce di cosa si
+    #tratta senza aprirlo
+    anteprima = " ".join(messaggio.split())[:60]
+    subject = f"TrackIt — [{ARGOMENTI[argomento]}] {anteprima}"
+    body = "\n".join([
+        messaggio,
+        "",
+        "---",
+        f"Da: {email}",
+        f"Browser: {browser or '?'}",
+    ])
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.post(
+            BREVO_URL,
+            headers={"api-key": BREVO_API_KEY},
+            json={
+                #il mittente resta quello verificato su Brevo: con l'indirizzo di
+                #chi scrive Brevo rifiuterebbe l'invio. «Rispondi» va a lui
+                "sender": {"email": SENDER_EMAIL, "name": "TrackIt — Scrivici"},
+                "to": [{"email": SUPPORT_EMAIL}],
+                "replyTo": {"email": email},
+                "subject": subject,
+                "textContent": body,
+            },
+        )
+    response.raise_for_status()

@@ -45,7 +45,8 @@
     "dataFutura": "Il prossimo addebito deve essere una data futura",
     "cambio": "Cambio non disponibile in questo momento",
     "nonTrovato": "Elemento non trovato: forse è stato eliminato",
-    "troppiRinnovi": "Troppi rinnovi da registrare da quella data. Scegli una data più recente."
+    "troppiRinnovi": "Troppi rinnovi da registrare da quella data. Scegli una data più recente.",
+    "nonInviato": "Messaggio non inviato. Riprova tra poco."
   },
   "accesso": {
     "legaleGoogle": "Continuando con Google confermi di aver letto l'",
@@ -606,8 +607,6 @@
     "rivediTutorial": "Rivedi il tutorial",
     "contattaci": "Contattaci",
     "privacy": "Privacy policy",
-    "nessunaEmail": "Nessuna app email trovata. Indirizzo copiato: {{email}}",
-    "scrivici": "Scrivici a {{email}}",
     "disconnettiTutti": "Disconnetti tutti i dispositivi",
     "eliminaAccount": "Elimina account",
     "esciTitolo": "Esci",
@@ -619,9 +618,6 @@
     "collegatoGoogle": "Il tuo account è collegato a Google.",
     "passwordErrata": "Password non corretta.",
     "eliminaErrore": "Non è stato possibile eliminare l'account. Riprova.",
-    "supportoTitolo": "Feedback e supporto",
-    "supportoTesto": "Contattaci per qualsiasi domanda all'indirizzo",
-    "mandaEmail": "Manda email",
     "temaScuro": "Tema scuro"
   },
   "modificaProfilo": {
@@ -653,5 +649,25 @@
   },
   "notifiche": {
     "canale": "Promemoria abbonamenti"
+  },
+  "contatto": {
+    "titolo": "Scrivici",
+    "sottotitolo": "Una domanda, un problema, un'idea? Leggiamo ogni messaggio e ti rispondiamo via email.",
+    "email": "La tua email",
+    "emailNonValida": "Controlla l'indirizzo email",
+    "argomento": "Di cosa si tratta?",
+    "argomenti": {
+      "problema": "Problema",
+      "idea": "Idea",
+      "domanda": "Domanda",
+      "altro": "Altro"
+    },
+    "messaggio": "Messaggio",
+    "legale": "Inviando confermi di aver letto l'",
+    "legaleBrowser": ". Alleghiamo il nome del browser, per capire subito dove guardare.",
+    "invia": "Invia",
+    "errore": "Messaggio non inviato. Riprova tra poco.",
+    "inviatoTitolo": "Messaggio inviato",
+    "inviatoTesto": "Grazie! Ti rispondiamo a {{email}}."
   }
 }

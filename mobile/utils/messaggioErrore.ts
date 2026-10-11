@@ -22,6 +22,7 @@ const NOTI: Record<string, string> = {
   "Expense not found": "errori.nonTrovato",
   "Subscription not found": "errori.nonTrovato",
   "Category not found": "errori.nonTrovato",
+  "Message not sent": "errori.nonInviato",
 };
 
 /** Il testo da mostrare per il detail di un errore del server. */

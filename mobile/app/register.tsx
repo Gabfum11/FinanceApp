@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { usePreferenze } from "@/utils/preferenze";
 import { useStili } from "@/utils/tema";
 import { PaginaDivisa } from "@/components/PaginaDivisa";
+import { TornaAllaLanding } from "@/components/TornaAllaLanding";
 import { useSchermoLargo } from "@/utils/layout";
 
 export default function RegisterScreen() {
@@ -78,9 +79,10 @@ export default function RegisterScreen() {
         }
     }
     return (
-        <PaginaDivisa>
+        <PaginaDivisa indietro>
         <View style={styles.container}>
             <PaginaScorrevole style={styles.content} tastiera centrata>
+                {!largo && <TornaAllaLanding />}
                 {!largo && (
                 <View style={styles.logoContainer}>
                     <Image source={require("../assets/images/logo/trackit-icon-rounded-180.png")} style={styles.logo} />

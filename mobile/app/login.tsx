@@ -15,6 +15,7 @@ import { SelettoreLingua } from "@/components/SelettoreLingua";
 import { useTranslation } from "react-i18next";
 import { useStili } from "@/utils/tema";
 import { PaginaDivisa } from "@/components/PaginaDivisa";
+import { TornaAllaLanding } from "@/components/TornaAllaLanding";
 import { useSchermoLargo } from "@/utils/layout";
 
 
@@ -68,11 +69,18 @@ export default function LoginScreen() {
 }
 
   return (
-    <PaginaDivisa>
+    <PaginaDivisa indietro>
     <View style={styles.container}>{/*container di tutta la schermata*/}
       <PaginaScorrevole style={styles.content} tastiera centrata>
-        {/* per chi ha saltato la presentazione o torna dopo un logout */}
-        {!largo && <SelettoreLingua />}
+        {/* la lingua per chi ha saltato la presentazione o torna dopo un logout */}
+        {!largo && (
+          <View style={styles.barraAlta}>
+            <TornaAllaLanding />
+            <View style={styles.selettore}>
+              <SelettoreLingua />
+            </View>
+          </View>
+        )}
         {!largo && (
         <View style={styles.logoContainer}>
           <Image source={require("../assets/images/logo/trackit-icon-rounded-180.png")} style={styles.logo} />
