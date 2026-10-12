@@ -24,7 +24,12 @@ import { IconaCategoria, IconaCerchio } from "@/components/IconaCategoria";
 type CategoryStat = {
   category_name: string;
   total: number;
+  //dalla piu' grande, come arrivano dal server
+  subcategories: { category_name: string; total: number }[];
 };
+
+//aperta una categoria se ne vedono le voci piu' grandi; le altre stanno in "Altre"
+const SOTTOCATEGORIE_VISIBILI = 3;
 
 //come si leggono le cifre della legenda: la scelta resta sul telefono
 const CHIAVE_CIFRE = "statistiche_cifre";
@@ -80,6 +85,14 @@ export default function StatsScreen() {
   const [nuovoBudget, setNuovoBudget] = useState("");
   const [erroreBudget, setErroreBudget] = useState("");
   const [salvataggio, setSalvataggio] = useState(false);
+  //una categoria aperta alla volta: aprirne un'altra chiude la precedente
+  const [aperta, setAperta] = useState<string | null>(null);
+  const [tutteVisibili, setTutteVisibili] = useState(false);
+
+  function apriCategoria(nome: string) {
+    setAperta((prima) => (prima === nome ? null : nome));
+    setTutteVisibili(false);
+  }
 
   async function loadStats() {
     try {
@@ -205,12 +218,16 @@ export default function StatsScreen() {
         inizio: new Date(annoMostrato, 0, 1).toLocaleDateString(localeAttuale(), { day: "numeric", month: "short" }),
       })
     : "";
+  //la categoria aperta, se c'e' ancora nel periodo mostrato
+  const categoriaAperta = stats.find((item) => item.category_name === aperta) ?? null;
+  //con una categoria aperta le altre fette sbiadiscono: si vede subito di cosa si parla
+  const sbiadita = (nome: string | null) => categoriaAperta != null && categoriaAperta.category_name !== nome;
   const pieData = [
     ...stats.map((item) => ({
       value: item.total,
-      color: colorePerGruppo(item.category_name),
+      color: colorePerGruppo(item.category_name) + (sbiadita(item.category_name) ? "33" : ""),
     })),
-    ...(remaining > 0 ? [{ value: remaining, color: colors.donutRemaining }] : []),
+    ...(remaining > 0 ? [{ value: remaining, color: categoriaAperta ? colors.donutRemaining + "55" : colors.donutRemaining }] : []),
   ];
 
   //la ciambella con il totale: sopra la legenda sugli schermi stretti, accanto sugli altri
@@ -224,9 +241,11 @@ export default function StatsScreen() {
         //il buco della ciambella e' un cerchio pieno, bianco se non si dice altro
         innerCircleColor={colors.surface}
         centerLabelComponent={() => (
-          <View style={{ alignItems: "center" }}>
-            <Text style={styles.totalLabel}>{t("statistiche.speso")}</Text>
-            <Text style={styles.totalAmount}>{importo(total)}</Text>
+          <View style={styles.centroCiambella}>
+            <Text style={styles.totalLabel} numberOfLines={2}>
+              {categoriaAperta ? nomeCategoria(categoriaAperta.category_name) : t("statistiche.speso")}
+            </Text>
+            <Text style={styles.totalAmount}>{importo(categoriaAperta ? categoriaAperta.total : total)}</Text>
           </View>
         )}
       />
@@ -347,30 +366,99 @@ export default function StatsScreen() {
                     <Text style={[styles.intestazioneColonna, styles.legendLeft]}>{t("statistiche.categoria")}</Text>
                     <Text style={[styles.intestazioneColonna, styles.colonnaImporto]}>{t("statistiche.importo")}</Text>
                     <Text style={[styles.intestazioneColonna, styles.colonnaPercentuale]}>%</Text>
+                    <View style={styles.freccina} />
                   </View>
                 )}
                 {stats.map((item, indice) => {
+                  //con una sola voce dentro, aprire non aggiungerebbe niente
+                  const apribile = item.subcategories.length > 1;
+                  const isAperta = categoriaAperta?.category_name === item.category_name;
+                  const nome = nomeCategoria(item.category_name);
+                  //se resterebbe fuori una sola voce, tanto vale mostrarla
+                  const voci = tutteVisibili || item.subcategories.length <= SOTTOCATEGORIE_VISIBILI + 1
+                    ? item.subcategories
+                    : item.subcategories.slice(0, SOTTOCATEGORIE_VISIBILI);
+                  const altre = item.subcategories.slice(voci.length);
+                  const colore = colorePerGruppo(item.category_name);
                   return (
-                    <View key={item.category_name} style={[styles.legendRow, (indice > 0 || largo) && styles.legendRowSeparata]}>
-                      <View style={styles.legendLeft}>
-                        {/* l'icona oltre al colore: la fetta si riconosce anche
-                            da chi distingue male i colori */}
-                        <IconaCategoria gruppo={item.category_name} dimensione={30} />
-                        <Text style={styles.legendLabel} numberOfLines={1}>{nomeCategoria(item.category_name)}</Text>
-                      </View>
-                      {largo ? (
-                        <>
-                          <Text style={[styles.legendPercentage, styles.colonnaImporto]}>{importo(item.total)}</Text>
-                          <Text style={styles.colonnaPercentuale}>{percentuale(item.total)}%</Text>
-                        </>
-                      ) : (
-                        <Text style={styles.legendPercentage}>{cifra(item.total)}</Text>
+                    <View key={item.category_name}>
+                      <Pressable
+                        disabled={!apribile}
+                        onPress={() => apriCategoria(item.category_name)}
+                        style={({ pressed }) => [
+                          styles.legendRow,
+                          (indice > 0 || largo) && styles.legendRowSeparata,
+                          sbiadita(item.category_name) && styles.rigaSbiadita,
+                          pressed && styles.premuto,
+                        ]}
+                        accessibilityRole={apribile ? "button" : undefined}
+                        accessibilityLabel={apribile
+                          ? t(isAperta ? "statistiche.chiudiCategoria" : "statistiche.apriCategoria", { categoria: nome })
+                          : undefined}
+                        accessibilityState={apribile ? { expanded: isAperta } : undefined}
+                      >
+                        <View style={styles.legendLeft}>
+                          {/* l'icona oltre al colore: la fetta si riconosce anche
+                              da chi distingue male i colori */}
+                          <IconaCategoria gruppo={item.category_name} dimensione={30} />
+                          <Text style={styles.legendLabel} numberOfLines={1}>{nome}</Text>
+                        </View>
+                        {largo ? (
+                          <>
+                            <Text style={[styles.legendPercentage, styles.colonnaImporto]}>{importo(item.total)}</Text>
+                            <Text style={styles.colonnaPercentuale}>{percentuale(item.total)}%</Text>
+                          </>
+                        ) : (
+                          <Text style={styles.legendPercentage}>{cifra(item.total)}</Text>
+                        )}
+                        {/* lo spazio resta anche senza freccia: gli importi restano in colonna */}
+                        <View style={styles.freccina}>
+                          {apribile && (
+                            <MaterialCommunityIcons name={isAperta ? "chevron-up" : "chevron-down"} size={20} color={colors.textMuted} />
+                          )}
+                        </View>
+                      </Pressable>
+                      {isAperta && (
+                        <View style={styles.sottocategorie}>
+                          {voci.map((sub) => (
+                            <View key={sub.category_name} style={styles.sottocategoria}>
+                              <View style={styles.sottocategoriaTesti}>
+                                <Text style={styles.sottocategoriaNome} numberOfLines={1}>{nomeCategoria(sub.category_name)}</Text>
+                                <Text style={styles.sottocategoriaImporto}>{largo ? importo(sub.total) : cifra(sub.total)}</Text>
+                              </View>
+                              {/* barra rispetto alla voce piu' grande: si confrontano meglio delle fette */}
+                              <View style={styles.binario}>
+                                <View
+                                  style={[
+                                    styles.barra,
+                                    { width: `${(sub.total / item.subcategories[0].total) * 100}%`, backgroundColor: colore },
+                                  ]}
+                                />
+                              </View>
+                            </View>
+                          ))}
+                          {altre.length > 0 && (
+                            <Pressable
+                              style={({ pressed }) => [styles.altre, pressed && styles.premuto]}
+                              onPress={() => setTutteVisibili(true)}
+                              accessibilityRole="button"
+                            >
+                              <Text style={styles.altreTesto}>
+                                {t("statistiche.altre", {
+                                  numero: altre.length,
+                                  importo: importo(altre.reduce((somma, sub) => somma + sub.total, 0)),
+                                })}
+                              </Text>
+                              <MaterialCommunityIcons name="chevron-right" size={18} color={colors.primaryDark} />
+                            </Pressable>
+                          )}
+                        </View>
                       )}
                     </View>
                   );
                 })}
                 {remaining > 0 && (
-                  <View style={[styles.legendRow, styles.legendRowSeparata]}>
+                  <View style={[styles.legendRow, styles.legendRowSeparata, categoriaAperta != null && styles.rigaSbiadita]}>
                     <View style={styles.legendLeft}>
                       {/* un anello vuoto, grigio come la sua fetta: e' il pezzo di ciambella
                           che resta, non una categoria, quindi niente icona */}
@@ -387,6 +475,7 @@ export default function StatsScreen() {
                     ) : (
                       <Text style={[styles.legendPercentage, styles.legendaResto]}>{cifra(remaining)}</Text>
                     )}
+                    <View style={styles.freccina} />
                   </View>
                 )}
               </View>

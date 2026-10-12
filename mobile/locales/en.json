@@ -554,6 +554,9 @@
     "ricalcolo": "Changing the day also recalculates past periods."
   },
   "statistiche": {
+    "altre": "{{numero}} more · {{importo}}",
+    "apriCategoria": "Show subcategories of {{categoria}}",
+    "chiudiCategoria": "Hide subcategories of {{categoria}}",
     "errore": "Couldn't load your stats",
     "nessunaMese": "No expenses this month",
     "nessunaPeriodo": "No expenses available",

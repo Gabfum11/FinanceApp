@@ -554,6 +554,9 @@
     "ricalcolo": "Cambiare il giorno ricalcola anche i periodi passati."
   },
   "statistiche": {
+    "altre": "Altre {{numero}} · {{importo}}",
+    "apriCategoria": "Mostra le sottocategorie di {{categoria}}",
+    "chiudiCategoria": "Nascondi le sottocategorie di {{categoria}}",
     "errore": "Errore nel caricamento delle statistiche",
     "nessunaMese": "Nessuna spesa in questo mese",
     "nessunaPeriodo": "Nessuna spesa disponibile",

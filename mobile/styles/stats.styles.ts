@@ -289,10 +289,74 @@ export const creaStili = (colors: Colori) =>
         borderRadius: 15,
         borderWidth: 7,
     },
+    //con una categoria aperta le altre righe passano in secondo piano
+    rigaSbiadita: {
+        opacity: 0.4,
+    },
+    //posto per la freccia di apertura, anche dove non c'e': importi in colonna
+    freccina: {
+        width: 28,
+        alignItems: "flex-end",
+    },
+    //rientrate fino al nome della categoria (icona 30 + spazio 12)
+    sottocategorie: {
+        paddingLeft: 42,
+        paddingRight: 28,
+        paddingBottom: 12,
+        gap: 10,
+    },
+    sottocategoria: {
+        gap: 4,
+    },
+    sottocategoriaTesti: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        gap: 12,
+    },
+    sottocategoriaNome: {
+        fontSize: fontSize.sm,
+        color: colors.textSecondary,
+        flexShrink: 1,
+    },
+    sottocategoriaImporto: {
+        fontSize: fontSize.sm,
+        fontWeight: fontWeight.bold,
+        color: colors.text,
+        fontVariant: ["tabular-nums"],
+    },
+    //il bordo come binario: surfaceAlt sul fondo scuro quasi non si vedeva
+    binario: {
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: colors.border,
+        overflow: "hidden",
+    },
+    barra: {
+        height: 6,
+        borderRadius: 3,
+    },
+    altre: {
+        flexDirection: "row",
+        alignItems: "center",
+        alignSelf: "flex-start",
+        minHeight: 44,
+        gap: 2,
+    },
+    altreTesto: {
+        fontSize: fontSize.sm,
+        fontWeight: fontWeight.bold,
+        color: colors.primaryDark,
+    },
+    //largo quanto il buco: un nome di categoria lungo va a capo invece di uscire
+    centroCiambella: {
+        alignItems: "center",
+        maxWidth: 100,
+    },
     //colore del tema e non opacita': sul fondo scuro il 60% di bianco non bastava
     totalLabel: {
         color: colors.textMuted,
         fontSize: fontSize.sm,
+        textAlign: "center",
     },
     totalAmount: {
         fontWeight: fontWeight.bold,

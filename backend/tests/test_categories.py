@@ -143,6 +143,14 @@ class TestStatisticheAggregate:
         totale = sum(c["total"] for c in client.get("/expenses/stats").json()["categories"])
         assert totale == 583.0
 
+    def test_ogni_gruppo_porta_le_sue_sottocategorie(self, client, utente, spese_su_piu_sottocategorie):
+        """Aprendo un gruppo nelle statistiche si vede di cosa e' fatto, dalla voce piu' grande."""
+        casa = next(c for c in client.get("/expenses/stats").json()["categories"] if c["category_name"] == "Casa")
+        assert casa["subcategories"] == [
+            {"category_name": "Affitto o mutuo", "total": 500.0},
+            {"category_name": "Bolletta energia", "total": 80.0},
+        ]
+
     def test_vista_anno_somma_tutto_l_anno_senza_budget(self, client, utente, spese_su_piu_sottocategorie):
         from datetime import date
 

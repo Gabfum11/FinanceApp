@@ -83,8 +83,9 @@ def get_stats(cycle_offset: int = 0, year: int | None = Query(None, ge=2000, le=
     parent = aliased(models.Category)
     gruppo = func.coalesce(parent.name, models.Category.name)
 
-    category_expense = db.query(
-        gruppo.label("gruppo"), func.sum(models.Expense.amount)
+    #raggruppa anche per sottocategoria: le statistiche le mostrano aprendo un gruppo
+    righe = db.query(
+        gruppo.label("gruppo"), models.Category.name, func.sum(models.Expense.amount)
     ).select_from(
         models.Category #senza, la query partirebbe dall'alias del padre
     ).join(
@@ -95,7 +96,15 @@ def get_stats(cycle_offset: int = 0, year: int | None = Query(None, ge=2000, le=
         models.Expense.user_id == current_user.id,
         models.Expense.date >= cycle_start,
         models.Expense.date <= cycle_end,
-    ).group_by(gruppo).order_by(func.sum(models.Expense.amount).desc()).all()
+    ).group_by(gruppo, models.Category.name).order_by(func.sum(models.Expense.amount).desc()).all()
+
+    #le righe arrivano dalla piu' grande: anche le sottocategorie restano in ordine
+    gruppi: dict[str, dict] = {}
+    for nome_gruppo, sottocategoria, totale in righe:
+        voce = gruppi.setdefault(nome_gruppo, {"category_name": nome_gruppo, "total": 0, "subcategories": []})
+        voce["total"] += totale
+        voce["subcategories"].append({"category_name": sottocategoria, "total": totale})
+    categorie = sorted(gruppi.values(), key=lambda g: g["total"], reverse=True)
 
     #il ciclo in corso usa il budget attuale; quelli chiusi il loro, dallo storico
     #il budget e' mensile: su un anno non c'e' un "quanto resta"
@@ -110,7 +119,7 @@ def get_stats(cycle_offset: int = 0, year: int | None = Query(None, ge=2000, le=
         "cycle_start": cycle_start,
         "cycle_end": cycle_end,
         "budget": budget,
-        "categories": [{"category_name": name, "total": total} for name, total in category_expense],
+        "categories": categorie,
     }
 @router.get("/weekly-stats", response_model=schemas.WeeklyStatsOut)
 def get_weekly_stats(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):

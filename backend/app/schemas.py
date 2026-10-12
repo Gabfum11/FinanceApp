@@ -169,9 +169,15 @@ class ResendOtp(BaseModel):
 class ResetPassword(BaseModel):
     new_password:str=Field(...,min_length=8,max_length=72)
 
+class SubcategoryStat(BaseModel):
+    category_name: str
+    total: float
+
 class CategoryStat(BaseModel):
     category_name:str
     total: float
+    #dalla piu' grande; per una categoria senza gruppo c'e' solo lei stessa
+    subcategories: list[SubcategoryStat] = []
 
 class StatsOut(BaseModel):
     cycle_start: date
