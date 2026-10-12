@@ -16,7 +16,7 @@ import { creaStili } from "@/styles/stats.styles";
 import { useFocusEffect, useRouter } from "expo-router";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
-import { DIALOGO_LARGO, useSchermoLargo, useSchermoStretto } from "@/utils/layout";
+import { DIALOGO_LARGO, LARGHEZZA_MASSIMA, useSchermoLargo, useSchermoStretto } from "@/utils/layout";
 import { useStili, useTema } from "@/utils/tema";
 import { PulsantiDialogo, creaStiliFinestra } from "@/components/Dialogo";
 import { IconaCategoria, IconaCerchio } from "@/components/IconaCategoria";
@@ -60,7 +60,9 @@ export default function StatsScreen() {
   const spazioBarra = useSpazioBarra();
   //su uno schermo stretto ciambella e legenda affiancate non ci stanno:
   //la ciambella va sopra e la legenda sotto, a tutta larghezza
-  const stretto = useSchermoStretto();
+  //soglia alla larghezza massima della colonna: a 412 (molti Samsung) affiancate
+  //lasciavano al nome della categoria pochi pixel, ridotto a "A…"
+  const stretto = useSchermoStretto(LARGHEZZA_MASSIMA);
   //sul computer: ciambella grande, importi e percentuali insieme, budget di lato
   const largo = useSchermoLargo();
   const router = useRouter();
@@ -369,7 +371,7 @@ export default function StatsScreen() {
                           {/* l'icona oltre al colore: la fetta si riconosce anche
                               da chi distingue male i colori */}
                           <IconaCategoria gruppo={item.category_name} dimensione={30} />
-                          <Text style={styles.legendLabel} numberOfLines={1}>{nome}</Text>
+                          <Text style={styles.legendLabel} numberOfLines={2}>{nome}</Text>
                         </View>
                         {largo ? (
                           <>
