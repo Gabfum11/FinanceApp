@@ -595,10 +595,6 @@ export const creaStili = (colors: Colori) =>
   pcChatIcona: {
     width: 28,
     height: 28,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.primarySoft,
   },
   pcChatTitolo: {
     fontWeight: fontWeight.bold,
@@ -616,10 +612,6 @@ export const creaStili = (colors: Colori) =>
   rispostaTesto: {
     lineHeight: 20,
     color: colors.text,
-  },
-  pcNota: {
-    fontSize: fontSize.md,
-    color: colors.textOnDarkMuted,
   },
   pcCorpo: {
     paddingTop: 48,
@@ -654,6 +646,66 @@ export const creaStili = (colors: Colori) =>
     borderRadius: 18,
     backgroundColor: colors.background,
     gap: 10,
+  },
+  //il riquadro dell'estratto conto: illustrazione e testi affiancati, uno
+  //sotto l'altro quando non c'e' spazio
+  pcRiquadroLargo: {
+    flexBasis: "100%",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 28,
+  },
+  pcLargoIllustrazione: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 420,
+  },
+  pcLargoTesti: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 300,
+    gap: 14,
+  },
+  pcPunto: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  pcPuntoTesto: {
+    flex: 1,
+  },
+  importChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  importChip: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  importChipPronte: {
+    color: colors.primaryDark,
+    backgroundColor: colors.primarySoft,
+  },
+  importChipSistemare: {
+    color: colors.msgArancio,
+    backgroundColor: colors.msgArancioSoft,
+  },
+  importPulsante: {
+    alignItems: "center",
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+  },
+  //come pcCreaTesto: il bianco sul verde non si legge
+  importPulsanteTesto: {
+    fontWeight: fontWeight.bold,
+    color: colors.surfaceDark,
   },
   pcRiquadroTitolo: {
     fontSize: fontSize.xl,

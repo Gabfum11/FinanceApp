@@ -29,6 +29,8 @@ import { LARGHEZZA_CONTENUTO } from "@/utils/layout";
 // capo da soli quando lo spazio finisce.
 
 export const LOGO = require("../assets/images/logo/trackit-icon-rounded-180.png");
+//la stessa icona del pulsante dell'assistente nella home
+const ICONA_ASSISTENTE = require("../assets/images/logo/trackit-bot-1024.png");
 //nel browser non ci sono notifiche push: i testi non devono promettere avvisi
 const SUL_WEB = Platform.OS === "web";
 //importi di esempio della settimana: servono solo a far vedere il grafico
@@ -199,6 +201,37 @@ export function IllustrazioneAbbonamenti() {
   );
 }
 
+// Come la schermata dell'import: il file letto, i conteggi e alcune righe,
+// con Netflix tolta perche' gia' registrata dall'abbonamento
+function IllustrazioneImport() {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
+  const { importo } = usePreferenze();
+  const { t } = useTranslation();
+  return (
+    <>
+      <View style={styles.abbonamento}>
+        <MaterialCommunityIcons name="microsoft-excel" size={32} color={colors.primaryDark} style={styles.abbonamentoIcona} />
+        <View style={styles.abbonamentoInfo}>
+          <Text style={styles.abbonamentoNome} numberOfLines={1}>{t("presentazione.importa.file")}</Text>
+          <Text style={styles.abbonamentoMeta}>{t("presentazione.importa.letto")}</Text>
+        </View>
+        <MaterialCommunityIcons name="check-circle" size={22} color={colors.primary} />
+      </View>
+      <View style={styles.importChips}>
+        <Text style={[styles.importChip, styles.importChipPronte]}>{t("importa.pronte", { count: 41 })}</Text>
+        <Text style={[styles.importChip, styles.importChipSistemare]}>{t("importa.daSistemare", { count: 2 })}</Text>
+      </View>
+      <Abbonamento nome="Esselunga" meta={nomeCategoria("Spesa alimentare")} importo={importo(54.2)} categoria="Spesa alimentare" gruppo="Cibo e bevande" />
+      <Abbonamento nome="Q8" meta={nomeCategoria("Carburante")} importo={importo(60)} categoria="Carburante" gruppo="Trasporti" />
+      <Abbonamento nome="Netflix" meta={t("importa.msg_abbonamento")} importo={importo(13.99)} categoria="Abbonamenti digitali" gruppo="Svago" />
+      <View style={styles.importPulsante}>
+        <Text style={styles.importPulsanteTesto}>{t("importa.pulsanteImporta", { count: 41 })}</Text>
+      </View>
+    </>
+  );
+}
+
 // Come la pagina delle statistiche: il mese, la ciambella con lo speso al
 // centro e la legenda. Niente colonna delle percentuali: sul telefono il
 // riquadro e' largo circa 210 punti e il nome della categoria verrebbe tagliato
@@ -277,15 +310,12 @@ function IllustrazioneStatistiche() {
 // cambiare con la data ("a settembre" letto a dicembre)
 function IllustrazioneAssistente() {
   const styles = useStili(creaStili);
-  const { colors } = useTema();
   const { importo } = usePreferenze();
   const { t } = useTranslation();
   return (
     <View style={styles.pcChat} role="img" aria-label={t("presentazione.descrizioni.assistente")}>
       <View style={styles.pcChatTesta}>
-        <View style={styles.pcChatIcona}>
-          <MaterialCommunityIcons name="creation" size={16} color={colors.primaryDark} />
-        </View>
+        <Image source={ICONA_ASSISTENTE} style={styles.pcChatIcona} accessibilityIgnoresInvertColors />
         <Text style={styles.pcChatTitolo}>{t("home.assistente")}</Text>
       </View>
       <View style={styles.fumetto}>
@@ -315,6 +345,7 @@ function IllustrazioneAssistente() {
 // (FinestraAccesso), sul computer e sul telefono
 export function Landing() {
   const styles = useStili(creaStili);
+  const { colors } = useTema();
   const { t } = useTranslation();
   const [contatto, setContatto] = useState(false);
   const [accesso, setAccesso] = useState<ModoAccesso | null>(null);
@@ -363,7 +394,6 @@ export function Landing() {
               >
                 {t("presentazione.p5.crea")}
               </Button>
-              <Text style={styles.pcNota}>{t("presentazione.p5.testo")}</Text>
             </View>
             <IllustrazioneAssistente />
           </View>
@@ -373,6 +403,22 @@ export function Landing() {
       <View style={[styles.pcColonna, styles.pcCorpo, { maxWidth: LARGHEZZA_CONTENUTO + 80 }]}>
         <Text role="heading" aria-level={2} style={styles.pcSezione}>{t("presentazione.cosaFa")}</Text>
         <View style={styles.pcRiquadri}>
+          {/* largo tutta la riga: un quinto riquadro normale resterebbe da solo in fondo */}
+          <View style={[styles.pcRiquadro, styles.pcRiquadroLargo]}>
+            <View style={[styles.pcIllustrazione, styles.pcLargoIllustrazione]} role="img" aria-label={t("presentazione.descrizioni.importa")}>
+              <IllustrazioneImport />
+            </View>
+            <View style={styles.pcLargoTesti}>
+              <Text role="heading" aria-level={3} style={styles.pcRiquadroTitolo}>{t("presentazione.importa.titolo")}</Text>
+              <Text style={styles.pcRiquadroTesto}>{t("presentazione.importa.testo")}</Text>
+              {["punto1", "punto2", "punto3"].map((punto) => (
+                <View key={punto} style={styles.pcPunto}>
+                  <MaterialCommunityIcons name="check" size={18} color={colors.primary} />
+                  <Text style={[styles.pcRiquadroTesto, styles.pcPuntoTesto]}>{t(`presentazione.importa.${punto}`)}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
           {riquadro(
             t("presentazione.p2.titolo"),
             t("presentazione.p2.testo"),
