@@ -232,9 +232,10 @@ function IllustrazioneImport() {
   );
 }
 
-// Come la pagina delle statistiche: il mese, la ciambella con lo speso al
-// centro e la legenda. Niente colonna delle percentuali: sul telefono il
-// riquadro e' largo circa 210 punti e il nome della categoria verrebbe tagliato
+// Come la pagina delle statistiche: Mese | Anno e il mese, la ciambella con lo
+// speso al centro e la legenda con le icone delle categorie. Niente interruttore
+// €/% ne' frecce delle sottocategorie: sul telefono il riquadro e' largo circa
+// 210 punti e il nome della categoria verrebbe tagliato
 function IllustrazioneStatistiche() {
   const styles = useStili(creaStili);
   const { colors } = useTema();
@@ -254,10 +255,17 @@ function IllustrazioneStatistiche() {
   }));
   return (
     <View style={styles.statistiche}>
+      {/* la fascia del periodo come nell'app: Mese | Anno e il mese tra le frecce */}
       <View style={styles.statPeriodo}>
-        <MaterialCommunityIcons name="chevron-left" size={20} color={colors.textMuted} />
-        <Text style={styles.statPeriodoTesto}>{periodoBudget(lingua)}</Text>
-        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.disabled} />
+        <View style={styles.statVista}>
+          <Text style={[styles.statVistaVoce, styles.statVistaScelta]}>{t("statistiche.mese")}</Text>
+          <Text style={styles.statVistaVoce}>{t("statistiche.anno")}</Text>
+        </View>
+        <View style={styles.statNavigatore}>
+          <MaterialCommunityIcons name="chevron-left" size={20} color={colors.text} />
+          <Text style={styles.statPeriodoTesto}>{periodoBudget(lingua)}</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textDisabled} />
+        </View>
       </View>
       <View style={styles.statCorpo}>
         <View style={styles.ciambella}>
@@ -285,15 +293,16 @@ function IllustrazioneStatistiche() {
           </View>
         </View>
         <View style={styles.statLegenda}>
-          {SPESE_CATEGORIE.map((c) => (
-            <View key={c.gruppo} style={styles.statRiga}>
-              <View style={[styles.statPunto, { backgroundColor: colorePerGruppo(c.gruppo) }]} />
-              <Text style={styles.statNome} numberOfLines={1}>{nomeCategoria(c.gruppo)}</Text>
+          {SPESE_CATEGORIE.map((c, i) => (
+            <View key={c.gruppo} style={[styles.statRiga, i > 0 && styles.statRigaSeparata]}>
+              <IconaCategoria gruppo={c.gruppo} dimensione={30} />
+              <Text style={styles.statNome} numberOfLines={2}>{nomeCategoria(c.gruppo)}</Text>
               <Text style={styles.statImporto}>{importo(c.totale)}</Text>
             </View>
           ))}
-          <View style={[styles.statRiga, styles.statRigaLibero]}>
-            <View style={[styles.statPunto, { backgroundColor: colors.donutRemaining }]} />
+          {/* il disponibile e' un anello vuoto grigio come la sua fetta, non una categoria */}
+          <View style={[styles.statRiga, styles.statRigaSeparata]}>
+            <View style={[styles.statAnello, { borderColor: colors.donutRemaining }]} />
             <Text style={[styles.statNome, styles.statTestoLibero]} numberOfLines={1}>
               {t("statistiche.disponibile")}
             </Text>

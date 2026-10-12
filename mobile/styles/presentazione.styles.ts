@@ -355,17 +355,51 @@ export const creaStili = (colors: Colori) =>
     paddingHorizontal: 18,
     ...cardShadow,
   },
+  //come la fascia del periodo nell'app (BarraPeriodo), in piccolo e senza tocchi
   statPeriodo: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    marginBottom: 10,
+    gap: 8,
+    marginBottom: 14,
+  },
+  statVista: {
+    flexDirection: "row",
+    padding: 3,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceAlt,
+  },
+  statVistaVoce: {
+    minWidth: 56,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    overflow: "hidden",
+    textAlign: "center",
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.textMuted,
+  },
+  statVistaScelta: {
+    backgroundColor: colors.primary,
+    color: colors.surfaceDark,
+  },
+  statNavigatore: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   statPeriodoTesto: {
     fontSize: fontSize.md,
-    fontWeight: fontWeight.semibold,
+    fontWeight: fontWeight.bold,
     color: colors.text,
+    fontVariant: ["tabular-nums"],
   },
   statCorpo: {
     flexDirection: "row",
@@ -398,23 +432,26 @@ export const creaStili = (colors: Colori) =>
   statLegenda: {
     flexGrow: 1,
     flexShrink: 1,
-    flexBasis: 180,
-    gap: 9,
+    flexBasis: 200,
   },
+  //righe come la legenda dell'app: icona su cerchio, alte 44 e separate da una linea
   statRiga: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
+    minHeight: 44,
+    paddingVertical: 4,
   },
-  statRigaLibero: {
+  statRigaSeparata: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    paddingTop: 9,
   },
-  statPunto: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  //largo come le icone, cosi' i nomi restano allineati
+  statAnello: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 7,
   },
   statNome: {
     flex: 1,
@@ -423,8 +460,9 @@ export const creaStili = (colors: Colori) =>
   },
   statImporto: {
     fontSize: fontSize.md,
-    fontWeight: fontWeight.semibold,
+    fontWeight: fontWeight.bold,
     color: colors.text,
+    fontVariant: ["tabular-nums"],
   },
   statTestoLibero: {
     color: colors.textMuted,
