@@ -8,6 +8,7 @@ import pytest
 
 from app import models
 from app.business_logic import import_categorie
+from app.business_logic.oggi import oggi
 
 OGGI = "2026-10-10"
 TIPO_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -32,6 +33,13 @@ ESTRATTO = xlsx([
     ["15/09/2026", "BONIFICO A FAVORE DI BIANCHI GIULIA", "-350,00"],
     ["18/09/2026", "PRELIEVO BANCOMAT", "-100,00"],
 ])
+
+
+@pytest.fixture(autouse=True)
+def oggi_fisso(client):
+    #il giorno dei test resta fermo: X-Local-Date vale solo entro un giorno
+    #dalla data vera, e passato il 10 ottobre i test cambiavano esito da soli
+    client.app.dependency_overrides[oggi] = lambda: date.fromisoformat(OGGI)
 
 
 @pytest.fixture
@@ -62,8 +70,7 @@ def utente(make_user, login_as):
 def anteprima(client, contenuto=ESTRATTO, nome="estratto.xlsx"):
     #l'AI non si chiama mai davvero: qui risponde sempre "non so"
     with patch.object(import_categorie, "chiedi_ai", return_value={}) as ai:
-        risposta = client.post("/import/anteprima", files={"file": (nome, contenuto, TIPO_XLSX)},
-                               headers={"X-Local-Date": OGGI})
+        risposta = client.post("/import/anteprima", files={"file": (nome, contenuto, TIPO_XLSX)})
     return risposta, ai
 
 
@@ -98,8 +105,7 @@ def test_dei_pagamenti_a_persone_all_ai_arriva_solo_il_motivo(client, db, catego
                       ["03/09/2026", "P2P A VERDI   ANGELO per cocktail", "-5,00"],
                       ["04/09/2026", "P2P A BIANCHI   GIULIA", "-1,00"]])
     with patch.object(import_categorie, "chiedi_ai", return_value={}) as ai:
-        risposta = client.post("/import/anteprima", files={"file": ("e.xlsx", contenuto, TIPO_XLSX)},
-                               headers={"X-Local-Date": OGGI})
+        risposta = client.post("/import/anteprima", files={"file": ("e.xlsx", contenuto, TIPO_XLSX)})
     per_nome = {r["nome"]: r for r in risposta.json()["righe"]}
     #"spesa conad" la riconoscono le parole chiave: la categoria arriva senza AI
     assert per_nome["P2P a Rossi Mario per spesa conad"]["categoria_id"] == categorie["spesa"]
@@ -159,8 +165,7 @@ CODICE = "0b1c2d3e-0000-4000-8000-000000000001"
 
 
 def conferma(client, righe, codice=CODICE):
-    return client.post("/import/conferma", json={"codice": codice, "righe": righe},
-                       headers={"X-Local-Date": OGGI})
+    return client.post("/import/conferma", json={"codice": codice, "righe": righe})
 
 
 def riga_ok(categoria_id, **altro):
