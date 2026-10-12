@@ -249,3 +249,13 @@ def test_anteprima_tronca_i_nomi_lunghi_e_salta_le_date_future(client, categorie
     righe = risposta.json()["righe"]
     assert len(righe) == 1
     assert len(righe[0]["nome"]) <= 100
+
+
+def test_la_conferma_blocca_l_utente(db):
+    #due conferme simultanee contavano entrambe 0 spese gia' salvate e scrivevano
+    #entrambe: con l'utente bloccato la seconda aspetta e trova le spese della prima.
+    #SQLite non ha blocchi di riga, si controlla la query che arriva a PostgreSQL
+    from sqlalchemy.dialects import postgresql
+    from app.routers.import_estratto import utente_bloccato
+    sql = str(utente_bloccato(db, 1).statement.compile(dialect=postgresql.dialect()))
+    assert "FOR UPDATE" in sql

@@ -139,11 +139,19 @@ def anteprima(request: Request, file: UploadFile = File(...), db: Session = Depe
     }
 
 
+def utente_bloccato(db: Session, user_id: int):
+    """La riga dell'utente, bloccata fino al commit: due conferme dello stesso
+    caricamento (doppio tocco) passano una alla volta, e la seconda trova le
+    spese della prima invece di salvarle di nuovo."""
+    return db.query(models.User).filter(models.User.id == user_id).with_for_update()
+
+
 @router.post("/conferma", status_code=201)
 @limiter.limit("20/minute", key_func=user_or_ip)
 def conferma(request: Request, dati: schemas.ImportConferma, db: Session = Depends(get_db),
              current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
     codice = str(dati.codice)
+    utente_bloccato(db, current_user.id).one()
     #un doppio tocco o una richiesta ripetuta dalla rete non deve raddoppiare le
     #spese. Si risponde come la prima volta: se la prima risposta si e' persa,
     #l'app va avanti invece di restare su un errore con le spese gia' salvate
