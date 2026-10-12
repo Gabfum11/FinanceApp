@@ -106,6 +106,9 @@ class Subscriptions(Base):
     amount = Column(Float, nullable=False)
     frequency = Column(String, nullable=False)
     next_date = Column(Date, nullable=False)
+    #il giorno del mese in cui si rinnova (es. 31): next_date da sola lo perde
+    #dopo un mese corto e resterebbe al 28. Vuoto per i settimanali
+    anchor_day = Column(Integer, nullable=True)
     auto_renew = Column(Boolean, default=True) 
     created_at = Column(DateTime(timezone=True), server_default=func.now()) #server_default serve per salvare con l'orario aggiornato
     is_active=Column(Boolean, default=True)

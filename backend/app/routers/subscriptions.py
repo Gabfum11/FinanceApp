@@ -38,6 +38,11 @@ def advance(d: date, frequency: str, anchor_day: int | None = None) -> date:
         nxt = nxt.replace(day=safe_day(nxt.year, nxt.month, anchor_day))
     return nxt
 
+
+def giorno_di_rinnovo(d: date, frequency: str) -> int | None:
+    #il giorno del mese da ricordare in anchor_day: per i settimanali non conta
+    return None if frequency == "weekly" else d.day
+
 @router.post("/", response_model=schemas.SubscriptionOut)
 def create_subscription(subscription: schemas.SubscriptionCreate, db: Session=Depends(get_db),  current_user: models.User=Depends(security.get_current_user), giorno: date = Depends(oggi)):
     if subscription.category_id is not None:
@@ -46,7 +51,7 @@ def create_subscription(subscription: schemas.SubscriptionCreate, db: Session=De
             raise HTTPException(status_code=404, detail="Category not found")
     today = giorno
     start_date = subscription.start_date or today
-    anchor_day = start_date.day if subscription.frequency != "weekly" else None
+    anchor_day = giorno_di_rinnovo(start_date, subscription.frequency)
 
     #i rinnovi gia' avvenuti tra la data di partenza e oggi diventano spese:
     #le calcoliamo prima di salvare, per poter rifiutare se sono troppi
@@ -68,6 +73,7 @@ def create_subscription(subscription: schemas.SubscriptionCreate, db: Session=De
         category_id=subscription.category_id,
         user_id=current_user.id,
         next_date=next_date,
+        anchor_day=anchor_day,
         auto_renew=subscription.auto_renew,
         currency=_valuta_abbonamento(subscription.currency, current_user.currency),
     )
@@ -124,7 +130,7 @@ def run_due_renewals(db: Session, user_id: int, oggi_utente: date | None = None)
                 logger.warning("rinnovo rimandato: cambio non disponibile", extra={"subscription_id": sub.id})
                 break
             db.add(new_expense)
-            sub.next_date = advance(sub.next_date, sub.frequency)
+            sub.next_date = advance(sub.next_date, sub.frequency, sub.anchor_day)
     #sempre, anche senza rinnovi: il commit rilascia il blocco, che altrimenti
     #durerebbe fino alla fine della richiesta e farebbe aspettare le altre
     db.commit()
@@ -145,7 +151,9 @@ def toggle_subscription(subscription_id:int, db: Session=Depends(get_db), curren
         raise HTTPException(status_code=404, detail="Subscription not found")
     sub.is_active = not sub.is_active
     if sub.is_active:  # appena riattivato
-        sub.next_date = advance(giorno, sub.frequency)
+        #il ciclo riparte da oggi: anche il giorno del rinnovo diventa quello di oggi
+        sub.anchor_day = giorno_di_rinnovo(giorno, sub.frequency)
+        sub.next_date = advance(giorno, sub.frequency, sub.anchor_day)
     db.commit()
     return {"detail": "Stato aggiornato", "is_active": sub.is_active}
 
@@ -168,7 +176,7 @@ def mark_subscription_paid(subscription_id: int, db: Session = Depends(get_db), 
         raise HTTPException(status_code=503, detail=CAMBIO_NON_DISPONIBILE)
     db.add(new_expense)
 
-    sub.next_date = advance(sub.next_date, sub.frequency)
+    sub.next_date = advance(sub.next_date, sub.frequency, sub.anchor_day)
 
     db.commit()
     db.refresh(sub)
@@ -217,9 +225,13 @@ def update_subscription(subscription_id: int, changes: schemas.SubscriptionUpdat
     #cambiando periodo la vecchia next_date non e' piu' coerente: la ricalcoliamo
     #da oggi, senza toccare le spese gia' generate. Se pero' l'utente ha indicato
     #anche una data esplicita, e' quella a valere
-    if new_frequency is not None and new_next_date is None:
-        anchor_day = sub.next_date.day if new_frequency != "weekly" else None
-        sub.next_date = advance(giorno, new_frequency, anchor_day)
+    if new_next_date is not None:
+        #la data scelta dall'utente decide anche il giorno dei rinnovi successivi
+        sub.anchor_day = giorno_di_rinnovo(new_next_date, sub.frequency)
+    elif new_frequency is not None:
+        #il giorno resta quello di prima: next_date puo' essere gia' scivolata al 28
+        sub.anchor_day = None if new_frequency == "weekly" else (sub.anchor_day or sub.next_date.day)
+        sub.next_date = advance(giorno, new_frequency, sub.anchor_day)
 
     db.commit()
     db.refresh(sub)

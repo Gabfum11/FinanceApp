@@ -113,3 +113,55 @@ class TestArretrati:
             dovute, next_date = simula_backfill(start, "monthly", TODAY)
             if dovute is not None:
                 assert next_date > TODAY
+
+
+class TestIlGiornoResta:
+    """Dal 31 il rinnovo torna al 31 anche dopo il primo mese corto, non solo alla creazione."""
+
+    @pytest.fixture
+    def nel_giorno(self, client, make_user, login_as):
+        from app.business_logic.oggi import oggi
+
+        login_as(make_user(email="giorno31@example.com", password="password123"))
+
+        def _imposta(giorno):
+            #client.app e non app.main.app: test_security_headers ricarica il modulo
+            client.app.dependency_overrides[oggi] = lambda: giorno
+        return _imposta
+
+    def _crea_dal_31(self, client, nel_giorno):
+        nel_giorno(date(2026, 2, 1))
+        r = client.post("/subscriptions/", json={
+            "description": "Palestra", "amount": 30, "frequency": "monthly", "start_date": "2026-01-31",
+        })
+        assert r.json()["next_date"] == "2026-02-28"
+        return r.json()["id"]
+
+    def test_rinnovo_automatico(self, client, nel_giorno):
+        self._crea_dal_31(client, nel_giorno)
+        nel_giorno(date(2026, 5, 15))
+        [sub] = client.get("/subscriptions/").json()
+        date_spese = sorted(s["date"] for s in client.get("/expenses/").json())
+        assert date_spese == ["2026-01-31", "2026-02-28", "2026-03-31", "2026-04-30"]
+        assert sub["next_date"] == "2026-05-31"
+
+    def test_ho_rinnovato(self, client, nel_giorno):
+        sub_id = self._crea_dal_31(client, nel_giorno)
+        r = client.post(f"/subscriptions/{sub_id}/mark-paid")
+        assert r.json()["next_date"] == "2026-03-31"
+
+    def test_spostare_la_data_sposta_il_giorno(self, client, nel_giorno):
+        sub_id = self._crea_dal_31(client, nel_giorno)
+        client.patch(f"/subscriptions/{sub_id}", json={"next_date": "2026-03-15"})
+        nel_giorno(date(2026, 4, 20))
+        [sub] = client.get("/subscriptions/").json()
+        assert sub["next_date"] == "2026-05-15"
+
+    def test_riattivato_riparte_dal_giorno_di_oggi(self, client, nel_giorno):
+        sub_id = self._crea_dal_31(client, nel_giorno)
+        client.patch(f"/subscriptions/{sub_id}/toggle")
+        nel_giorno(date(2026, 3, 15))
+        client.patch(f"/subscriptions/{sub_id}/toggle")
+        nel_giorno(date(2026, 5, 20))
+        [sub] = client.get("/subscriptions/").json()
+        assert sub["next_date"] == "2026-06-15"
