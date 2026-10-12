@@ -71,16 +71,12 @@ def _messaggio(sub: models.Subscriptions, utente: models.User) -> dict:
 
 
 def invia_a_expo(messaggi: list[dict]) -> list[dict]:
-    """Consegna i messaggi a Expo e restituisce un esito (ticket) per ciascuno, nello stesso ordine."""
-    esiti: list[dict] = []
-    with httpx.Client(timeout=15) as client:
-        for inizio in range(0, len(messaggi), MESSAGGI_PER_RICHIESTA):
-            blocco = messaggi[inizio:inizio + MESSAGGI_PER_RICHIESTA]
-            response = client.post(EXPO_PUSH_URL, json=blocco)
-            #un rifiuto dell'intera richiesta non deve sembrare un invio riuscito
-            response.raise_for_status()
-            esiti.extend(response.json()["data"])
-    return esiti
+    """Consegna un blocco di messaggi (al massimo MESSAGGI_PER_RICHIESTA) a Expo
+    e restituisce un esito (ticket) per ciascuno, nello stesso ordine."""
+    response = httpx.post(EXPO_PUSH_URL, json=messaggi, timeout=15)
+    #un rifiuto dell'intera richiesta non deve sembrare un invio riuscito
+    response.raise_for_status()
+    return response.json()["data"]
 
 
 def invia_promemoria(db: Session) -> dict:
@@ -109,28 +105,31 @@ def invia_promemoria(db: Session) -> dict:
         db.commit()  #rilascia il blocco anche quando non c'e' niente da inviare
         return {"inviati": 0, "falliti": 0, "token_rimossi": 0}
 
-    messaggi = [_messaggio(sub, utente) for sub, utente in righe]
-    esiti = invia_a_expo(messaggi)
-
     inviati = falliti = 0
     token_rimossi: set[int] = set()
-    for (sub, utente), esito in zip(righe, esiti):
-        if esito.get("status") == "ok":
-            sub.reminder_sent_for = domani
-            inviati += 1
-            continue
-        falliti += 1
-        errore = (esito.get("details") or {}).get("error")
-        if errore == "DeviceNotRegistered":
-            #app disinstallata o dati cancellati: continuare a inviare non serve
-            utente.push_token = None
-            token_rimossi.add(utente.id)
-        else:
-            #non segnato: la prossima chiamata del cron ci riprova
-            logger.warning(
-                "promemoria non consegnato",
-                extra={"subscription_id": sub.id, "errore": errore or esito.get("message")},
-            )
-
-    db.commit()
+    try:
+        for inizio in range(0, len(righe), MESSAGGI_PER_RICHIESTA):
+            blocco = righe[inizio:inizio + MESSAGGI_PER_RICHIESTA]
+            esiti = invia_a_expo([_messaggio(sub, utente) for sub, utente in blocco])
+            for (sub, utente), esito in zip(blocco, esiti):
+                if esito.get("status") == "ok":
+                    sub.reminder_sent_for = domani
+                    inviati += 1
+                    continue
+                falliti += 1
+                errore = (esito.get("details") or {}).get("error")
+                if errore == "DeviceNotRegistered":
+                    #app disinstallata o dati cancellati: continuare a inviare non serve
+                    utente.push_token = None
+                    token_rimossi.add(utente.id)
+                else:
+                    #non segnato: la prossima chiamata del cron ci riprova
+                    logger.warning(
+                        "promemoria non consegnato",
+                        extra={"subscription_id": sub.id, "errore": errore or esito.get("message")},
+                    )
+    finally:
+        #anche se un blocco successivo fallisce: i promemoria gia' consegnati
+        #restano segnati, e il cron non li rimanda
+        db.commit()
     return {"inviati": inviati, "falliti": falliti, "token_rimossi": len(token_rimossi)}

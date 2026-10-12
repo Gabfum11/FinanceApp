@@ -213,3 +213,23 @@ class TestEsitiDiExpo:
 
         expo["esito"] = {"status": "ok", "id": "ticket"}
         assert cron().json()["inviati"] == 1
+
+
+class TestBlocchi:
+    def test_un_blocco_rifiutato_non_fa_rimandare_i_precedenti(self, cron, abbonamento, db_session, monkeypatch):
+        """Expo accetta il primo blocco e rifiuta il secondo: il primo resta segnato."""
+        monkeypatch.setattr(reminders, "MESSAGGI_PER_RICHIESTA", 1)
+        chiamate = []
+
+        def invia(messaggi):
+            chiamate.append(messaggi)
+            if len(chiamate) == 2:
+                raise RuntimeError("Expo giu'")
+            return [{"status": "ok", "id": "ticket"} for _ in messaggi]
+
+        monkeypatch.setattr(reminders, "invia_a_expo", invia)
+        primo, _ = abbonamento(email="a@t.it", token="ExponentPushToken[a]")
+        secondo, _ = abbonamento(email="b@t.it", token="ExponentPushToken[b]")
+        assert cron().status_code == 500
+        segnati = [leggi(db_session, models.Subscriptions, s).reminder_sent_for for s in (primo, secondo)]
+        assert sum(d is not None for d in segnati) == 1
