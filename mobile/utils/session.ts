@@ -80,7 +80,12 @@ let rinnovoInCorso: Promise<EsitoRinnovo> | null = null;
  */
 export function rinnovaSessione(): Promise<EsitoRinnovo> {
   if (!rinnovoInCorso) {
-    rinnovoInCorso = eseguiRinnovo().finally(() => {
+    //nel browser più schede condividono lo stesso refresh token: il blocco le
+    //fa rinnovare una alla volta, e la seconda legge il token già nuovo invece
+    //di riusare quello consumato (che per il server sarebbe un furto)
+    const blocchi = typeof navigator !== "undefined" ? navigator.locks : undefined;
+    const rinnovo = blocchi ? blocchi.request("rinnovo-sessione", eseguiRinnovo) : eseguiRinnovo();
+    rinnovoInCorso = rinnovo.finally(() => {
       rinnovoInCorso = null;
     });
   }
