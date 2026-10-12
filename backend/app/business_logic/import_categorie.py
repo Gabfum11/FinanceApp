@@ -86,19 +86,18 @@ def _sottocategorie(db: Session) -> tuple[dict[str, int], dict[str, list[str]]]:
     return per_nome, per_gruppo
 
 
-def _da_regole(nome: str, regole: list[tuple[re.Pattern, int]]) -> int | None:
+def da_regole(nome: str, regole: list[tuple[re.Pattern, int]]) -> int | None:
     for regola, category_id in regole:
         if regola.search(nome.lower()):
             return category_id
     return None
 
 
-def _regole(db: Session) -> list[tuple[re.Pattern, int]]:
+def regole_parole_chiave(db: Session) -> list[tuple[re.Pattern, int]]:
     """Le parole chiave delle sottocategorie, come parole intere.
 
-    Il confronto dell'assistente cerca la parola dentro la frase: con i nomi dei
-    negozi "gas" scatterebbe in "Gastronomia" e "bar" in "Barbiere", e la riga
-    finirebbe tra le pronte con una categoria sbagliata.
+    Le usano l'import e l'assistente. Cercando la parola dentro la frase, "gas"
+    scatterebbe in "Gastronomia" e "bar" in "Barbiere", con una categoria sbagliata.
     """
     regole = []
     sotto = db.query(models.Category).filter(
@@ -152,7 +151,7 @@ def proponi(righe: list[tuple[str, str | None]], user_id: int, db: Session) -> d
     memoria = memoria_import(user_id, db)
     memoria_manuale = categorization.memoria_categorie(user_id, db)
     per_nome, per_gruppo = _sottocategorie(db)
-    regole = _regole(db)
+    regole = regole_parole_chiave(db)
 
     proposte: dict[str, Proposta] = {}
     per_ai: list[str] = []
@@ -163,7 +162,7 @@ def proponi(righe: list[tuple[str, str | None]], user_id: int, db: Session) -> d
         if ricordato:
             proposte[nome] = Proposta(ricordato[0] or nome, ricordato[1])
             continue
-        categoria = categorization.cerca_in_memoria(nome, memoria_manuale) or _da_regole(nome, regole)
+        categoria = categorization.cerca_in_memoria(nome, memoria_manuale) or da_regole(nome, regole)
         proposte[nome] = Proposta(nome, categoria)
         if categoria is None:
             per_ai.append(nome)

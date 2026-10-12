@@ -146,5 +146,5 @@ class TestChiaveDiAccount:
         assert got == IP_UTENTE_A
 
 
-# I limiti su extract-preview sono verificati in test_rate_limit_groq.py,
+# I limiti sugli endpoint che chiamano Groq sono verificati in test_rate_limit_groq.py,
 # dove sono allineati ai limiti reali del piano Groq.

@@ -505,16 +505,15 @@ def token_di(make_user, login_as, email):
 
 
 class TestQuotaCondivisa:
-    def test_i_due_endpoint_condividono_il_tetto_globale(self, client, make_user, login_as,
-                                                          make_category, limiter_attivo):
+    def test_il_tetto_globale_vale_per_tutti_gli_utenti(self, client, make_user, login_as,
+                                                         make_category, limiter_attivo):
         make_category(name="Altro")
         codici = []
         with patch("app.business_logic.categorization.extract_expense_from_text", return_value=ESTRAZIONE_FINTA):
             for i in range(2):
                 token = token_di(make_user, login_as, f"vecchia{i}@example.com")
                 for _ in range(4):
-                    codici.append(client.post("/expenses/extract-preview", json={"expenseText": "Pizza 15"},
-                                              headers={"Authorization": token}).status_code)
+                    codici.append(invia(client, "Pizza 15", token).status_code)
             token = token_di(make_user, login_as, "nuova@example.com")
             codici.append(invia(client, "Pizza 15", token).status_code)
         assert codici == [200] * 8 + [429]
@@ -527,8 +526,7 @@ class TestQuotaCondivisa:
             for i in range(2):
                 token = token_di(make_user, login_as, f"riempi{i}@example.com")
                 for _ in range(4 - i):
-                    assert client.post("/expenses/extract-preview", json={"expenseText": "Pizza 15"},
-                                       headers={"Authorization": token}).status_code == 200
+                    assert invia(client, "Pizza 15", token).status_code == 200
 
         richieste = []
 
@@ -541,3 +539,24 @@ class TestQuotaCondivisa:
             r = invia(client, "Come va il budget?", token)
         assert r.status_code == 503
         assert len(richieste) == 1
+
+
+class TestParoleChiave:
+    """Senza categoria dal modello si usano le parole chiave, come parole intere."""
+
+    @pytest.fixture
+    def bar(self, db_session, connesso):
+        db = db_session()
+        cibo = models.Category(name="Cibo")
+        db.add(cibo)
+        db.flush()
+        db.add(models.Category(name="Bar e caffè", parent_id=cibo.id, keywords="bar,caffè"))
+        db.commit()
+        db.close()
+
+    @pytest.mark.parametrize("descrizione,categoria", [("Barbiere", "Altro"), ("Caffè al bar", "Bar e caffè")])
+    def test_parola_intera(self, client, bar, descrizione, categoria):
+        estratta = {**ESTRAZIONE_FINTA, "description": descrizione}
+        with patch("app.business_logic.categorization.extract_expense_from_text", return_value=estratta):
+            r = invia(client, f"{descrizione} 15")
+        assert r.json()["spesa"]["category_name"] == categoria

@@ -4,7 +4,7 @@ from sqlalchemy import func, extract
 from typing import List
 from app.database import get_db
 from app import models, schemas
-from app.business_logic import categorization
+from app.business_logic import categorization, import_categorie
 from app.business_logic import security
 from datetime import date
 from app.business_logic.budget import get_budget_cycle, budget_del_ciclo
@@ -206,8 +206,8 @@ def limiti_groq(endpoint):
 
     Senza tetto, un client in loop puo' esaurire la quota. Il limite e' per
     account, non per IP, cosi' utenti dietro la stessa rete non si bloccano a
-    vicenda. I contatori sono condivisi (shared_limit) tra questo endpoint e
-    /assistant/message: con contatori separati si potrebbe usarli entrambi e
+    vicenda. I contatori sono condivisi (shared_limit) tra /assistant/message e
+    /import/anteprima: con contatori separati si potrebbe usarli entrambi e
     raddoppiare la quota.
     """
     #un limite per utente piu' alto di quello globale lascerebbe saturare
@@ -217,22 +217,6 @@ def limiti_groq(endpoint):
     #tetto complessivo: senza, bastano due utenti attivi insieme per superare
     #il limite di Groq e ricevere 429 invece di una risposta
     return limiter.shared_limit(GROQ_AL_MINUTO, scope=GROQ_AMBITO, key_func=chiave_groq_globale)(endpoint)
-
-
-@router.post("/extract-preview")
-#resta per le versioni dell'app gia' installate: quella nuova usa /assistant/message
-@limiti_groq
-def extract_expense_preview(request: Request, data_expense: dict, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user), giorno: date = Depends(oggi)):
-    text = data_expense.get("expenseText", "")
-    try:
-        proposta = proponi_spesa(text, db, current_user, giorno)
-    except categorization.ServizioOccupato:
-        #503 e non 422: la frase era valida, e' il servizio a non essere
-        #disponibile. Dire "non ho capito" porterebbe a riscriverla invano
-        raise HTTPException(status_code=503, detail=SERVIZIO_OCCUPATO)
-    if proposta is None:
-        raise HTTPException(status_code=422, detail="Non sono riuscito a capire la spesa")
-    return proposta
 
 
 SERVIZIO_OCCUPATO = "Troppe richieste in questo momento. Riprova tra qualche istante."
@@ -282,7 +266,7 @@ def proponi_spesa(text: str, db: Session, current_user: models.User, giorno: dat
         match = next((c for c in categories if c.name == extracted["category"]), None)
         category_id = match.id if match else None
     if category_id is None: #il modello non ha scelto: ci provano le keyword
-        category_id = categorization.categorize_by_rules(extracted["description"], db)
+        category_id = import_categorie.da_regole(extracted["description"], import_categorie.regole_parole_chiave(db))
     if category_id is None:
        altro=db.query(models.Category).filter(models.Category.name=="Altro").first()
        category_id=altro.id if altro else None

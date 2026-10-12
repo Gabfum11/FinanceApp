@@ -36,8 +36,8 @@ def limiter_attivo():
 
 def chiedi(client, token="Bearer tok"):
     return client.post(
-        "/expenses/extract-preview",
-        json={"expenseText": "Pizza 15 euro"},
+        "/assistant/message",
+        json={"text": "Pizza 15 euro"},
         headers={"Authorization": token},
     )
 

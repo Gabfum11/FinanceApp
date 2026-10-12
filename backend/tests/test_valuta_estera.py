@@ -247,7 +247,7 @@ class TestAssistente:
         risultato = {"description": "Cena", "amount": 40.0, "date": None, "category": None,
                      "recurring": False, "frequency": None, "currency": valuta}
         with patch("app.business_logic.categorization.extract_expense_from_text", return_value=risultato):
-            return client.post("/expenses/extract-preview", json={"expenseText": "cena 40 sterline"}).json()
+            return client.post("/assistant/message", json={"text": "cena 40 sterline"}).json()["spesa"]
 
     def test_valuta_estera_arriva_all_app(self, client, utente):
         assert self._estrai(client, "GBP")["currency"] == "GBP"

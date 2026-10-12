@@ -158,7 +158,6 @@ class RefreshRequest(BaseModel):
 class UserLogin(BaseModel):
     email:str
     password:str
-    remember_me:bool=False
 
 class VerifyEmail(BaseModel):
     email: EmailNormalizzata
@@ -217,7 +216,6 @@ class DeleteAccount(BaseModel): #la password conferma un'operazione irreversibil
 
 class GoogleLogin(BaseModel):
     id_token: str #token rilasciato da Google all'app, che il server verifica
-    remember_me: bool = False
 
 class UpdateProfile(BaseModel):
     nickname: str = Field(..., min_length=1, max_length=50)

@@ -23,21 +23,6 @@ groq_client=Groq( api_key=os.environ.get("GROQ_API_KEY"),)
 WEEKDAYS_IT = ["lunedi'", "martedi'", "mercoledi'", "giovedi'", "venerdi'", "sabato", "domenica"]
 
 
-def categorize_by_rules(description: str, db: Session) :
-    description_lower = description.lower()
-    categories = db.query(models.Category).all()
-
-    for category in categories:
-        if not category.keywords:
-            continue
-        keyword_list = [k.strip().lower() for k in category.keywords.split(",")]
-        for keyword in keyword_list:
-            if keyword and keyword in description_lower:
-                return category.id
-
-    return None
-
-
 def _normalizza(testo: str) -> str:
     return " ".join(testo.lower().split())
 
@@ -54,6 +39,9 @@ def memoria_categorie(user_id: int, db: Session) -> list[tuple[str, int]]:
         #le vecchie spese possono puntare a un gruppo, che non si assegna piu'
         .filter(models.Expense.user_id == user_id, models.Category.parent_id.isnot(None))
         .order_by(models.Expense.date.desc(), models.Expense.id.desc())
+        #shortcut: ogni descrizione va decifrata a ogni messaggio, quindi solo le
+        #ultime 1000 spese; se serve ricordare piu' indietro, una tabella di memoria
+        .limit(1000)
         .all()
     )
     ultima: dict[str, int] = {}

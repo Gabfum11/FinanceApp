@@ -74,8 +74,8 @@ class TestUnaSpesaDopoMezzanotte:
         estratta = {"description": "Taxi", "amount": 20.0, "date": None, "category": None,
                     "recurring": False, "frequency": None, "currency": None}
         with patch("app.business_logic.categorization.extract_expense_from_text", return_value=estratta) as estrai:
-            proposta = client.post("/expenses/extract-preview", json={"expenseText": "taxi 20"},
-                                   headers=dal_telefono("2026-10-01")).json()
+            proposta = client.post("/assistant/message", json={"text": "taxi 20"},
+                                   headers=dal_telefono("2026-10-01")).json()["spesa"]
         assert proposta["date"] == "2026-10-01"
         #e "ieri" detto all'assistente si conta dal suo giorno
         assert estrai.call_args.kwargs["oggi"] == date(2026, 10, 1)
