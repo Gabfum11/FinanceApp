@@ -34,7 +34,7 @@ def _session_tokens(db: Session, user: models.User) -> dict:
 #response model dice a FastAPI che qualunque cosa la funzione restituisca, formattala secondo questo schema pydantic prima di mandarla al client
 @router.post("/register", response_model=schemas.UserOut)
 @limiter.limit("5/hour") #per impedire che qualcuno faccia richieste di registrazione a raffica, limitando a 5 richieste per ora per IP
-async def register(request:Request, user: schemas.UserCreate, db: Session = Depends(get_db)):
+def register(request:Request, user: schemas.UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     #user sono dati inseriti dall'utente validati  e trasformati in un oggetto python
     normalized_email=user.email.strip().lower()
     existing_user = db.query(models.User).filter(models.User.email == normalized_email).first()
@@ -67,12 +67,16 @@ async def register(request:Request, user: schemas.UserCreate, db: Session = Depe
     db.add(new_otp)
     db.commit()
     db.refresh(new_otp)
-    await email_service.send_otp_email(normalized_email,otp_code, purpose="email_verification", lingua=new_user.language)
+    #dopo la risposta, come in /resendOTP: se Brevo non risponde l'account esiste
+    #gia', e l'utente puo' chiedere un nuovo codice invece di vedere un errore
+    background_tasks.add_task(
+        _invia_otp, normalized_email, otp_code, "email_verification", new_user.language, new_user.id
+    )
     return new_user
 
 @router.post("/verify-otp", response_model=schemas.Token)
 @limiter.limit("10/5minutes")
-async def verify_otp(request: Request, verify: schemas.VerifyEmail, db: Session=Depends(get_db)):
+def verify_otp(request: Request, verify: schemas.VerifyEmail, db: Session=Depends(get_db)):
     #il codice NON va filtrato qui: serve trovare l'OTP dell'utente anche quando
     #sbaglia, altrimenti il conteggio dei tentativi non verrebbe mai incrementato
     otp=db.query(models.OtpCode).join(models.User).filter(
@@ -285,7 +289,7 @@ def delete_me(request: Request, payload: schemas.DeleteAccount, db: Session = De
 
 @router.post("/resendOTP")
 @limiter.limit("3/5minutes") #significa che un utente puo' richiedere al massimo 3 codici OTP ogni 5 minuti, per impedire abusi
-async def resendOTP(request: Request, payload: schemas.ResendOtp, background_tasks: BackgroundTasks, db: Session=Depends(get_db)):
+def resendOTP(request: Request, payload: schemas.ResendOtp, background_tasks: BackgroundTasks, db: Session=Depends(get_db)):
     risposta = {"detail":"Se l'account esiste, ricevereai un codice via mail"}
     auth_user=db.query(models.User).filter(models.User.email==payload.email).first()
     if auth_user is not None:
@@ -342,7 +346,7 @@ async def _invia_otp(email: str, codice: str, purpose: str, lingua: str | None, 
 
 @router.post("/resetPassword")
 @limiter.limit("10/hour")
-async def resetPassword(request: Request, passw:schemas.ResetPassword,db:Session=Depends(get_db),user:str=Depends(security.get_reset_password_user)):
+def resetPassword(request: Request, passw:schemas.ResetPassword,db:Session=Depends(get_db),user:str=Depends(security.get_reset_password_user)):
     user.hashed_password=security.hash_password(passw.new_password)
     #chi ha chiesto il reset ha perso l'accesso: ogni sessione aperta va chiusa
     security.revoke_all_refresh_tokens(db, user.id)

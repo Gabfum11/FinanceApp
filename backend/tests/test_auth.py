@@ -362,3 +362,24 @@ class TestEliminazioneAccount:
         login_as(user_id)
         r = client.request("DELETE", "/auth/me", json={"password": ""})
         assert r.status_code == 200
+
+
+class TestEndpointNonBloccanti:
+    """Query sincrone e hash argon2 dentro un async def fermano tutte le altre richieste."""
+
+    @pytest.mark.parametrize("nome", ["register", "verify_otp", "resendOTP", "resetPassword"])
+    def test_non_e_async(self, nome):
+        import inspect
+        from app.routers import auth
+        assert not inspect.iscoroutinefunction(getattr(auth, nome))
+
+    def test_registrazione_riuscita_anche_se_l_email_non_parte(self, client, db_session, caplog):
+        import logging
+        with caplog.at_level(logging.ERROR), \
+             patch("app.business_logic.email_service.send_otp_email", side_effect=Exception("Brevo giu'")):
+            r = client.post("/auth/register", json={"email": "brevo@t.it", "password": PASSWORD, "nickname": "B"})
+        assert r.status_code == 200
+        db = db_session()
+        assert db.query(models.User).filter(models.User.email == "brevo@t.it").count() == 1
+        db.close()
+        assert any("OTP" in rec.message for rec in caplog.records), "il fallimento va registrato"
