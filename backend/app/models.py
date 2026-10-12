@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, Date, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -98,6 +98,10 @@ class Expense(Base):
     owner = relationship("User", back_populates="expenses") #permette facilmente di ottenere il proprietario partendo da una spesa
     category = relationship("Category", back_populates="expenses") #se aggiungi una spesa, sqlalchemy aggiorna automaticamente la lista di spese della categoria, e viceversa
 
+    #quasi ogni schermata chiede le spese di un utente in un periodo: senza,
+    #Postgres legge l'intera tabella, con le spese di tutti
+    __table_args__ = (Index("ix_expenses_user_date", "user_id", "date"),)
+
 class Subscriptions(Base):
     __tablename__ = "subscriptions"
 
@@ -112,7 +116,8 @@ class Subscriptions(Base):
     auto_renew = Column(Boolean, default=True) 
     created_at = Column(DateTime(timezone=True), server_default=func.now()) #server_default serve per salvare con l'orario aggiornato
     is_active=Column(Boolean, default=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    #index: i rinnovi bloccano gli abbonamenti dell'utente a ogni lettura
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     #la next_date per cui il promemoria push e' gia' partito: se il cron chiama
     #due volte lo stesso giorno, il secondo giro non manda doppioni
