@@ -20,6 +20,7 @@ import { DIALOGO_LARGO, useSchermoLargo, useSchermoStretto } from "@/utils/layou
 import { useStili, useTema } from "@/utils/tema";
 import { PulsantiDialogo, creaStiliFinestra } from "@/components/Dialogo";
 import { IconaCategoria, IconaCerchio } from "@/components/IconaCategoria";
+import { BarraPeriodo } from "@/components/BarraPeriodo";
 
 type CategoryStat = {
   category_name: string;
@@ -255,50 +256,17 @@ export default function StatsScreen() {
   return (
     <View style={styles.container}>
       <PaginaScorrevole style={styles.content} sopraBarra>
-        <View style={styles.barraPeriodo}>
-          {/* Mese | Anno: stesso controllo segmentato dell'interruttore € / % */}
-          <View style={styles.cifre} accessibilityRole="radiogroup" accessibilityLabel={t("statistiche.vista")}>
-            {(["mese", "anno"] as const).map((voce) => (
-              <Pressable
-                key={voce}
-                style={[styles.cifraVoce, styles.vistaVoce, vista === voce && styles.cifraScelta]}
-                onPress={() => scegliVista(voce)}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: vista === voce }}
-              >
-                <Text style={[styles.cifraTesto, vista === voce && styles.cifraTestoScelto]}>{t(`statistiche.${voce}`)}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <View style={styles.navigatore}>
-            <FrecciaPeriodo
-              icona="chevron-left"
-              onPress={() => (vista === "anno" ? setYearOffset : setCycleOffset)((prev) => prev - 1)}
-              etichetta={t("statistiche.periodoPrima")}
-            />
-            <View style={styles.periodoTesti}>
-              <Text style={styles.periodo} accessibilityRole="header">{periodo}</Text>
-              {notaPeriodo !== "" && <Text style={styles.periodoNota}>{notaPeriodo}</Text>}
-            </View>
-            <FrecciaPeriodo
-              icona="chevron-right"
-              onPress={() => (vista === "anno" ? setYearOffset : setCycleOffset)((prev) => prev + 1)}
-              disabilitata={periodoInCorso}
-              etichetta={t("statistiche.periodoDopo")}
-            />
-          </View>
-          {!periodoInCorso && (
-            <Pressable
-              style={({ pressed }) => [styles.oggi, pressed && styles.premuto]}
-              onPress={() => (vista === "anno" ? setYearOffset : setCycleOffset)(0)}
-              accessibilityRole="button"
-              accessibilityLabel={t("statistiche.tornaAOggi")}
-            >
-              <MaterialCommunityIcons name="calendar-today" size={18} color={colors.primaryDark} />
-              <Text style={styles.oggiTesto}>{t("statistiche.oggi")}</Text>
-            </Pressable>
-          )}
-        </View>
+        <BarraPeriodo
+          voci={(["mese", "anno"] as const).map((voce) => ({ valore: voce, etichetta: t(`statistiche.${voce}`) }))}
+          scelta={vista}
+          onScegli={scegliVista}
+          etichettaGruppo={t("statistiche.vista")}
+          periodo={periodo}
+          nota={notaPeriodo}
+          inCorso={periodoInCorso}
+          onSposta={(passo) => (vista === "anno" ? setYearOffset : setCycleOffset)((prev) => prev + passo)}
+          onOggi={() => (vista === "anno" ? setYearOffset : setCycleOffset)(0)}
+        />
         <View style={largo ? styles.rigaLarga : undefined}>
         <View style={[styles.card, largo && styles.cardLarga]}>
           {/* sul computer c'e' posto per importi e percentuali insieme: l'interruttore non serve */}
@@ -575,29 +543,5 @@ export default function StatsScreen() {
         {errorMessage}
       </Snackbar>
     </View>
-  );
-}
-
-//freccia per cambiare periodo, 44px da toccare dentro la pillola del navigatore.
-//Quella del periodo futuro e' grigia: non si puo' toccare
-function FrecciaPeriodo({ icona, onPress, disabilitata = false, etichetta }: {
-  icona: string;
-  onPress: () => void;
-  disabilitata?: boolean;
-  etichetta: string;
-}) {
-  const styles = useStili(creaStili);
-  const { colors } = useTema();
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.freccia, pressed && styles.premuto]}
-      onPress={onPress}
-      disabled={disabilitata}
-      accessibilityRole="button"
-      accessibilityLabel={etichetta}
-      accessibilityState={{ disabled: disabilitata }}
-    >
-      <MaterialCommunityIcons name={icona as any} size={24} color={disabilitata ? colors.textDisabled : colors.text} />
-    </Pressable>
   );
 }

@@ -6,10 +6,11 @@ import { annullaImport } from "@/utils/importEstratto";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
-import { intestazioneGiorno } from "@/utils/date";
+import { intestazioneGiorno, localeAttuale, toDateString } from "@/utils/date";
 import { creaStili } from "@/styles/all_expenses.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { IconaCategoria } from "@/components/IconaCategoria";
+import { BarraPeriodo } from "@/components/BarraPeriodo";
 import { usePreferenze } from "@/utils/preferenze";
 import { useTranslation } from "react-i18next";
 import { nomeCategoria } from "@/utils/categorie";
@@ -39,18 +40,20 @@ type Gruppo = { id: number; name: string };
 
 type CategoryGroup = Gruppo & { children: { id: number; name: string }[] };
 
-type Period = "all" | "month" | "quarter";
+type Period = "mese" | "anno" | "tutto";
 
-const PERIODS: { value: Period; label: string }[] = [
-    { value: "all", label: "spese.tutto" },
-    { value: "month", label: "spese.questoMese" },
-    { value: "quarter", label: "spese.treMesi" },
-];
-
-function periodStart(period: Period): Date | null {
+//mese o anno di calendario spostato di "offset" dal presente: inizio incluso, fine esclusa
+function periodRange(period: Period, offset: number): { from: Date; to: Date } | null {
     const today = new Date();
-    if (period === "month") return new Date(today.getFullYear(), today.getMonth(), 1);
-    if (period === "quarter") return new Date(today.getFullYear(), today.getMonth() - 2, 1);
+    if (period === "mese") {
+        return {
+            from: new Date(today.getFullYear(), today.getMonth() + offset, 1),
+            to: new Date(today.getFullYear(), today.getMonth() + offset + 1, 1),
+        };
+    }
+    if (period === "anno") {
+        return { from: new Date(today.getFullYear() + offset, 0, 1), to: new Date(today.getFullYear() + offset + 1, 0, 1) };
+    }
     return null;
 }
 
@@ -65,7 +68,9 @@ export default function ExpenseList() {
     const [expensesLoaded, setExpensesLoaded] = useState(false);
     const [query, setQuery] = useState("");
     const [categoryId, setCategoryId] = useState<number | null>(null);
-    const [period, setPeriod] = useState<Period>("all");
+    const [period, setPeriod] = useState<Period>("tutto");
+    const [offset, setOffset] = useState(0);
+    const range = periodRange(period, offset);
     //le spese portano la sottocategoria: per raggrupparle serve sapere a quale
     //gruppo appartiene ciascuna, informazione che sta solo nel backend
     const [gruppoDiCategoria, setGruppoDiCategoria] = useState<Map<number, Gruppo>>(new Map());
@@ -100,7 +105,9 @@ export default function ExpenseList() {
 
     const filtered = useMemo(() => {
         const q = normalize(query.trim());
-        const from = periodStart(period);
+        //le date sono "AAAA-MM-GG": il confronto fra stringhe evita gli scarti di fuso orario
+        const from = range && toDateString(range.from);
+        const to = range && toDateString(range.to);
         return expenses.filter((e) => {
             if (categoryId !== null) {
                 //il chip porta l'id del gruppo, la spesa quello della sottocategoria:
@@ -108,7 +115,7 @@ export default function ExpenseList() {
                 const gruppo = e.category_id !== null ? gruppoDiCategoria.get(e.category_id) : undefined;
                 if (gruppo?.id !== categoryId) return false;
             }
-            if (from && new Date(e.date) < from) return false;
+            if (from && to && (e.date < from || e.date >= to)) return false;
             if (!q) return true;
             //la ricerca testuale guarda anche il nome del gruppo: cercando "casa"
             //si trovano le bollette, che non contengono quella parola
@@ -121,7 +128,7 @@ export default function ExpenseList() {
                 normalize(gruppo?.name ?? "").includes(q)
             );
         });
-    }, [expenses, query, categoryId, period, gruppoDiCategoria]);
+    }, [expenses, query, categoryId, period, offset, gruppoDiCategoria]);
 
     const total = useMemo(
         () => filtered.reduce((sum, e) => sum + e.amount, 0),
@@ -143,12 +150,21 @@ export default function ExpenseList() {
         return perGiorno;
     }, [filtered]);
 
-    const hasFilters = query.trim() !== "" || categoryId !== null || period !== "all";
+    const hasFilters = query.trim() !== "" || categoryId !== null || period !== "tutto";
+    const etichettaPeriodo = !range ? null
+        : period === "anno" ? String(range.from.getFullYear())
+        //"ottobre 2026" -> "Ottobre 2026"
+        : range.from.toLocaleDateString(localeAttuale(), { month: "long", year: "numeric" }).replace(/^./, (c) => c.toUpperCase());
+
+    function scegliPeriodo(nuovo: Period) {
+        setPeriod(nuovo);
+        setOffset(0);
+    }
 
     function resetFilters() {
         setQuery("");
         setCategoryId(null);
-        setPeriod("all");
+        scegliPeriodo("tutto");
     }
     async function loadExpenses() {
         const response=await apiFetch("/expenses/");
@@ -225,26 +241,20 @@ export default function ExpenseList() {
             inputStyle={styles.searchbarInput}
         />
 
-        <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.chipScroll}
-            contentContainerStyle={styles.chipRow}
-        >
-            {PERIODS.map((p) => (
-                <Pressable
-                    key={p.value}
-                    onPress={() => setPeriod(p.value)}
-                    style={[styles.chip, period === p.value && styles.chipSelected]}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: period === p.value }}
-                >
-                    <Text style={[styles.chipLabel, period === p.value && styles.chipLabelSelected]}>
-                        {t(p.label)}
-                    </Text>
-                </Pressable>
-            ))}
-        </ScrollView>
+        <BarraPeriodo
+            voci={[
+                { valore: "mese", etichetta: t("statistiche.mese") },
+                { valore: "anno", etichetta: t("statistiche.anno") },
+                { valore: "tutto", etichetta: t("spese.tutto") },
+            ]}
+            scelta={period}
+            onScegli={scegliPeriodo}
+            etichettaGruppo={t("spese.periodo")}
+            periodo={etichettaPeriodo}
+            inCorso={offset === 0}
+            onSposta={(passo) => setOffset((prev) => prev + passo)}
+            onOggi={() => setOffset(0)}
+        />
 
         {categories.length > 0 && (
             <ScrollView
