@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from datetime import date as date_type #serve dove un campo si chiama "date" e oscura il tipo
-from pydantic import BaseModel,Field,EmailStr,field_validator
-from typing import Literal
+from pydantic import AfterValidator, BaseModel,Field,EmailStr,field_validator
+from typing import Annotated, Literal
 from uuid import UUID
 #schema in entrata(create) -> verifica che i dati che l'utente manda sono nel formato che ci si aspetta
 #schema in uscita(out) -> verifica se il sistema restituisce solo ciò che è appropriato da mostrare nella forma giusta
@@ -10,6 +10,9 @@ from uuid import UUID
 #con un 422, cosi' il database non contiene mai un codice che l'app non conosce
 Valuta = Literal["EUR", "USD", "GBP", "CHF"]
 Lingua = Literal["it", "en"]
+
+#come la salva la registrazione: "Mario@x.it " altrimenti non trova l'account
+EmailNormalizzata = Annotated[str, AfterValidator(lambda v: v.strip().lower())]
 
 
 
@@ -158,12 +161,12 @@ class UserLogin(BaseModel):
     remember_me:bool=False
 
 class VerifyEmail(BaseModel):
-    email:str
+    email: EmailNormalizzata
     code:str
     purpose: Literal["email_verification", "password_reset"] = "email_verification"
 
 class ResendOtp(BaseModel):
-    email:str
+    email: EmailNormalizzata
     purpose: Literal["email_verification", "password_reset"]
 
 class ResetPassword(BaseModel):

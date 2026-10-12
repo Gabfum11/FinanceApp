@@ -102,6 +102,14 @@ class TestTentativiOtp:
         assert r.status_code == 401
         assert r.json()["detail"] == "code Expired"
 
+    def test_email_con_maiuscole_e_spazi(self, client, db_session, otp_user):
+        #la registrazione la salva in minuscolo: la verifica deve trovarla lo stesso
+        r = client.post(
+            "/auth/verify-otp",
+            json={"email": " OTP@Example.com ", "code": "123456", "purpose": "email_verification"},
+        )
+        assert r.status_code == 200
+
     def test_email_sconosciuta(self, client, db_session):
         r = client.post(
             "/auth/verify-otp",
@@ -167,6 +175,13 @@ class TestReinvioOtp:
             resend(client, "reset@example.com")
         assert invia.call_count == 1
         assert otp_count(db_session, user_id) == 1, "i codici vecchi vanno cancellati"
+
+    def test_email_con_maiuscole_e_spazi(self, client, db_session, make_user):
+        make_user(email="reset@example.com", password=PASSWORD)
+        with patch("app.business_logic.email_service.send_otp_email") as invia:
+            resend(client, "Reset@Example.com ")
+        assert invia.call_count == 1
+        assert invia.call_args.args[0] == "reset@example.com"
 
     def test_nessun_codice_di_verifica_per_un_account_gia_verificato(self, client, db_session, make_user):
         user_id = make_user(email="verificato@example.com", password=PASSWORD)
