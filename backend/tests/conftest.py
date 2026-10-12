@@ -8,6 +8,7 @@ import sys
 from datetime import datetime, timezone
 
 import pytest
+from fastapi import Depends
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, DateTime as SADateTime
 from sqlalchemy.orm import sessionmaker
@@ -112,9 +113,11 @@ def login_as(db_session):
     """Fa sì che le richieste risultino autenticate come quell'utente."""
 
     def _login(user_id):
-        app.dependency_overrides[security.get_current_user] = (
-            lambda: db_session().query(models.User).filter(models.User.id == user_id).first()
-        )
+        #dalla sessione della richiesta, come get_current_user in produzione:
+        #le modifiche all'utente devono finire nello stesso commit dell'endpoint
+        def _utente(db=Depends(get_db)):
+            return db.query(models.User).filter(models.User.id == user_id).first()
+        app.dependency_overrides[security.get_current_user] = _utente
 
     return _login
 

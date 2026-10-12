@@ -250,13 +250,10 @@ def logout_all_devices(request: Request, db: Session = Depends(get_db), current_
     non basta, perche' quelli emessi restano validi fino alla scadenza.
     Chi rifa' login ottiene token nuovi.
     """
-    #current_user puo' arrivare da un'altra sessione: l'incremento va fatto
-    #su quella corrente, altrimenti il commit non lo vede
-    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
-    security.revoke_all_refresh_tokens(db, utente.id)
-    utente.token_version += 1
+    security.revoke_all_refresh_tokens(db, current_user.id)
+    current_user.token_version += 1
     #il telefono perso non deve continuare a ricevere i promemoria
-    utente.push_token = None
+    current_user.push_token = None
     db.commit()
     return {"detail": "Sessioni chiuse su tutti i dispositivi"}
 
@@ -281,7 +278,6 @@ def delete_me(request: Request, payload: schemas.DeleteAccount, db: Session = De
     db.query(models.Subscriptions).filter(models.Subscriptions.user_id == user_id).delete()
     db.query(models.Expense).filter(models.Expense.user_id == user_id).delete()
     db.query(models.BudgetHistory).filter(models.BudgetHistory.user_id == user_id).delete()
-    #rileggiamo l'utente da questa sessione: current_user puo' arrivare da un'altra
     db.query(models.User).filter(models.User.id == user_id).delete()
     db.commit()
     return {"detail": "Account deleted"}
@@ -372,21 +368,18 @@ def change_password(data: schemas.ChangePassword, db:Session=Depends(get_db), cu
         raise HTTPException(status_code=400, detail="Questo account accede con Google e non ha una password")
     if not security.verify_password(data.current_password, current_user.hashed_password):
         raise HTTPException(status_code=401, detail="Current password is incorrect")
-    #current_user puo' arrivare da un'altra sessione: le modifiche vanno fatte
-    #su quella corrente, altrimenti il commit non le vede
-    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
-    utente.hashed_password = security.hash_password(data.new_password)
+    current_user.hashed_password = security.hash_password(data.new_password)
     #chi avesse rubato un token resterebbe dentro con la password vecchia:
     #la revoca chiude i rinnovi, l'incremento i token di accesso gia' emessi
-    security.revoke_all_refresh_tokens(db, utente.id)
-    utente.token_version += 1
+    security.revoke_all_refresh_tokens(db, current_user.id)
+    current_user.token_version += 1
     db.commit()
-    db.refresh(utente)
+    db.refresh(current_user)
     #chi ha cambiato la password verrebbe disconnesso dalla propria revoca:
     #gli diamo subito una sessione nuova
     return {
         "detail": "Password aggiornata con successo",
-        **_session_tokens(db, utente),
+        **_session_tokens(db, current_user),
     }
 
 @router.patch("/updateProfile")
@@ -410,9 +403,7 @@ def set_push_token(payload: schemas.PushToken, db: Session = Depends(get_db), cu
         models.User.id != current_user.id,
     ).update({models.User.push_token: None})
 
-    #current_user puo' arrivare da un'altra sessione: va modificato su questa
-    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
-    utente.push_token = payload.token
+    current_user.push_token = payload.token
     db.commit()
     return {"detail": "Dispositivo registrato per le notifiche"}
 
@@ -423,11 +414,10 @@ def update_preferences(preferences: schemas.UpdatePreferences, db: Session = Dep
     PATCH: arriva solo quello che cambia. Restituisce l'utente aggiornato, cosi'
     l'app riparte dai valori salvati invece di fidarsi di quelli che ha mandato.
     """
-    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
-    if preferences.currency is not None and preferences.currency != utente.currency:
+    if preferences.currency is not None and preferences.currency != current_user.currency:
         if preferences.convert_history:
             try:
-                valuta_estera.converti_storico(db, utente, preferences.currency, giorno)
+                valuta_estera.converti_storico(db, current_user, preferences.currency, giorno)
             except CambioNonDisponibile:
                 #niente a meta': o tutto convertito o tutto com'era
                 db.rollback()
@@ -436,15 +426,15 @@ def update_preferences(preferences: schemas.UpdatePreferences, db: Session = Dep
             #i numeri restano gli stessi: un abbonamento con il prezzo nella nuova
             #valuta torna semplicemente "nella valuta dell'utente"
             db.query(models.Subscriptions).filter(
-                models.Subscriptions.user_id == utente.id,
+                models.Subscriptions.user_id == current_user.id,
                 models.Subscriptions.currency == preferences.currency,
             ).update({models.Subscriptions.currency: None})
-        utente.currency = preferences.currency
+        current_user.currency = preferences.currency
     if preferences.language is not None:
-        utente.language = preferences.language
+        current_user.language = preferences.language
     db.commit()
-    db.refresh(utente)
-    return utente
+    db.refresh(current_user)
+    return current_user
 
 @router.put("/tutorial-visto")
 def set_tutorial_visto(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
@@ -452,15 +442,13 @@ def set_tutorial_visto(db: Session = Depends(get_db), current_user: models.User 
 
     PUT perche' imposta un valore: richiamarlo una seconda volta non cambia nulla.
     """
-    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
-    utente.tutorial_visto = True
+    current_user.tutorial_visto = True
     db.commit()
     return {"detail": "Tutorial segnato come visto"}
 
 @router.delete("/push-token")
 def delete_push_token(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
     """Promemoria spenti o logout: il telefono smette di ricevere le push."""
-    utente = db.query(models.User).filter(models.User.id == current_user.id).first()
-    utente.push_token = None
+    current_user.push_token = None
     db.commit()
     return {"detail": "Notifiche disattivate per questo dispositivo"}
