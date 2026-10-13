@@ -47,13 +47,27 @@ function ieri(lingua: Lingua): string {
   return d.toLocaleDateString(localeDi(lingua));
 }
 
-function periodoBudget(lingua: Lingua): string {
-  //esempio con il mese che riparte il 27, come per chi prende lo stipendio
+//esempio con il mese che riparte il 27, come per chi prende lo stipendio
+function cicloEsempio(): [Date, Date] {
   const oggi = new Date();
   const inizio = new Date(oggi.getFullYear(), oggi.getMonth() - (oggi.getDate() < 27 ? 1 : 0), 27);
-  const fine = new Date(inizio.getFullYear(), inizio.getMonth() + 1, 26);
+  return [inizio, new Date(inizio.getFullYear(), inizio.getMonth() + 1, 26)];
+}
+
+function periodoBudget(lingua: Lingua): string {
+  const [inizio, fine] = cicloEsempio();
   const opzioni: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
   return `${inizio.toLocaleDateString(localeDi(lingua), opzioni)} - ${fine.toLocaleDateString(localeDi(lingua), opzioni)}`;
+}
+
+//come formatCycleLabel in app/(tabs)/stats.tsx: l'anno sempre sulla fine,
+//sull'inizio solo se il ciclo scavalca l'anno
+function periodoStatistiche(lingua: Lingua): string {
+  const [inizio, fine] = cicloEsempio();
+  const opzioni: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
+  const conAnno: Intl.DateTimeFormatOptions = { ...opzioni, year: "numeric" };
+  const primo = inizio.toLocaleDateString(localeDi(lingua), inizio.getFullYear() === fine.getFullYear() ? opzioni : conAnno);
+  return `${primo} - ${fine.toLocaleDateString(localeDi(lingua), conAnno)}`;
 }
 
 export function IllustrazioneSpese() {
@@ -250,7 +264,7 @@ export function IllustrazioneStatistiche() {
         </View>
         <View style={styles.statNavigatore}>
           <MaterialCommunityIcons name="chevron-left" size={20} color={colors.text} />
-          <Text style={styles.statPeriodoTesto}>{periodoBudget(lingua)}</Text>
+          <Text style={styles.statPeriodoTesto}>{periodoStatistiche(lingua)}</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textDisabled} />
         </View>
       </View>

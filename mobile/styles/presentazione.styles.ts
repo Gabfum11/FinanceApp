@@ -257,18 +257,18 @@ export const creaStili = (colors: Colori) =>
     fontSize: fontSize.md,
     marginBottom: 12,
   },
-  //come il grafico della home: barre fino a 35 con 8 di spazio, allineate a
-  //sinistra e con la cima tonda. Si stringono da sole se lo spazio non basta,
-  //senza misurare la finestra (la landing viene generata durante la build)
+  //i sette giorni occupano tutta la larghezza, con 8 di spazio: allineati a
+  //sinistra lasciavano un vuoto a destra sul computer. Si stringono da sole se
+  //lo spazio non basta, senza misurare la finestra (la landing viene generata
+  //durante la build)
   colonne: {
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 8,
-    paddingHorizontal: 8,
   },
   colonna: {
     flex: 1,
-    maxWidth: 35,
+    minWidth: 0,
     alignItems: "center",
     gap: 4,
   },
@@ -276,11 +276,12 @@ export const creaStili = (colors: Colori) =>
     color: colors.textOnDark,
     fontSize: fontSize.xxs,
   },
-  //raggio grande: il browser lo riduce a meta' della larghezza, una cupola
+  //angoli appena arrotondati: con la cupola le barre basse diventavano mezzi cerchi
   colonnaBarra: {
     width: "100%",
-    borderTopLeftRadius: 999,
-    borderTopRightRadius: 999,
+    maxWidth: 44,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
   giorno: {
     marginTop: 4,
@@ -587,10 +588,10 @@ export const creaStili = (colors: Colori) =>
     gap: 18,
   },
   pcTitolo: {
-    //da 34 sul telefono a 52 sul computer, seguendo la larghezza della
+    //da 36 sul telefono a 60 sul computer, seguendo la larghezza della
     //finestra: e' CSS, quindi funziona anche nella pagina generata in anticipo
-    fontSize: "clamp(34px, 6vw, 52px)" as unknown as number,
-    lineHeight: "1.12" as unknown as number,
+    fontSize: "clamp(36px, 6vw, 60px)" as unknown as number,
+    lineHeight: "1.08" as unknown as number,
     fontWeight: fontWeight.bold,
     color: colors.textOnPrimary,
   },
@@ -652,66 +653,82 @@ export const creaStili = (colors: Colori) =>
     color: colors.text,
   },
   pcCorpo: {
-    paddingTop: 48,
-    paddingBottom: 64,
-    gap: 28,
+    paddingTop: 64,
+    paddingBottom: 72,
+    gap: 32,
   },
   pcSezione: {
-    fontSize: fontSize.xxxl,
+    fontSize: 32,
     fontWeight: fontWeight.bold,
     color: colors.text,
   },
-  pcRiquadri: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 20,
-  },
-  //400 e non 300: con quattro riquadri ne stanno due per riga, invece di
-  //tre sopra e uno da solo, largo quanto la pagina, sotto
-  pcRiquadro: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 400,
-    padding: 24,
-    gap: 14,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  pcIllustrazione: {
-    padding: 16,
-    borderRadius: 18,
-    backgroundColor: colors.background,
-    gap: 10,
-  },
-  //il riquadro dell'estratto conto: illustrazione e testi affiancati, uno
-  //sotto l'altro quando non c'e' spazio
-  pcRiquadroLargo: {
-    flexBasis: "100%",
+  //illustrazione e testo affiancati; sotto i 776 punti (420 + 300 + lo spazio
+  //tra i due) vanno a capo, l'illustrazione sopra
+  pcRiga: {
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
-    gap: 28,
+    rowGap: 28,
+    columnGap: 56,
+    paddingVertical: 40,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  pcLargoIllustrazione: {
+  pcRigaInvertita: {
+    flexDirection: "row-reverse",
+  },
+  //fondo grigio senza bordo: le card dell'illustrazione, bianche, si staccano da sole
+  pcIllustrazione: {
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 420,
+    padding: 20,
+    borderRadius: 24,
+    backgroundColor: colors.surfaceAlt,
+    gap: 10,
   },
-  pcLargoTesti: {
+  pcRigaTesti: {
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 300,
-    gap: 14,
+    gap: 12,
   },
-  pcPunto: {
+  pcNota: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+  },
+  // --- invito finale, prima del piè di pagina ---
+  pcInvito: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
+    rowGap: 24,
+    columnGap: 40,
+    marginTop: 16,
+    paddingVertical: 40,
+    paddingHorizontal: 28,
+    borderRadius: 24,
+    backgroundColor: colors.surfaceDark,
   },
-  pcPuntoTesto: {
-    flex: 1,
+  pcInvitoTesti: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 300,
+    gap: 8,
+  },
+  pcInvitoTitolo: {
+    //come pcTitolo: CSS, quindi funziona anche nella pagina generata in anticipo
+    fontSize: "clamp(26px, 4vw, 36px)" as unknown as number,
+    lineHeight: "1.15" as unknown as number,
+    fontWeight: fontWeight.bold,
+    color: colors.textOnPrimary,
+  },
+  pcInvitoTesto: {
+    fontSize: fontSize.lg,
+    lineHeight: 28,
+    maxWidth: 480,
+    color: colors.textOnDark,
   },
   importChips: {
     flexDirection: "row",
@@ -746,13 +763,15 @@ export const creaStili = (colors: Colori) =>
     color: colors.surfaceDark,
   },
   pcRiquadroTitolo: {
-    fontSize: fontSize.xl,
+    fontSize: fontSize.xxl,
+    lineHeight: 30,
     fontWeight: fontWeight.bold,
     color: colors.text,
   },
   pcRiquadroTesto: {
-    fontSize: fontSize.md,
-    lineHeight: 22,
+    fontSize: fontSize.lg,
+    lineHeight: 28,
+    maxWidth: 520,
     color: colors.textSecondary,
   },
   // --- piè di pagina della landing ---

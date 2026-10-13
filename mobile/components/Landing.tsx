@@ -1,7 +1,6 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { View, Image, ScrollView } from "react-native";
 import { Button, Text } from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import { useTranslation } from "react-i18next";
@@ -10,7 +9,7 @@ import { SelettoreLingua } from "@/components/SelettoreLingua";
 import { FinestraContatto } from "@/components/FinestraContatto";
 import { FinestraAccesso, type ModoAccesso } from "@/components/FinestraAccesso";
 import { creaStili } from "@/styles/presentazione.styles";
-import { useStili, useTema } from "@/utils/tema";
+import { useStili } from "@/utils/tema";
 import { LARGHEZZA_CONTENUTO } from "@/utils/layout";
 import {
   IllustrazioneSpese,
@@ -33,13 +32,13 @@ import {
 export const LOGO = require("../assets/images/logo/trackit-icon-rounded-180.png");
 
 // In alto la domanda e il pulsante per registrarsi, con accanto la chat
-// dell'assistente; sotto le quattro cose che fa TrackIt, due per riga (una
-// sotto l'altra sul telefono); in fondo i collegamenti.
+// dell'assistente; sotto le cose che fa TrackIt, una per riga con
+// l'illustrazione alternata a sinistra e a destra; poi di nuovo l'invito a
+// registrarsi e in fondo i collegamenti.
 // Accesso e registrazione si aprono in una finestra sopra la landing
 // (FinestraAccesso), sul computer e sul telefono
 export function Landing() {
   const styles = useStili(creaStili);
-  const { colors } = useTema();
   const { t } = useTranslation();
   const [contatto, setContatto] = useState(false);
   const [accesso, setAccesso] = useState<ModoAccesso | null>(null);
@@ -47,14 +46,20 @@ export function Landing() {
   //stabile: la finestra la usa per ascoltare Esc solo mentre e' aperta
   const chiudiAccesso = useCallback(() => setAccesso(null), []);
 
-  //l'illustrazione e' un'immagine con una descrizione: i suoi testi sono
+  //una riga per ogni cosa che fa TrackIt: illustrazione e testo affiancati,
+  //con l'illustrazione una volta a sinistra e una a destra. "row-reverse" e non
+  //l'ordine dei figli invertito: quando va a capo l'illustrazione resta sopra.
+  //L'illustrazione e' un'immagine con una descrizione: i suoi testi sono
   //importi di esempio, che letti uno per uno da un lettore di schermo non dicono nulla
-  function riquadro(titolo: string, testo: string, descrizione: string, illustrazione: ReactNode) {
+  function riga(indice: number, titolo: string, testo: string, descrizione: string, illustrazione: ReactNode, nota?: string) {
     return (
-      <View style={styles.pcRiquadro}>
+      <View style={[styles.pcRiga, indice % 2 === 1 && styles.pcRigaInvertita]}>
         <View style={styles.pcIllustrazione} role="img" aria-label={descrizione}>{illustrazione}</View>
-        <Text role="heading" aria-level={3} style={styles.pcRiquadroTitolo}>{titolo}</Text>
-        <Text style={styles.pcRiquadroTesto}>{testo}</Text>
+        <View style={styles.pcRigaTesti}>
+          <Text role="heading" aria-level={3} style={styles.pcRiquadroTitolo}>{titolo}</Text>
+          <Text style={styles.pcRiquadroTesto}>{testo}</Text>
+          {nota && <Text style={styles.pcNota}>{nota}</Text>}
+        </View>
       </View>
     );
   }
@@ -96,48 +101,61 @@ export function Landing() {
 
       <View style={[styles.pcColonna, styles.pcCorpo, { maxWidth: LARGHEZZA_CONTENUTO + 80 }]}>
         <Text role="heading" aria-level={2} style={styles.pcSezione}>{t("presentazione.cosaFa")}</Text>
-        <View style={styles.pcRiquadri}>
-          {/* largo tutta la riga: un quinto riquadro normale resterebbe da solo in fondo */}
-          <View style={[styles.pcRiquadro, styles.pcRiquadroLargo]}>
-            <View style={[styles.pcIllustrazione, styles.pcLargoIllustrazione]} role="img" aria-label={t("presentazione.descrizioni.importa")}>
-              <IllustrazioneImport />
-            </View>
-            <View style={styles.pcLargoTesti}>
-              <Text role="heading" aria-level={3} style={styles.pcRiquadroTitolo}>{t("presentazione.importa.titolo")}</Text>
-              <Text style={styles.pcRiquadroTesto}>{t("presentazione.importa.testo")}</Text>
-              {["punto1", "punto2", "punto3"].map((punto) => (
-                <View key={punto} style={styles.pcPunto}>
-                  <MaterialCommunityIcons name="check" size={18} color={colors.primary} />
-                  <Text style={[styles.pcRiquadroTesto, styles.pcPuntoTesto]}>{t(`presentazione.importa.${punto}`)}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-          {riquadro(
+        <View>
+          {/* una frase sola per riga: dei tre punti dell'import restano il controllo e i formati */}
+          {riga(
+            0,
+            t("presentazione.importa.titolo"),
+            `${t("presentazione.importa.testo")} ${t("presentazione.importa.punto2")}`,
+            t("presentazione.descrizioni.importa"),
+            <IllustrazioneImport />,
+            t("presentazione.importa.punto3")
+          )}
+          {riga(
+            1,
             t("presentazione.p2.titolo"),
             t("presentazione.p2.testo"),
             t("presentazione.descrizioni.spese"),
             <IllustrazioneSpese />
           )}
-          {riquadro(
+          {riga(
+            2,
             t("presentazione.p3.titolo"),
             t("presentazione.p3.testo"),
             t("presentazione.descrizioni.budget"),
             <IllustrazioneBudget />
           )}
-          {riquadro(
+          {riga(
+            3,
             t("presentazione.statistiche.titolo"),
             t("presentazione.statistiche.testo"),
             t("presentazione.descrizioni.statistiche"),
             <IllustrazioneStatistiche />
           )}
           {/* nel browser niente notifiche: vale il testo che non le promette */}
-          {riquadro(
+          {riga(
+            4,
             t("presentazione.p4.titolo"),
             t("presentazione.p4.testoWeb"),
             t("presentazione.descrizioni.abbonamenti"),
             <IllustrazioneAbbonamenti />
           )}
+        </View>
+
+        {/* l'invito ripetuto in fondo: chi ha letto fino a qui non deve risalire */}
+        <View style={styles.pcInvito}>
+          <View style={styles.pcInvitoTesti}>
+            <Text role="heading" aria-level={2} style={styles.pcInvitoTitolo}>{t("presentazione.p5.titolo")}</Text>
+            <Text style={styles.pcInvitoTesto}>{t("presentazione.p5.testo")}</Text>
+          </View>
+          <Button
+            mode="contained"
+            onPress={() => setAccesso("registrazione")}
+            style={styles.pcCrea}
+            labelStyle={[styles.buttonLabel, styles.pcCreaTesto]}
+          >
+            {t("presentazione.p5.crea")}
+          </Button>
         </View>
       </View>
 
