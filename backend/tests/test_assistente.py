@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pytest
 
 from app import models
-from app.business_logic import categorization, domande, security
+from app.business_logic import categorization, conti_spese, domande, security
 
 OGGI = date(2026, 10, 7)
 ESTRAZIONE_FINTA = {
@@ -93,7 +93,7 @@ class TestFunzioni:
         altro = make_user(email="altro@example.com")
         spesa(db, utente.id, date(2026, 9, 3), 10.0)
         spesa(db, altro, date(2026, 9, 3), 999.0)
-        r = domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30")
+        r = conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30")
         assert r["totale"] == 10.0
         assert r["numero_spese"] == 1
 
@@ -101,29 +101,29 @@ class TestFunzioni:
         spesa(db, utente.id, date(2026, 9, 1), 1.0)
         spesa(db, utente.id, date(2026, 9, 30), 2.0)
         spesa(db, utente.id, date(2026, 10, 1), 4.0)
-        assert domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30")["totale"] == 3.0
+        assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30")["totale"] == 3.0
 
     def test_un_gruppo_comprende_le_sue_sottocategorie(self, db, utente, categorie):
         spesa(db, utente.id, date(2026, 9, 3), 30.0, categorie["ristoranti"])
         spesa(db, utente.id, date(2026, 9, 4), 50.0, categorie["alimentari"])
         spesa(db, utente.id, date(2026, 9, 5), 80.0, categorie["bollette"])
-        assert domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", categoria="cibo")["totale"] == 80.0
-        assert domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30",
+        assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", categoria="cibo")["totale"] == 80.0
+        assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30",
                                     categoria="Pranzi e cene")["totale"] == 30.0
         #il modello a volte copia anche il gruppo, come nell'elenco che riceve
-        assert domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30",
+        assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30",
                                     categoria="Cibo: Pranzi e cene")["totale"] == 30.0
 
     def test_categoria_sconosciuta_elenca_i_nomi_validi(self, db, utente, categorie):
-        r = domande.esegui_strumento("totale_spese", json.dumps(
+        r = conti_spese.esegui_strumento("totale_spese", json.dumps(
             {"da": "2026-09-01", "a": "2026-09-30", "categoria": "Restaurants"}), db, utente, OGGI)
         assert "Pranzi e cene" in r["errore"]
 
     def test_il_testo_cercato_non_e_un_jolly(self, db, utente):
         spesa(db, utente.id, date(2026, 9, 3), 10.0, descrizione="Conad")
         spesa(db, utente.id, date(2026, 9, 3), 20.0, descrizione="sconto 50%")
-        assert domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", testo="conad")["totale"] == 10.0
-        assert domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", testo="%")["totale"] == 20.0
+        assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", testo="conad")["totale"] == 10.0
+        assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", testo="%")["totale"] == 20.0
 
     @pytest.mark.parametrize("parametri", [
         {"da": "settembre", "a": "2026-09-30"},
@@ -132,20 +132,20 @@ class TestFunzioni:
         {"da": "2026-09-01"},
     ])
     def test_parametri_sbagliati_tornano_al_modello(self, db, utente, parametri):
-        r = domande.esegui_strumento("totale_spese", json.dumps(parametri), db, utente, OGGI)
+        r = conti_spese.esegui_strumento("totale_spese", json.dumps(parametri), db, utente, OGGI)
         assert "errore" in r
 
     def test_parametri_sconosciuti_o_null_sono_ignorati(self, db, utente):
         """Non c'e' un secondo giro per correggerli: vale il valore predefinito."""
         spesa(db, utente.id, date(2026, 9, 3), 10.0)
-        r = domande.esegui_strumento("elenco_spese", json.dumps(
+        r = conti_spese.esegui_strumento("elenco_spese", json.dumps(
             {"da": "2026-09-01", "a": "2026-09-30", "ordina": "importo", "categoria": None}), db, utente, OGGI)
         assert r["numero_spese"] == 1
 
     def test_il_modello_non_sceglie_utente_ne_giorno(self, db, utente, make_user):
         altro = make_user(email="altro@example.com")
         spesa(db, altro, date(2026, 10, 2), 99.0)
-        r = domande.esegui_strumento("stato_budget", json.dumps(
+        r = conti_spese.esegui_strumento("stato_budget", json.dumps(
             {"utente": altro, "giorno": "2020-01-01"}), db, utente, OGGI)
         assert r["speso"] == 0
         assert r["inizio_ciclo"] == "2026-10-01"
@@ -154,7 +154,7 @@ class TestFunzioni:
         spesa(db, utente.id, date(2026, 9, 3), 10.0, categorie["ristoranti"])
         spesa(db, utente.id, date(2026, 9, 20), 30.0, categorie["ristoranti"])
         spesa(db, utente.id, date(2026, 9, 21), 99.0, categorie["bollette"])
-        r = domande.esegui_strumento("totali_per_periodi", json.dumps({
+        r = conti_spese.esegui_strumento("totali_per_periodi", json.dumps({
             "periodi": [{"da": "2026-09-01", "a": "2026-09-15"}, {"da": "2026-09-16", "a": "2026-09-30"}],
             "categoria": "Cibo",
         }), db, utente, OGGI)
@@ -162,18 +162,18 @@ class TestFunzioni:
 
     @pytest.mark.parametrize("periodi", [[], "settembre", [{"da": "x", "a": "y"}], ["2026-09"]])
     def test_totali_per_periodi_non_validi(self, db, utente, periodi):
-        r = domande.esegui_strumento("totali_per_periodi", json.dumps({"periodi": periodi}), db, utente, OGGI)
+        r = conti_spese.esegui_strumento("totali_per_periodi", json.dumps({"periodi": periodi}), db, utente, OGGI)
         assert "errore" in r
 
     def test_funzione_inesistente(self, db, utente):
-        assert "errore" in domande.esegui_strumento("cancella_tutto", "{}", db, utente, OGGI)
+        assert "errore" in conti_spese.esegui_strumento("cancella_tutto", "{}", db, utente, OGGI)
 
     def test_per_categoria_raggruppa_e_ordina(self, db, utente, categorie):
         spesa(db, utente.id, date(2026, 9, 3), 30.0, categorie["ristoranti"])
         spesa(db, utente.id, date(2026, 9, 4), 50.0, categorie["alimentari"])
         spesa(db, utente.id, date(2026, 9, 5), 60.0, categorie["bollette"])
         spesa(db, utente.id, date(2026, 9, 6), 5.0)
-        r = domande.spese_per_categoria(db, utente, OGGI, "2026-09-01", "2026-09-30")
+        r = conti_spese.spese_per_categoria(db, utente, OGGI, "2026-09-01", "2026-09-30")
         assert [g["gruppo"] for g in r["gruppi"]] == ["Cibo", "Casa", "Senza categoria"]
         assert r["gruppi"][0]["totale"] == 80.0
         assert r["totale"] == 145.0
@@ -182,22 +182,22 @@ class TestFunzioni:
 
     def test_il_risultato_dice_quale_filtro_e_stato_usato(self, db, utente, categorie):
         spesa(db, utente.id, date(2026, 9, 3), 30.0, categorie["ristoranti"])
-        r = domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", categoria="Pranzi e cene")
+        r = conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", categoria="Pranzi e cene")
         assert r["categoria"] == "Pranzi e cene"
-        assert domande.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30")["categoria"] == "tutte"
+        assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30")["categoria"] == "tutte"
 
     def test_elenco_ha_un_tetto(self, db, utente):
         for i in range(30):
             spesa(db, utente.id, date(2026, 9, 1), float(i))
-        r = domande.elenco_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", limite=100)
-        assert len(r["spese"]) == domande.MAX_ELENCO
+        r = conti_spese.elenco_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", limite=100)
+        assert len(r["spese"]) == conti_spese.MAX_ELENCO
         assert r["spese"][0]["importo"] == 29.0
         assert r["numero_spese"] == 30
 
     def test_i_mesi_senza_spese_valgono_zero(self, db, utente):
         spesa(db, utente.id, date(2026, 7, 10), 10.0)
         spesa(db, utente.id, date(2026, 9, 10), 20.0)
-        r = domande.totali_mensili(db, utente, OGGI, "2026-07-01", "2026-09-30")
+        r = conti_spese.totali_mensili(db, utente, OGGI, "2026-07-01", "2026-09-30")
         assert r["categoria"] == "tutte"
         assert r["mesi"] == [
             {"mese": "2026-07", "totale": 10.0},
@@ -208,7 +208,7 @@ class TestFunzioni:
     def test_stato_budget(self, db, utente):
         spesa(db, utente.id, date(2026, 10, 2), 120.0)
         spesa(db, utente.id, date(2026, 9, 30), 999.0)
-        r = domande.stato_budget(db, utente, OGGI)
+        r = conti_spese.stato_budget(db, utente, OGGI)
         assert r["speso"] == 120.0
         assert r["rimanente"] == 380.0
         assert r["giorni_rimanenti"] == 25
@@ -225,7 +225,7 @@ class TestFunzioni:
                                  frequency="monthly", next_date=date(2026, 11, 1), is_active=False),
         ])
         db.commit()
-        r = domande.abbonamenti_attivi(db, utente, OGGI)
+        r = conti_spese.abbonamenti_attivi(db, utente, OGGI)
         assert len(r["abbonamenti"]) == 3
         assert r["costo_mensile_stimato"] == 51.0
         assert r["abbonamenti_in_altre_valute_esclusi_dal_totale"] == 1
