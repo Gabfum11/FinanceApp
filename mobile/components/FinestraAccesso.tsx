@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import { Image, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { IconButton, Text } from "react-native-paper";
 import { useSchermoStretto } from "@/utils/layout";
@@ -42,6 +43,10 @@ export function FinestraAccesso({ modo, onCambia, onDismiss }: Props) {
 
   //un errore del modulo di prima non vale per l'altro
   useEffect(() => setErrore(""), [modo]);
+
+  //il Modal resta sopra anche alle pagine aperte da qui (codice di verifica,
+  //password dimenticata): si chiude quando la landing perde il focus
+  useFocusEffect(useCallback(() => onDismiss, [onDismiss]));
 
   useEffect(() => {
     if (!modo || Platform.OS !== "web") return;
