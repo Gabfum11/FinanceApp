@@ -25,7 +25,13 @@ const ICONE: Record<Messaggio, keyof typeof MaterialCommunityIcons.glyphMap> = {
 };
 
 function giornoBreve(iso: string) {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString(localeAttuale(), { day: "numeric", month: "short" });
+  const data = new Date(`${iso}T00:00:00`);
+  return data.toLocaleDateString(localeAttuale(), {
+    day: "numeric",
+    month: "short",
+    //un estratto a cavallo d'anno: la spesa di dicembre non deve sembrare di quest'anno
+    ...(data.getFullYear() !== new Date().getFullYear() && { year: "numeric" }),
+  });
 }
 
 type Props = {

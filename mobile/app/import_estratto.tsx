@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Platform, Pressable, ScrollView, View } from "react-native";
-import { ActivityIndicator, IconButton, Text } from "react-native-paper";
+import { AccessibilityInfo, ScrollView, View } from "react-native";
+import { IconButton, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { useStili, useTema } from "@/utils/tema";
+import { useStili } from "@/utils/tema";
 import { creaStili } from "@/styles/import-estratto.styles";
 import { FinestraComputer } from "@/components/FinestraComputer";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { RigaImportata } from "@/components/RigaImportata";
 import { FoglioModificaImport, type CategoriaScelta, type Gruppo } from "@/components/FoglioModificaImport";
 import { apiFetch } from "@/utils/apiFetch";
 import { usePreferenze } from "@/utils/preferenze";
@@ -25,6 +23,9 @@ import {
   type ErroreImport,
   type RigaImport,
 } from "@/utils/importEstratto";
+import { FaseScelta } from "@/components/importa/FaseScelta";
+import { FaseCaricamento, FaseErrore } from "@/components/importa/FaseAttesaErrore";
+import { ElencoControllo, PiedeImport } from "@/components/importa/FaseControllo";
 
 // Import dell'estratto conto: si sceglie il file, il backend lo legge e propone
 // le spese, l'utente controlla e conferma. Le fasi stanno in una schermata sola
@@ -40,7 +41,6 @@ const ATTESA_MASSIMA = 90_000;
 
 export default function ImportEstratto() {
   const styles = useStili(creaStili);
-  const { colors } = useTema();
   const router = useRouter();
   const { t } = useTranslation();
   const [fase, setFase] = useState<Fase>("scelta");
@@ -59,9 +59,6 @@ export default function ImportEstratto() {
   const [gruppi, setGruppi] = useState<Gruppo[]>([]);
   const [inModifica, setInModifica] = useState<{ indice: number; inFila: boolean; totale: number } | null>(null);
   const largo = useSchermoLargo();
-  //sul computer il file si puo' anche trascinare nel riquadro tratteggiato
-  const riquadro = useRef<View>(null);
-  const [sopraRiquadro, setSopraRiquadro] = useState(false);
   const lista = useRef<ScrollView>(null);
   //posizione verticale di ogni riga, per scorrere fino alla prima da sistemare
   const posizioni = useRef<Map<number, number>>(new Map());
@@ -109,6 +106,11 @@ export default function ImportEstratto() {
   async function scegli() {
     const file = await scegliFile();
     if (!file) return;
+    nuovoFile(file);
+  }
+
+  //scelto o trascinato nel riquadro
+  function nuovoFile(file: File) {
     setNomeFile(file.name);
     analizza(file);
   }
@@ -145,37 +147,6 @@ export default function ImportEstratto() {
       if (richiesta.current === controllo) richiesta.current = null;
     }
   }
-
-  useEffect(() => {
-    if (!largo || Platform.OS !== "web" || fase !== "scelta") return;
-    //su react-native-web il ref di una View e' il div della pagina
-    const nodo = riquadro.current as unknown as HTMLElement | null;
-    if (!nodo) return;
-    //dragenter/dragleave scattano anche entrando nei figli: si contano
-    let dentro = 0;
-    const entra = (e: DragEvent) => { e.preventDefault(); dentro++; setSopraRiquadro(true); };
-    const sopra = (e: DragEvent) => e.preventDefault();
-    const esce = () => { dentro = Math.max(0, dentro - 1); if (dentro === 0) setSopraRiquadro(false); };
-    const lascia = (e: DragEvent) => {
-      e.preventDefault();
-      dentro = 0;
-      setSopraRiquadro(false);
-      const file = e.dataTransfer?.files?.[0];
-      if (!file) return;
-      setNomeFile(file.name);
-      analizza(file);
-    };
-    nodo.addEventListener("dragenter", entra);
-    nodo.addEventListener("dragover", sopra);
-    nodo.addEventListener("dragleave", esce);
-    nodo.addEventListener("drop", lascia);
-    return () => {
-      nodo.removeEventListener("dragenter", entra);
-      nodo.removeEventListener("dragover", sopra);
-      nodo.removeEventListener("dragleave", esce);
-      nodo.removeEventListener("drop", lascia);
-    };
-  }, [largo, fase]);
 
   function cambiaSelezione(indice: number) {
     setRighe((attuali) => attuali.map((r) => (r.indice === indice ? { ...r, selezionata: !r.selezionata } : r)));
@@ -243,7 +214,12 @@ export default function ImportEstratto() {
   }
 
   function giornoLungo(iso: string) {
-    return new Date(`${iso}T00:00:00`).toLocaleDateString(localeAttuale(), { day: "numeric", month: "long" });
+    const data = new Date(`${iso}T00:00:00`);
+    return data.toLocaleDateString(localeAttuale(), {
+      day: "numeric",
+      month: "long",
+      ...(data.getFullYear() !== new Date().getFullYear() && { year: "numeric" }),
+    });
   }
 
   function annullaAnalisi() {
@@ -275,166 +251,42 @@ export default function ImportEstratto() {
       )}
 
       {fase === "scelta" && (
-        <View style={styles.scelta}>
-          <View
-            ref={riquadro}
-            style={[styles.riquadroFile, largo && styles.riquadroFileComputer, sopraRiquadro && styles.riquadroFileSopra]}
-          >
-            <View style={styles.iconaFile}>
-              <MaterialCommunityIcons
-                name={sopraRiquadro ? "tray-arrow-down" : "file-excel"}
-                size={30}
-                color={colors.primaryDark}
-              />
-            </View>
-            <Text style={styles.sceltaTitolo}>
-              {sopraRiquadro
-                ? t("importa.sceltaRilascia")
-                : largo ? t("importa.sceltaTitoloComputer") : t("importa.sceltaTitolo")}
-            </Text>
-            <Text style={styles.nota}>{t("importa.sceltaTesto")}</Text>
-            {largo && <Text style={styles.oppure}>{t("importa.sceltaOppure")}</Text>}
-            <Pressable
-              style={({ pressed }) => [styles.pulsante, pressed && styles.premuto]}
-              onPress={scegli}
-              accessibilityRole="button"
-            >
-              <Text style={styles.pulsanteTesto}>{t("importa.sceltaPulsante")}</Text>
-            </Pressable>
-          </View>
-        </View>
+        <FaseScelta onScegli={scegli} onFile={nuovoFile} />
       )}
 
       {fase === "caricamento" && (
-        <>
-          {mostraAttesa && (
-            <>
-              <View style={styles.stato} accessibilityRole="progressbar" accessibilityLiveRegion="polite">
-                <ActivityIndicator animating={!movimentoRidotto} color={colors.primary} />
-                <View style={styles.statoTesti}>
-                  <Text style={styles.statoTitolo}>{t("importa.analisi")}</Text>
-                  <Text style={styles.statoNota} numberOfLines={2}>{nomeFile}</Text>
-                  {attesaLunga && <Text style={styles.statoNota}>{t("importa.analisiLenta")}</Text>}
-                </View>
-              </View>
-              <View style={styles.sagoma} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                {[0.8, 0.65, 0.75, 0.55].map((larghezza, i) => (
-                  <View key={i} style={[styles.sagomaRiga, i > 0 && styles.sagomaSeparata]}>
-                    <View style={[styles.blocco, { width: 22, height: 22 }]} />
-                    <View style={[styles.blocco, { width: 36, height: 36, borderRadius: 18 }]} />
-                    <View style={{ flex: 1, gap: 6 }}>
-                      <View style={[styles.blocco, { width: `${larghezza * 100}%` }]} />
-                      <View style={[styles.blocco, { width: "40%", height: 10 }]} />
-                    </View>
-                    <View style={[styles.blocco, { width: 56 }]} />
-                  </View>
-                ))}
-              </View>
-            </>
-          )}
-          <View style={styles.spazio} />
-          <Pressable
-            style={({ pressed }) => [styles.pulsanteSecondario, pressed && styles.premuto]}
-            onPress={annullaAnalisi}
-            accessibilityRole="button"
-          >
-            <Text style={styles.pulsanteSecondarioTesto}>{t("comune.annulla")}</Text>
-          </Pressable>
-        </>
+        <FaseCaricamento
+          mostraAttesa={mostraAttesa}
+          attesaLunga={attesaLunga}
+          movimentoRidotto={movimentoRidotto}
+          nomeFile={nomeFile}
+          onAnnulla={annullaAnalisi}
+        />
       )}
 
       {fase === "errore" && (
-        <>
-          <View style={styles.errore} accessibilityRole="alert">
-            <View style={styles.erroreIcona}>
-              <MaterialCommunityIcons name="information" size={30} color={colors.msgArancio} />
-            </View>
-            <Text style={styles.erroreTitolo}>{t("importa.erroreTitolo")}</Text>
-            <Text style={styles.erroreTesto}>{t(`importa.errore_${errore}`)}</Text>
-          </View>
-          <View style={styles.spazio} />
-          <Pressable
-            style={({ pressed }) => [styles.pulsante, { marginHorizontal: 16 }, pressed && styles.premuto]}
-            onPress={scegli}
-            accessibilityRole="button"
-          >
-            <Text style={styles.pulsanteTesto}>{t("importa.altroFile")}</Text>
-          </Pressable>
-          <Text style={styles.link} onPress={() => router.back()} accessibilityRole="link">
-            {t("importa.tornaSpesa")}
-          </Text>
-        </>
+        <FaseErrore errore={errore} onAltroFile={scegli} onTorna={() => router.back()} />
       )}
 
       {fase === "controllo" && anteprima && (
         <>
           <Text style={styles.passo}>{t("importa.passo")}</Text>
-          <ScrollView ref={lista} contentContainerStyle={{ paddingBottom: 16 }}>
-            {daSistemare.length > 0 && (
-              <>
-                <View style={styles.sezione}>
-                  <Text style={styles.sezioneTitolo} accessibilityRole="header">
-                    {t("importa.daSistemare", { count: daSistemare.length })}
-                  </Text>
-                </View>
-                <View style={styles.lista}>
-                  {daSistemare.map((r, i) => (
-                    <View key={r.indice} onLayout={(e) => posizioni.current.set(r.indice, e.nativeEvent.layout.y)}>
-                      <RigaImportata
-                        riga={r}
-                        separata={i > 0}
-                        onCambiaSelezione={() => cambiaSelezione(r.indice)}
-                        onModifica={() => apriModifica(r.indice, false)}
-                      />
-                    </View>
-                  ))}
-                </View>
-              </>
-            )}
-            {pronte.length > 0 && (
-              <>
-                <View style={styles.sezione}>
-                  <Text style={styles.sezioneTitolo} accessibilityRole="header">
-                    {t("importa.pronte", { count: pronte.length })}
-                  </Text>
-                  <Text style={styles.sezioneAzione} onPress={togliPronte} accessibilityRole="button">
-                    {t("importa.togliTutte")}
-                  </Text>
-                </View>
-                <View style={styles.lista}>
-                  {pronte.map((r, i) => (
-                    <RigaImportata
-                      key={r.indice}
-                      riga={r}
-                      separata={i > 0}
-                      onCambiaSelezione={() => cambiaSelezione(r.indice)}
-                      onModifica={() => apriModifica(r.indice, false)}
-                    />
-                  ))}
-                </View>
-              </>
-            )}
-          </ScrollView>
-          <View style={styles.piede}>
-            <View style={styles.piedeRiga}>
-              <Text style={styles.piedeTesto}>{t("importa.selezionate", { count: selezionate.length })}</Text>
-              <Text style={styles.piedeTotale}>{importo(totale)}</Text>
-            </View>
-            {erroreInvio && <Text style={[styles.piedeTesto, { color: colors.msgArancio }]}>{t("importa.erroreConferma")}</Text>}
-            <Pressable
-              style={({ pressed }) => [styles.pulsante, mancanti.length > 0 && styles.pulsanteBloccato, pressed && styles.premuto]}
-              onPress={premiImporta}
-              disabled={selezionate.length === 0}
-              accessibilityRole="button"
-            >
-              {mancanti.length > 0 && <MaterialCommunityIcons name="help-circle" size={18} color={colors.msgArancio} />}
-              <Text style={[styles.pulsanteTesto, mancanti.length > 0 && styles.pulsanteBloccatoTesto]}>
-                {mancanti.length > 0
-                  ? t("importa.pulsanteBloccato", { count: mancanti.length })
-                  : t("importa.pulsanteImporta", { count: selezionate.length })}
-              </Text>
-            </Pressable>
-          </View>
+          <ElencoControllo
+            lista={lista}
+            posizioni={posizioni}
+            daSistemare={daSistemare}
+            pronte={pronte}
+            onCambiaSelezione={cambiaSelezione}
+            onModifica={(indice) => apriModifica(indice, false)}
+            onTogliPronte={togliPronte}
+          />
+          <PiedeImport
+            selezionate={selezionate.length}
+            totale={totale}
+            mancanti={mancanti.length}
+            erroreInvio={erroreInvio}
+            onImporta={premiImporta}
+          />
           {rigaInModifica && inModifica && (
             <FoglioModificaImport
               riga={rigaInModifica}
