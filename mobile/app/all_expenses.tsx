@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { SectionList, View, Pressable, ScrollView } from "react-native";
+import { SectionList, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconButton, Text, Searchbar, Snackbar } from "react-native-paper";
 import { annullaImport } from "@/utils/importEstratto";
@@ -9,28 +9,15 @@ import { apiFetch } from "@/utils/apiFetch";
 import { intestazioneGiorno, localeAttuale, toDateString } from "@/utils/date";
 import { creaStili } from "@/styles/all_expenses.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { IconaCategoria } from "@/components/IconaCategoria";
 import { BarraPeriodo } from "@/components/BarraPeriodo";
 import { usePreferenze } from "@/utils/preferenze";
 import { useTranslation } from "react-i18next";
 import { nomeCategoria } from "@/utils/categorie";
 import { useStili } from "@/utils/tema";
 import { LARGHEZZA_CONTENUTO, useSchermoLargo } from "@/utils/layout";
+import { ChipGruppi } from "@/components/spese/ChipGruppi";
+import { RigaSpesa, RigaTabella, IntestazioneTabella, type Expense } from "@/components/spese/RigaSpesa";
 
-type Expense = {
-  id: number;
-  description: string;
-  amount: number;
-  date: string;
-  category_id: number | null;
-  category_name: string | null;
-  //gruppo della sottocategoria: colore e icona di ripiego
-  category_group?: string | null;
-  created_at : string;
-  //spesa pagata in un'altra valuta: amount è già convertito
-  original_amount?: number | null;
-  original_currency?: string | null;
-};
 //"Caffè" va trovato anche digitando "caffe": togliamo accenti e maiuscole
 function normalize(text: string): string {
     return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -59,7 +46,7 @@ function periodRange(period: Period, offset: number): { from: Date; to: Date } |
 
 export default function ExpenseList() {
   const styles = useStili(creaStili);
-  const { importo, importoIn } = usePreferenze();
+  const { importo } = usePreferenze();
   const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     //sul computer le spese diventano una tabella, in una colonna centrata
@@ -257,36 +244,7 @@ export default function ExpenseList() {
         />
 
         {categories.length > 0 && (
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.chipScroll}
-                contentContainerStyle={styles.chipRow}
-            >
-                <Pressable
-                    onPress={() => setCategoryId(null)}
-                    style={[styles.chip, categoryId === null && styles.chipSelected]}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: categoryId === null }}
-                >
-                    <Text style={[styles.chipLabel, categoryId === null && styles.chipLabelSelected]}>
-                        {t("spese.tutte")}
-                    </Text>
-                </Pressable>
-                {categories.map(([id, name]) => (
-                    <Pressable
-                        key={id}
-                        onPress={() => setCategoryId(id)}
-                        style={[styles.chip, categoryId === id && styles.chipSelected]}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: categoryId === id }}
-                    >
-                        <Text style={[styles.chipLabel, categoryId === id && styles.chipLabelSelected]}>
-                            {nomeCategoria(name)}
-                        </Text>
-                    </Pressable>
-                ))}
-            </ScrollView>
+            <ChipGruppi gruppi={categories} scelto={categoryId} onScegli={setCategoryId} />
         )}
 
         {/* filtrando, la domanda successiva e' sempre "quanto ho speso in questo".
@@ -311,59 +269,17 @@ export default function ExpenseList() {
         renderSectionHeader={({ section }) => (
             <Text style={styles.dayHeader}>{intestazioneGiorno(section.giorno)}</Text>
         )}
-        ListHeaderComponent={largo && filtered.length > 0 ? (
-            <View style={styles.intestazioneTabella}>
-                <View style={styles.colonnaIcona} />
-                <Text style={[styles.intestazioneColonna, styles.colonnaDescrizione]}>{t("spese.colonnaDescrizione")}</Text>
-                <Text style={[styles.intestazioneColonna, styles.colonnaCategoria]}>{t("spese.colonnaCategoria")}</Text>
-                <Text style={[styles.intestazioneColonna, styles.colonnaImporto]}>{t("spese.colonnaImporto")}</Text>
-                <View style={styles.colonnaAzioni} />
-            </View>
-        ) : null}
+        ListHeaderComponent={largo && filtered.length > 0 ? <IntestazioneTabella /> : null}
         renderItem={({ item, index, section })=> largo ? (
-            //sul computer: una riga di tabella, ogni dato nella sua colonna
-            <View style={styles.rigaTabella}>
-                <View style={styles.colonnaIcona}>
-                    <IconaCategoria categoria={item.category_name} gruppo={item.category_group} dimensione={34} />
-                </View>
-                <Text style={[styles.expenseDescription, styles.colonnaDescrizione]} numberOfLines={1}>{item.description}</Text>
-                <Text style={[styles.expenseMeta, styles.colonnaCategoria]} numberOfLines={1}>{nomeCategoria(item.category_name)}</Text>
-                <View style={[styles.amountColumn, styles.colonnaImporto]}>
-                    <Text style={styles.expenseAmount}>−{importo(item.amount)}</Text>
-                    {item.original_currency && item.original_amount != null && (
-                        <Text style={styles.expenseOriginal}>{importoIn(item.original_amount, item.original_currency)}</Text>
-                    )}
-                </View>
-                <View style={[styles.azioni, styles.colonnaAzioni]}>
-                    <IconButton icon="pencil-outline" size={18} onPress={() => openEdit(item)} accessibilityLabel={t("spese.modifica")} />
-                    <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} accessibilityLabel={t("spese.elimina")} />
-                </View>
-            </View>
+            <RigaTabella item={item} onModifica={() => openEdit(item)} onElimina={() => confirmDelete(item.id)} />
         ) : (
-            //le spese dello stesso giorno formano un riquadro solo, divise da una linea
-            <View style={[
-                styles.expenseRow,
-                index === 0 && styles.expenseRowPrima,
-                index > 0 && styles.expenseRowSeparata,
-                index === section.data.length - 1 && styles.expenseRowUltima,
-            ]}>
-                {/* l'icona rende la lista scansionabile senza leggere */}
-                <IconaCategoria categoria={item.category_name} gruppo={item.category_group} />
-                <View style={styles.expenseInfo}>
-                    <Text style={styles.expenseDescription}>{item.description}</Text>
-                    {/* la data e' gia' nell'intestazione del giorno */}
-                    <Text style={styles.expenseMeta}>{nomeCategoria(item.category_name)}</Text>
-                </View>
-                <View style={styles.amountColumn}>
-                    <Text style={styles.expenseAmount}>−{importo(item.amount)}</Text>
-                    {item.original_currency && item.original_amount != null && (
-                        <Text style={styles.expenseOriginal}>{importoIn(item.original_amount, item.original_currency)}</Text>
-                    )}
-                </View>
-                {/* sempre visibili: si deve capire subito che la spesa si puo' modificare o eliminare */}
-                <IconButton icon="pencil-outline" size={18} onPress={() => openEdit(item)} accessibilityLabel={t("spese.modifica")} style={styles.azioneRiga} />
-                <IconButton icon="trash-can-outline" size={18} onPress={() => confirmDelete(item.id)} accessibilityLabel={t("spese.elimina")} style={styles.azioneRiga} />
-            </View>
+            <RigaSpesa
+                item={item}
+                prima={index === 0}
+                ultima={index === section.data.length - 1}
+                onModifica={() => openEdit(item)}
+                onElimina={() => confirmDelete(item.id)}
+            />
         )}
         ListEmptyComponent={
             !expensesLoaded ? null : hasFilters ? (

@@ -1,52 +1,28 @@
-import { Animated, KeyboardAvoidingView, View, FlatList, Platform, Pressable, Image } from "react-native";
+import { KeyboardAvoidingView, View, FlatList, Platform, Pressable, Image } from "react-native";
 import { useSchermoLargo } from "@/utils/layout";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, IconButton, TextInput, Button, Switch, Portal } from "react-native-paper";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Text, IconButton, TextInput, Portal } from "react-native-paper";
+import { useCallback, useRef, useState } from "react";
 import { API_URL } from "@/config";
 import { creaStili } from "../styles/assistant.styles";
 import { useFocusEffect, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
-import { toDateString, fromDateString } from "@/utils/date"
-import { IconaCategoria } from "@/components/IconaCategoria";
-import { usePreferenze } from "@/utils/preferenze";
-import { CampoData } from "@/components/CampoData";
+import { toDateString } from "@/utils/date"
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { prendiSalvataggio } from "@/utils/esitoAssistente";
 import { useTranslation } from "react-i18next";
-import { nomeCategoria } from "@/utils/categorie";
-import { localeAttuale } from "@/utils/date";
 import { traduciErrore } from "@/utils/messaggioErrore";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useStili, useTema } from "@/utils/tema";
+import { Messaggio, type ChatMessage, type ExpenseConfirmation } from "@/components/assistente/Messaggio";
+import { CardProposta } from "@/components/assistente/CardProposta";
+import { PuntiniAttesa } from "@/components/assistente/PuntiniAttesa";
 
 export default function AssistantScreen() {
   const styles = useStili(creaStili);
   const { colors } = useTema();
-  const { importoIn } = usePreferenze();
   const { t } = useTranslation();
-  const frequenza = (f: string | null) => t(`frequenze.${f ?? "monthly"}`);
-  type ExpenseConfirmation = {
-    id: number;
-    description: string;
-    amount: number;
-    category_name: string | null;
-    category_group: string | null;
-    date: string;
-    category_id:number | null;
-    recurring: boolean;
-    frequency: string | null;
-    currency?: string | null; //riconosciuta nel testo ("40 sterline"), se diversa da quella dell'utente
-  };
-
-  type ChatMessage = {
-    id: string;
-    sender: "user" | "system";
-    text?: string;
-    examples?: string[]; //elenco sotto il testo, solo per il benvenuto
-    expenseData?: ExpenseConfirmation;
-  };
 
   const router = useRouter();
   //sul computer: pannello a destra, con la pagina visibile accanto
@@ -258,29 +234,6 @@ export default function AssistantScreen() {
     setPendingExpense(null);
   }
 
-  //icona, descrizione, categoria e data, importo: uguale nella spesa da
-  //confermare e in quella salvata, che cosi' si riconosce come la stessa
-  function corpoSpesa(spesa: ExpenseConfirmation) {
-    return (
-      <View style={styles.savedBody}>
-        <IconaCategoria categoria={spesa.category_name} gruppo={spesa.category_group} dimensione={36} />
-        <View style={styles.savedInfo}>
-          <Text style={styles.savedDescription} numberOfLines={1}>
-            {spesa.description}
-          </Text>
-          <Text style={styles.savedMeta}>
-            {nomeCategoria(spesa.category_name)}
-            {" · "}
-            {spesa.recurring
-              ? frequenza(spesa.frequency)
-              : fromDateString(spesa.date).toLocaleDateString(localeAttuale())}
-          </Text>
-        </View>
-        <Text style={styles.savedAmount}>{importoIn(spesa.amount, spesa.currency)}</Text>
-      </View>
-    );
-  }
-
   return (
     //i dialoghi vanno disegnati dentro la modale: con l'host globale, su iOS
     //finirebbero sotto la schermata presentata
@@ -315,83 +268,22 @@ export default function AssistantScreen() {
         onLayout={() => lista.current?.scrollToEnd({ animated: false })}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.chatContainer}
-        renderItem={({ item }) => (
-          item.expenseData ? (
-            //card di esito: dice chiaramente che il salvataggio è andato a buon fine
-            <View style={styles.savedCard}>
-              <View style={styles.savedHeader}>
-                <MaterialCommunityIcons name="check-circle" size={20} color={colors.primary} />
-                <Text style={styles.savedTitle}>
-                  {item.expenseData.recurring ? t("assistente.abbonamentoAggiunto") : t("assistente.spesaAggiunta")}
-                </Text>
-              </View>
-              {corpoSpesa(item.expenseData)}
-            </View>
-          ) : (
-            <View
-              style={[
-                styles.messageBubble,
-                item.sender === "user" ? styles.userBubble : styles.systemBubble,
-              ]}
-            >
-              <Text style={item.sender === "user" ? styles.userText : styles.systemText}>
-                {item.text}
-              </Text>
-              {item.examples && (
-                <View style={styles.examples}>
-                  <Text style={styles.examplesLabel}>{t("assistente.perEsempio")}</Text>
-                  {item.examples.map((esempio) => (
-                    <Text key={esempio} style={styles.example}>“{esempio}”</Text>
-                  ))}
-                </View>
-              )}
-            </View>
-          )
-        )}
+        renderItem={({ item }) => <Messaggio item={item} />}
         ListFooterComponent={
           isLoading ? <PuntiniAttesa /> : null
         }
       />
 
       {pendingExpense && (
-        //la stessa card dell'esito: confermando cambiano solo intestazione e colore
-        <View style={[styles.savedCard, styles.pendingCard]}>
-          <View style={[styles.savedHeader, styles.pendingHeader]}>
-            <MaterialCommunityIcons name="clock-outline" size={20} color={colors.textMuted} />
-            <Text style={styles.pendingTitle}>
-              {pendingExpense.recurring ? t("assistente.abbonamentoDaConfermare") : t("assistente.spesaDaConfermare")}
-            </Text>
-          </View>
-          {corpoSpesa(pendingExpense)}
-          {/* un tocco sulla riga apre subito il calendario */}
-          <CampoData
-            value={fromDateString(pendingExpense.date)}
-            onChange={(data) => setPendingExpense({ ...pendingExpense, date: toDateString(data) })}
-            style={styles.pendingLine}
-            accessibilityLabel={pendingExpense.recurring ? t("assistente.primoAddebito") : t("assistente.data")}
-          >
-            <MaterialCommunityIcons name="calendar-outline" size={20} color={colors.textMuted} />
-            <Text style={styles.pendingLineLabel}>
-              {pendingExpense.recurring ? t("assistente.primoAddebito") : t("assistente.data")}
-            </Text>
-            <Text style={styles.pendingLineValue}>
-              {fromDateString(pendingExpense.date).toLocaleDateString(localeAttuale())}
-            </Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.chevron} />
-          </CampoData>
-          {pendingExpense.recurring && (
-            <View style={styles.pendingLine}>
-              <MaterialCommunityIcons name="autorenew" size={20} color={colors.textMuted} />
-              <Text style={styles.pendingLineLabel}>{t("assistente.rinnovoAutomatico")}</Text>
-              <Switch value={autoRenew} onValueChange={setAutoRenew} />
-            </View>
-          )}
-          <View style={styles.cardActions}>
-            <Button mode="text" onPress={handleCancel}>{t("comune.annulla")}</Button>
-            <Button mode="outlined" icon="pencil-outline" onPress={handleEdit}>{t("comune.modifica")}</Button>
-            <Button mode="contained" onPress={handleConfirm}>{t("comune.conferma")}</Button>
-          </View>
-        </View>
+        <CardProposta
+          spesa={pendingExpense}
+          onCambiaData={(data) => setPendingExpense({ ...pendingExpense, date: toDateString(data) })}
+          autoRenew={autoRenew}
+          onAutoRenew={setAutoRenew}
+          onAnnulla={handleCancel}
+          onModifica={handleEdit}
+          onConferma={handleConfirm}
+        />
       )}
 
       <View style={styles.inputRow}>
@@ -437,40 +329,3 @@ export default function AssistantScreen() {
   );
 }
 
-//i tre puntini delle chat mentre l'assistente risponde; chi usa un lettore
-//di schermo sente "Sto analizzando"
-function PuntiniAttesa() {
-  const styles = useStili(creaStili);
-  const { t } = useTranslation();
-  //useState e non useRef: i valori si creano una volta e si leggono nel disegno
-  const [valori] = useState(() => [0, 1, 2].map(() => new Animated.Value(0.3)));
-
-  useEffect(() => {
-    const animazione = Animated.loop(
-      Animated.stagger(
-        150,
-        valori.map((valore) =>
-          Animated.sequence([
-            Animated.timing(valore, { toValue: 1, duration: 300, useNativeDriver: true }),
-            Animated.timing(valore, { toValue: 0.3, duration: 300, useNativeDriver: true }),
-          ])
-        )
-      )
-    );
-    animazione.start();
-    return () => animazione.stop();
-  }, [valori]);
-
-  return (
-    <View
-      style={[styles.messageBubble, styles.systemBubble, styles.puntini]}
-      accessible
-      accessibilityLabel={t("assistente.analizzo")}
-      accessibilityLiveRegion="polite"
-    >
-      {valori.map((valore, i) => (
-        <Animated.View key={i} style={[styles.puntino, { opacity: valore }]} />
-      ))}
-    </View>
-  );
-}

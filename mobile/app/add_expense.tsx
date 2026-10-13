@@ -1,77 +1,44 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Animated,
   Keyboard,
-  Modal,
   Pressable,
   ScrollView,
-  SectionList,
   TextInput as RNTextInput,
   View,
 } from "react-native";
 import { useSchermoLargo } from "@/utils/layout";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Text, IconButton, ActivityIndicator, Portal, Switch, Menu, Searchbar } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Text, IconButton, ActivityIndicator, Portal } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { CampoData } from "@/components/CampoData";
 import { apiFetch } from "@/utils/apiFetch";
-import { fromDateString, toDateString } from "@/utils/date";
+import { fromDateString, localeAttuale, toDateString } from "@/utils/date";
 import { creaStili, coloriSpesa } from "../styles/add-expense.styles";
-import { iconaPerGruppo } from "@/utils/categoryIcons";
-import { IconaCategoria } from "@/components/IconaCategoria";
 import { usePreferenze } from "@/utils/preferenze";
-import { simbolo, eValuta, VALUTE, IMPORTO_MASSIMO, type Valuta } from "@/utils/formato";
+import { simbolo, eValuta, IMPORTO_MASSIMO, type Valuta } from "@/utils/formato";
 import { useConfirmDiscard } from "@/utils/useConfirmDiscard";
 import { segnalaSalvataggio } from "@/utils/esitoAssistente";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useTranslation } from "react-i18next";
 import { nomeCategoria } from "@/utils/categorie";
-import { localeAttuale } from "@/utils/date";
 import { traduciErrore } from "@/utils/messaggioErrore";
 import { useStili, useTema } from "@/utils/tema";
+import { useCambio } from "@/components/spesa/useCambio";
+import { SezioneImporto } from "@/components/spesa/SezioneImporto";
+import { Tastierino } from "@/components/spesa/Tastierino";
+import { CampiAbbonamento, FREQUENCIES, type Frequency } from "@/components/spesa/CampiAbbonamento";
+import { FoglioCategorie, type Category, type CategoryGroup } from "@/components/spesa/FoglioCategorie";
 
-type Category = {
-  id: number;
-  name: string;
-  keywords: string | null;
-  parent_id: number | null;
-};
-
-//le categorie sono a due livelli: i gruppi fanno da intestazione e non sono
-//selezionabili, si sceglie sempre una sottocategoria
-type CategoryGroup = {
-  id: number;
-  name: string;
-  children: Category[];
-};
-
-type Frequency = "monthly" | "weekly" | "yearly";
-
-const FREQUENCIES: { value: Frequency; label: string }[] = [
-  { value: "monthly", label: "frequenze.monthly" },
-  { value: "weekly", label: "frequenze.weekly" },
-  { value: "yearly", label: "frequenze.yearly" },
-];
-
-const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "backspace"];
 //stesso testo del server: lo riconosce e propone di scrivere a mano la cifra convertita
 const CAMBIO_NON_DISPONIBILE = "Exchange rate unavailable";
 const MAX_DECIMALS = 2;
-
-//"Caffè" va trovato anche digitando "caffe": togliamo accenti e maiuscole
-function normalize(text: string): string {
-  return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-}
 
 export default function AddExpenseScreen() {
   const styles = useStili(creaStili);
   const { colors: tokens } = useTema();
   const colors = useMemo(() => coloriSpesa(tokens), [tokens]);
-  //il foglio delle categorie e' una Modal, fuori dalla SafeAreaView: senza
-  //questo l'ultima voce finiva sotto la barra dei gesti dell'iPhone
-  const { bottom: margineSotto } = useSafeAreaInsets();
-  const { valuta, importo: formatta, importoIn } = usePreferenze();
+  const { valuta, importoIn } = usePreferenze();
   const { t } = useTranslation();
   const router = useRouter();
   //sul computer: finestra al centro della pagina, importo scritto con la tastiera
@@ -127,11 +94,6 @@ export default function AddExpenseScreen() {
   const estera = valutaSpesa !== valuta;
   //il massimo nella valuta in cui si sta scrivendo l'importo
   const formattaInValuta = (v: number) => importoIn(v, valutaSpesa);
-  const [menuValuta, setMenuValuta] = useState(false);
-  // Tasso per l'anteprima, legato a valuta e giorno per cui è stato chiesto:
-  // cambiando l'una o l'altro, quello vecchio non si mostra più.
-  const [cambio, setCambio] = useState<{ chiave: string; rate: number; date: string } | null>(null);
-  const [cambioMancante, setCambioMancante] = useState<string | null>(null);
   // la cifra addebitata, scritta a mano quando il tasso non si trova
   const [convertitoRaw, setConvertitoRaw] = useState("");
 
@@ -171,35 +133,12 @@ export default function AddExpenseScreen() {
 
   const amount = parseFloat(amountRaw.replace(",", "."));
   const giorno = toDateString(date);
-  const chiaveCambio = `${valutaSpesa}-${giorno}`;
-  const cambioAttuale = estera && cambio?.chiave === chiaveCambio ? cambio : null;
-  const senzaCambio = estera && cambioMancante === chiaveCambio;
+  const { cambioAttuale, senzaCambio, segnaMancante } = useCambio(estera, valutaSpesa, giorno);
   const convertito = parseFloat(convertitoRaw.replace(",", "."));
   // una spesa estera senza tasso si salva solo con la cifra scritta a mano;
   // un abbonamento no: il server la riprova a ogni rinnovo
   const mancaConvertito = senzaCambio && !isSubscription && !(convertito > 0);
   const canSave = !isSaving && amount > 0 && category !== null && !mancaConvertito;
-
-  useEffect(() => {
-    if (!estera) return;
-    let annullato = false;
-    apiFetch(`/exchange-rate?from_currency=${valutaSpesa}&day=${giorno}`)
-      .then(async (response) => {
-        if (annullato) return;
-        if (!response.ok) {
-          setCambioMancante(chiaveCambio);
-          return;
-        }
-        const dati = await response.json();
-        if (!annullato) setCambio({ chiave: chiaveCambio, rate: dati.rate, date: dati.date });
-      })
-      .catch(() => {
-        if (!annullato) setCambioMancante(chiaveCambio);
-      });
-    return () => {
-      annullato = true;
-    };
-  }, [estera, valutaSpesa, giorno, chiaveCambio]);
 
   useEffect(() => {
     async function loadCategories() {
@@ -232,29 +171,6 @@ export default function AddExpenseScreen() {
     setShowCategoryPicker(false);
     setCercaCategoria("");
   }
-
-  //si cerca nel nome tradotto e in quello italiano, nel gruppo ("casa" trova
-  //le bollette) e nelle parole chiave del server ("netflix" trova Abbonamenti digitali)
-  const sezioniCategorie = useMemo(() => {
-    const q = normalize(cercaCategoria.trim());
-    return categories
-      .map((gruppo) => {
-        const nelGruppo =
-          normalize(gruppo.name).includes(q) || normalize(nomeCategoria(gruppo.name)).includes(q);
-        return {
-          title: gruppo.name,
-          data: !q || nelGruppo
-            ? gruppo.children
-            : gruppo.children.filter(
-                (c) =>
-                  normalize(c.name).includes(q) ||
-                  normalize(nomeCategoria(c.name)).includes(q) ||
-                  normalize(c.keywords ?? "").includes(q)
-              ),
-        };
-      })
-      .filter((sezione) => sezione.data.length > 0);
-  }, [categories, cercaCategoria]);
 
   function focusAmount() {
     // la tastiera di sistema della Descrizione e il tastierino non devono convivere
@@ -361,7 +277,7 @@ export default function AddExpenseScreen() {
           .catch(() => null);
         if (detail === CAMBIO_NON_DISPONIBILE) {
           // il tasso c'era per l'anteprima ma non al salvataggio: si chiede la cifra a mano
-          setCambioMancante(chiaveCambio);
+          segnaMancante();
           setError(
             isSubscription
               ? t("spesa.cambioAbbonamento")
@@ -473,69 +389,20 @@ export default function AddExpenseScreen() {
         </View>
         )}
 
-        <Pressable style={styles.amountSection} onPress={focusAmount}>
-          <Text variant="labelSmall" style={styles.amountLabel}>
-            {t("spesa.importo")}
-          </Text>
-          <View style={styles.amountRow}>
-            <Menu
-              visible={menuValuta}
-              onDismiss={() => setMenuValuta(false)}
-              anchorPosition="bottom"
-              contentStyle={styles.menu}
-              anchor={
-                <Pressable
-                  style={styles.valutaTocco}
-                  onPress={() => {
-                    setIsAmountFocused(false);
-                    setMenuValuta(true);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("spesa.valuta", { valuta: valutaSpesa })}
-                >
-                  <Text style={styles.currency}>{simbolo(valutaSpesa)}</Text>
-                  <MaterialCommunityIcons name="chevron-down" size={18} color={colors.green} />
-                </Pressable>
-              }
-            >
-              {VALUTE.map((v) => (
-                <Menu.Item
-                  key={v}
-                  title={`${simbolo(v)}  ${v}`}
-                  //la spunta a destra: a sinistra spostava il testo solo sulla voce scelta
-                  trailingIcon={v === valutaSpesa ? "check" : undefined}
-                  style={[styles.menuVoce, v === valutaSpesa && styles.menuVoceScelta]}
-                  titleStyle={[styles.menuTesto, v === valutaSpesa && styles.menuTestoScelto]}
-                  accessibilityState={{ selected: v === valutaSpesa }}
-                  onPress={() => {
-                    setError(null);
-                    setValutaScelta(v === valuta ? null : v);
-                    setMenuValuta(false);
-                  }}
-                />
-              ))}
-            </Menu>
-            <Text style={styles.amountValue}>{amountRaw}</Text>
-            {isAmountFocused && <BlinkingCursor />}
-          </View>
-          <View style={[styles.amountUnderline, !isAmountFocused && styles.amountUnderlineBlurred]} />
-          {cambioAttuale && amount > 0 && (
-            <Text style={styles.anteprima}>
-              {t("spesa.anteprima", {
-                importo: formatta(amount * cambioAttuale.rate),
-                data: fromDateString(cambioAttuale.date).toLocaleDateString(localeAttuale(), { day: "numeric", month: "short" }),
-              })}
-              {isSubscription && t("spesa.ricalcolato")}
-            </Text>
-          )}
-          {senzaCambio && (
-            <Text style={styles.anteprimaErrore}>
-              {isSubscription
-                ? t("spesa.senzaCambioAbbonamento")
-                : t("spesa.senzaCambioSpesa")}
-            </Text>
-          )}
-        </Pressable>
+        <SezioneImporto
+          amountRaw={amountRaw}
+          focused={isAmountFocused}
+          onFocus={focusAmount}
+          onApriMenu={() => setIsAmountFocused(false)}
+          valutaSpesa={valutaSpesa}
+          onScegliValuta={(v) => {
+            setError(null);
+            setValutaScelta(v === valuta ? null : v);
+          }}
+          cambioAttuale={cambioAttuale}
+          senzaCambio={senzaCambio}
+          isSubscription={isSubscription}
+        />
 
         <View style={styles.fields}>
           {senzaCambio && !isSubscription && (
@@ -578,57 +445,18 @@ export default function AddExpenseScreen() {
           </View>
 
           {isSubscription && (
-            <View>
-              <Text variant="bodySmall" style={styles.fieldLabel}>
-                {t("spesa.frequenza")}
-              </Text>
-              <View style={styles.frequencyRow}>
-                {FREQUENCIES.map((option) => {
-                  const selected = frequency === option.value;
-                  return (
-                    <Pressable
-                      key={option.value}
-                      style={[styles.frequencyChip, selected && styles.frequencyChipSelected]}
-                      onPress={() => {
-                        setIsAmountFocused(false);
-                        setFrequency(option.value);
-                      }}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                    >
-                      <Text
-                        style={[
-                          styles.frequencyLabel,
-                          selected && styles.frequencyLabelSelected,
-                        ]}
-                      >
-                        {t(option.label)}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          )}
-
-          {isSubscription && (
-            <View style={styles.autoRenewRow}>
-              <View style={styles.autoRenewText}>
-                <Text style={styles.autoRenewLabel}>{t("spesa.rinnovoAutomatico")}</Text>
-                <Text style={styles.autoRenewHint}>
-                  {autoRenew
-                    ? t("spesa.rinnovoAutomaticoSi")
-                    : t("spesa.rinnovoAutomaticoNo")}
-                </Text>
-              </View>
-              <Switch
-                value={autoRenew}
-                onValueChange={(valore) => {
-                  setIsAmountFocused(false);
-                  setAutoRenew(valore);
-                }}
-              />
-            </View>
+            <CampiAbbonamento
+              frequency={frequency}
+              onFrequency={(valore) => {
+                setIsAmountFocused(false);
+                setFrequency(valore);
+              }}
+              autoRenew={autoRenew}
+              onAutoRenew={(valore) => {
+                setIsAmountFocused(false);
+                setAutoRenew(valore);
+              }}
+            />
           )}
 
           {/* la data di partenza di un abbonamento ha gia' generato le spese arretrate */}
@@ -690,117 +518,20 @@ export default function AddExpenseScreen() {
       </ScrollView>
 
       {/* sul computer si scrive con la tastiera vera: il tastierino non serve */}
-      {isAmountFocused && !largo && (
-      <View style={styles.keypad}>
-        {KEYS.map((key) => (
-          <Pressable
-            key={key}
-            style={({ pressed }) => [styles.key, pressed && styles.keyPressed]}
-            onPress={() => handleKeyPress(key)}
-          >
-            {key === "backspace" ? (
-              <MaterialCommunityIcons name="backspace-outline" size={24} color={colors.keypadText} />
-            ) : (
-              <Text style={styles.keyText}>{key}</Text>
-            )}
-          </Pressable>
-        ))}
-      </View>
-      )}
+      {isAmountFocused && !largo && <Tastierino onTasto={handleKeyPress} />}
 
-      <Modal
+      <FoglioCategorie
         visible={showCategoryPicker}
-        transparent
-        animationType={largo ? "fade" : "slide"}
-        onRequestClose={chiudiCategorie}
-      >
-        <Pressable style={[styles.modalOverlay, largo && styles.modalOverlayLargo]} onPress={chiudiCategorie}>
-          {/* il Pressable interno intercetta il tap così non chiude il foglio */}
-          <Pressable
-            style={[styles.modalSheet, !largo && { paddingBottom: Math.max(28, margineSotto + 12) }, largo && styles.modalSheetLargo]}
-            onPress={() => {}}
-          >
-            {/* la maniglia dice "foglio" sul telefono; sul computer e' una finestra */}
-            {!largo && <View style={styles.maniglia} />}
-            <View style={styles.modalIntestazione}>
-              <Text variant="titleMedium" style={styles.modalTitle}>
-                {t("spesa.selezionaCategoria")}
-              </Text>
-              <IconButton
-                icon="close"
-                size={22}
-                mode="contained-tonal"
-                containerColor={colors.surfaceAlt}
-                iconColor={colors.text}
-                onPress={chiudiCategorie}
-                accessibilityLabel={t("comune.chiudi")}
-                style={styles.modalChiudi}
-              />
-            </View>
-            {/* sul computer si scrive subito; sul telefono la tastiera coprirebbe l'elenco */}
-            <Searchbar
-              placeholder={t("spesa.cercaCategoria")}
-              value={cercaCategoria}
-              onChangeText={setCercaCategoria}
-              autoFocus={largo}
-              style={styles.categorySearch}
-              inputStyle={styles.categorySearchInput}
-            />
-            <SectionList
-              sections={sezioniCategorie}
-              keyboardShouldPersistTaps="handled"
-              keyExtractor={(item) => item.id.toString()}
-              stickySectionHeadersEnabled
-              renderSectionHeader={({ section }) => (
-                //il gruppo è solo un'intestazione: non è selezionabile
-                <View style={styles.categoryGroupHeader}>
-                  <MaterialCommunityIcons
-                    name={iconaPerGruppo(section.title) as any}
-                    size={16}
-                    color={colors.label}
-                  />
-                  <Text style={styles.categoryGroupTitle}>{nomeCategoria(section.title)}</Text>
-                </View>
-              )}
-              renderItem={({ item, section }) => (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.categoryRow,
-                    category?.id === item.id && styles.categoryRowScelta,
-                    pressed && styles.categoryRowPremuta,
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: category?.id === item.id }}
-                  onPress={() => {
-                    setCategory(item);
-                    chiudiCategorie();
-                  }}
-                >
-                  <IconaCategoria categoria={item.name} gruppo={section.title} dimensione={34} />
-                  <Text
-                    style={[
-                      styles.categoryRowText,
-                      category?.id === item.id && styles.categoryRowSelected,
-                    ]}
-                  >
-                    {nomeCategoria(item.name)}
-                  </Text>
-                  {category?.id === item.id && (
-                    <MaterialCommunityIcons name="check-circle" size={22} color={colors.green} />
-                  )}
-                </Pressable>
-              )}
-              ListEmptyComponent={
-                <Text style={styles.categoryEmpty}>
-                  {cercaCategoria.trim()
-                    ? t("spesa.nessunaCategoriaTrovata", { testo: cercaCategoria.trim() })
-                    : t("spesa.nessunaCategoria")}
-                </Text>
-              }
-            />
-          </Pressable>
-        </Pressable>
-      </Modal>
+        categories={categories}
+        scelta={category}
+        onScegli={(item) => {
+          setCategory(item);
+          chiudiCategorie();
+        }}
+        cerca={cercaCategoria}
+        onCerca={setCercaCategoria}
+        onChiudi={chiudiCategorie}
+      />
       <ConfirmDialog {...dialogo} />
     </SafeAreaView>
     </View>
@@ -808,22 +539,3 @@ export default function AddExpenseScreen() {
   );
 }
 
-function BlinkingCursor() {
-  const styles = useStili(creaStili);
-  //useState e non useRef: il valore si crea una volta e si legge durante il
-  //disegno, cosa che con .current di un ref il linter non permette
-  const [opacity] = useState(() => new Animated.Value(1));
-
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 0, duration: 500, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-      ])
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [opacity]);
-
-  return <Animated.View style={[styles.cursor, { opacity }]} />;
-}

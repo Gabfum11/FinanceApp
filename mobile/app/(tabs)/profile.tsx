@@ -1,5 +1,5 @@
 import { View, Pressable, Platform } from "react-native";
-import { Text, Dialog, Portal, TextInput, ActivityIndicator, Snackbar, Switch, RadioButton } from "react-native-paper";
+import { Text, ActivityIndicator, Snackbar, Switch } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { esportaCsv } from "@/utils/exportData";
 import { impostaPromemoria, promemoriaAttivi, dimenticaDispositivo, NOTIFICHE_DISPONIBILI } from "@/utils/notifications";
@@ -9,19 +9,20 @@ import { PRIVACY_URL } from "@/config";
 import { useFocusEffect, useRouter } from "expo-router";
 import { cancellaSessione, chiudiSessione } from "@/utils/session";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { IconaDialogo, PulsantiDialogo, creaStiliFinestra } from "@/components/Dialogo";
 import { creaStili, COLORI_RIGHE } from "@/styles/profile.styles";
 import { Avatar } from "@/components/Avatar";
-import { IconaCerchio } from "@/components/IconaCategoria";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
 import { usePreferenze } from "@/utils/preferenze";
-import { VALUTE, LINGUE, simbolo, type Valuta, type Lingua } from "@/utils/formato";
+import { simbolo, type Valuta } from "@/utils/formato";
 import { useTranslation } from "react-i18next";
 import { useStili, useTema } from "@/utils/tema";
-import { DIALOGO_LARGO, useSchermoLargo } from "@/utils/layout";
+import { useSchermoLargo } from "@/utils/layout";
+import { Riga } from "@/components/profilo/Riga";
+import { FinestraValuta, FinestraLingua, FinestraConversione } from "@/components/profilo/FinestreValutaLingua";
+import { FinestraEliminaAccount } from "@/components/profilo/FinestraEliminaAccount";
 
 //dopo il logout (o l'account eliminato): nel browser, anche dall'icona sulla
 //Home, si torna alla landing; "/" la mostra a chi non ha fatto l'accesso.
@@ -32,7 +33,6 @@ const DOPO_USCITA = Platform.OS === "web" ? "/" : "/login";
 
 export default function ProfileScreen() {
   const styles = useStili(creaStili);
-  const finestra = useStili(creaStiliFinestra);
   const { colors, scuro, impostaScuro } = useTema();
   //sul computer: account a sinistra, impostazioni a destra
   const largo = useSchermoLargo();
@@ -40,12 +40,8 @@ export default function ProfileScreen() {
     const [nickname, setNickname] = useState("");
     const [email, setEmail] = useState("");
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const [password, setPassword] = useState("");
-    //gli account creati con Google non hanno password: chiedergliela farebbe
-    //sembrare valida qualsiasi cosa scritta, perche' il server la ignora
+    //gli account Google non hanno password: la finestra di eliminazione non la chiede
     const [hasPassword, setHasPassword] = useState(true);
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
     //quale esportazione e' in corso: disabilita entrambe le voci e mostra
     //l'indicatore solo su quella toccata
@@ -57,7 +53,7 @@ export default function ProfileScreen() {
     const [showLogoutAllDialog, setShowLogoutAllDialog] = useState(false);
     //l'icona di logout e' piccola e in alto: un tocco per sbaglio non deve buttare fuori
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-    const { valuta, impostaValuta, lingua, impostaLingua } = usePreferenze();
+    const { valuta, impostaValuta, lingua } = usePreferenze();
     const { t } = useTranslation();
     //i messaggi in basso compaiono sopra la barra delle schede, non sotto
     const spazioBarra = useSpazioBarra();
@@ -147,38 +143,12 @@ export default function ProfileScreen() {
         }
     }
 
-    function closeDeleteDialog() {
-        setShowDeleteDialog(false);
-        setPassword("");
-        setDeleteError(null);
-    }
-
-    async function handleDeleteAccount() {
-        setIsDeleting(true);
-        setDeleteError(null);
-        try {
-            const response = await apiFetch("/auth/me", {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password }),
-            });
-            if (!response.ok) {
-                setDeleteError(
-                    response.status === 401
-                        ? t("profilo.passwordErrata")
-                        : t("profilo.eliminaErrore")
-                );
-                return;
-            }
-            await dimenticaDispositivo(false);
-            //l'account non esiste piu': i token vanno buttati anche qui
-            await cancellaSessione();
-            router.replace(DOPO_USCITA);
-        } catch {
-            setDeleteError(t("errori.rete"));
-        } finally {
-            setIsDeleting(false);
-        }
+    //account cancellato dalla finestra: si chiude la sessione anche qui
+    async function dopoEliminazione() {
+        await dimenticaDispositivo(false);
+        //l'account non esiste piu': i token vanno buttati anche qui
+        await cancellaSessione();
+        router.replace(DOPO_USCITA);
     }
 
     //a ogni ritorno sulla scheda, non solo alla prima apertura:
@@ -382,94 +352,16 @@ export default function ProfileScreen() {
 
             </PaginaScorrevole>
 
-            <Portal>
-                <Dialog visible={showValutaDialog} onDismiss={() => setShowValutaDialog(false)} style={[finestra.finestra, largo && DIALOGO_LARGO]}>
-                    <Dialog.Title style={finestra.titolo}>{t("profilo.valuta")}</Dialog.Title>
-                    <Dialog.Content style={styles.dialogScelte}>
-                        <RadioButton.Group onValueChange={scegliValuta} value={valuta}>
-                            {VALUTE.map((v) => (
-                                <RadioButton.Item
-                                    labelStyle={[styles.opzioneTesto, v === valuta && styles.opzioneTestoScelto]}
-                                    style={[styles.opzione, v === valuta && styles.opzioneScelta]}
-                                    key={v}
-                                    value={v}
-                                    label={`${nomeValuta(v)} (${simbolo(v)})`}
-                                />
-                            ))}
-                        </RadioButton.Group>
-                    </Dialog.Content>
-                    <PulsantiDialogo conferma={t("comune.chiudi")} onConferma={() => setShowValutaDialog(false)} />
-                </Dialog>
-            </Portal>
-
-            <Portal>
-                <Dialog visible={showLinguaDialog} onDismiss={() => setShowLinguaDialog(false)} style={[finestra.finestra, largo && DIALOGO_LARGO]}>
-                    <Dialog.Title style={finestra.titolo}>{t("lingua.titolo")}</Dialog.Title>
-                    <Dialog.Content style={styles.dialogScelte}>
-                        <RadioButton.Group
-                            onValueChange={(scelta) => {
-                                setShowLinguaDialog(false);
-                                impostaLingua(scelta as Lingua);
-                            }}
-                            value={lingua}
-                        >
-                            {/* ogni lingua nella sua lingua: chi non capisce l'italiano la riconosce */}
-                            {LINGUE.map((l) => (
-                                <RadioButton.Item
-                                    labelStyle={[styles.opzioneTesto, l === lingua && styles.opzioneTestoScelto]}
-                                    style={[styles.opzione, l === lingua && styles.opzioneScelta]}
-                                    key={l} value={l} label={t(`lingua.${l}`)} />
-                            ))}
-                        </RadioButton.Group>
-                        <Text style={styles.dialogNota}>{t("lingua.nota")}</Text>
-                    </Dialog.Content>
-                    <PulsantiDialogo conferma={t("comune.chiudi")} onConferma={() => setShowLinguaDialog(false)} />
-                </Dialog>
-            </Portal>
-
-            <Portal>
-                <Dialog visible={valutaNuova !== null} onDismiss={() => !valutaInCorso && setValutaNuova(null)} style={[finestra.finestra, largo && DIALOGO_LARGO]}>
-                    <IconaDialogo nome="swap-horizontal" />
-                    <Dialog.Title style={[finestra.titolo, finestra.titoloCentrato]}>
-                        {valutaNuova ? t("profilo.passareA", { valuta: `${nomeValuta(valutaNuova)} (${simbolo(valutaNuova)})` }) : ""}
-                    </Dialog.Title>
-                    <Dialog.Content style={styles.dialogScelte}>
-                        <RadioButton.Group
-                            onValueChange={(scelta) => setConvertiPassate(scelta === "converti")}
-                            value={convertiPassate ? "converti" : "mantieni"}
-                        >
-                            {/* ogni scelta in un riquadro con la sua spiegazione: si capisce
-                                che la nota appartiene alla voce sopra e non a quella sotto */}
-                            <View style={[styles.sceltaRiquadro, convertiPassate && styles.sceltaRiquadroScelto]}>
-                                <RadioButton.Item
-                                    labelStyle={[styles.opzioneTesto, styles.opzioneTestoScelto]}
-                                    style={styles.opzioneInRiquadro}
-                                    value="converti"
-                                    label={t("profilo.converti")}
-                                    disabled={valutaInCorso}
-                                />
-                                <Text style={styles.opzioneNota}>{t("profilo.convertiTesto")}</Text>
-                            </View>
-                            <View style={[styles.sceltaRiquadro, !convertiPassate && styles.sceltaRiquadroScelto]}>
-                                <RadioButton.Item
-                                    labelStyle={[styles.opzioneTesto, styles.opzioneTestoScelto]}
-                                    style={styles.opzioneInRiquadro}
-                                    value="mantieni"
-                                    label={t("profilo.mantieni")}
-                                    disabled={valutaInCorso}
-                                />
-                                <Text style={styles.opzioneNota}>{t("profilo.mantieniTesto")}</Text>
-                            </View>
-                        </RadioButton.Group>
-                    </Dialog.Content>
-                    <PulsantiDialogo
-                        conferma={t("profilo.cambiaValuta")}
-                        onConferma={confermaValuta}
-                        onAnnulla={() => setValutaNuova(null)}
-                        loading={valutaInCorso}
-                    />
-                </Dialog>
-            </Portal>
+            <FinestraValuta visible={showValutaDialog} onScegli={scegliValuta} onChiudi={() => setShowValutaDialog(false)} />
+            <FinestraLingua visible={showLinguaDialog} onChiudi={() => setShowLinguaDialog(false)} />
+            <FinestraConversione
+                valutaNuova={valutaNuova}
+                convertiPassate={convertiPassate}
+                onConvertiPassate={setConvertiPassate}
+                inCorso={valutaInCorso}
+                onConferma={confermaValuta}
+                onAnnulla={() => setValutaNuova(null)}
+            />
 
             <ConfirmDialog
                 visible={showLogoutDialog}
@@ -493,42 +385,12 @@ export default function ProfileScreen() {
                 onDismiss={() => setShowLogoutAllDialog(false)}
             />
 
-            <Portal>
-                <Dialog visible={showDeleteDialog} onDismiss={closeDeleteDialog} style={[finestra.finestra, largo && DIALOGO_LARGO]}>
-                    <IconaDialogo nome="account-remove" distruttivo />
-                    <Dialog.Title style={[finestra.titolo, finestra.titoloCentrato]}>{t("profilo.eliminaAccount")}</Dialog.Title>
-                    <Dialog.Content>
-                        <Text style={[finestra.testo, finestra.testoCentrato, styles.deleteWarning]}>
-                            {t("profilo.eliminaTesto")}
-                        </Text>
-                        {hasPassword ? (
-                            <TextInput
-                                label={t("profilo.confermaPassword")}
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                mode="outlined"
-                                autoCapitalize="none"
-                                error={!!deleteError}
-                            />
-                        ) : (
-                            <Text style={[finestra.testo, finestra.testoCentrato]}>
-                                {t("profilo.collegatoGoogle")}
-                            </Text>
-                        )}
-                        {deleteError && <Text style={styles.deleteError}>{deleteError}</Text>}
-                    </Dialog.Content>
-                    <PulsantiDialogo
-                        conferma={t("comune.elimina")}
-                        onConferma={handleDeleteAccount}
-                        onAnnulla={closeDeleteDialog}
-                        distruttivo
-                        loading={isDeleting}
-                        confermaDisattivata={hasPassword && password.length === 0}
-                    />
-                </Dialog>
-
-            </Portal>
+            <FinestraEliminaAccount
+                visible={showDeleteDialog}
+                hasPassword={hasPassword}
+                onChiudi={() => setShowDeleteDialog(false)}
+                onEliminato={dopoEliminazione}
+            />
 
             {/* ha il suo Portal: compare sopra il profilo come le altre finestre */}
             <FinestraContatto
@@ -545,39 +407,3 @@ export default function ProfileScreen() {
     );
 }
 
-//una riga dell'elenco: cerchio colorato, testo, e a destra freccia o
-//interruttore. Tutte uguali, cosi' le sezioni si leggono come un elenco solo
-function Riga({ icona, colore, etichetta, dettaglio, onPress, destra, distruttiva, disabilitata }: {
-    icona: string;
-    colore: string;
-    etichetta: string;
-    dettaglio?: string;
-    onPress?: () => void;
-    destra?: ReactNode;
-    distruttiva?: boolean;
-    disabilitata?: boolean;
-}) {
-    const styles = useStili(creaStili);
-    const { colors } = useTema();
-    const contenuto = (
-        <>
-            <IconaCerchio icona={icona} sfondo={colore} dimensione={32} />
-            <View style={styles.rowTextGroup}>
-                <Text style={[styles.rowLabelInGroup, distruttiva && styles.rowLabelDistruttiva]}>{etichetta}</Text>
-                {dettaglio !== undefined && <Text style={styles.rowHint}>{dettaglio}</Text>}
-            </View>
-            {destra ?? (onPress && <MaterialCommunityIcons name="chevron-right" size={22} color={colors.chevron} />)}
-        </>
-    );
-    if (!onPress) return <View style={styles.row}>{contenuto}</View>;
-    return (
-        <Pressable
-            style={({ pressed }) => [styles.row, pressed && styles.rowPremuta]}
-            onPress={onPress}
-            disabled={disabilitata}
-            accessibilityRole="button"
-        >
-            {contenuto}
-        </Pressable>
-    );
-}

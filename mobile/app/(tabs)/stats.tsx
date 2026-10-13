@@ -1,40 +1,30 @@
 import { useCallback, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, Pressable } from "react-native";
-import { Text, Snackbar, ActivityIndicator, Dialog, Portal, TextInput } from "react-native-paper";
+import { Text, Snackbar, ActivityIndicator } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { apiFetch } from "@/utils/apiFetch";
 import { usePreferenze } from "@/utils/preferenze";
-import { simbolo, IMPORTO_MASSIMO } from "@/utils/formato";
+import { IMPORTO_MASSIMO } from "@/utils/formato";
 import { messaggioErrore } from "@/utils/messaggioErrore";
 import { useTranslation } from "react-i18next";
 import { nomeCategoria } from "@/utils/categorie";
 import { colorePerGruppo } from "@/utils/categoryIcons";
 import { localeAttuale } from "@/utils/date";
-import { PieChart } from "react-native-gifted-charts";
 import { creaStili } from "@/styles/stats.styles";
 import { useFocusEffect, useRouter } from "expo-router";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
-import { DIALOGO_LARGO, LARGHEZZA_MASSIMA, useSchermoLargo, useSchermoStretto } from "@/utils/layout";
+import { LARGHEZZA_MASSIMA, useSchermoLargo, useSchermoStretto } from "@/utils/layout";
 import { useStili, useTema } from "@/utils/tema";
-import { PulsantiDialogo, creaStiliFinestra } from "@/components/Dialogo";
-import { IconaCategoria, IconaCerchio } from "@/components/IconaCategoria";
 import { BarraPeriodo } from "@/components/BarraPeriodo";
-
-type CategoryStat = {
-  category_name: string;
-  total: number;
-  //dalla piu' grande, come arrivano dal server
-  subcategories: { category_name: string; total: number }[];
-};
-
-//aperta una categoria se ne vedono le voci piu' grandi; le altre stanno in "Altre"
-const SOTTOCATEGORIE_VISIBILI = 3;
+import { Ciambella } from "@/components/statistiche/Ciambella";
+import { SelettoreCifre, type Cifre } from "@/components/statistiche/SelettoreCifre";
+import { RigaCategoria, RigaResto, type CategoryStat } from "@/components/statistiche/RigheLegenda";
+import { RigaBudget, RiquadroResto, FinestraBudget } from "@/components/statistiche/BudgetPeriodo";
 
 //come si leggono le cifre della legenda: la scelta resta sul telefono
 const CHIAVE_CIFRE = "statistiche_cifre";
-type Cifre = "importi" | "percentuali";
 //mese (ciclo di budget) o anno di calendario: anche questa scelta resta sul telefono
 const CHIAVE_VISTA = "statistiche_vista";
 type Vista = "mese" | "anno";
@@ -52,9 +42,8 @@ function formatCycleLabel(cycleStart: string, cycleEnd: string): string {
 
 export default function StatsScreen() {
   const styles = useStili(creaStili);
-  const finestra = useStili(creaStiliFinestra);
   const { colors } = useTema();
-  const { importo, valuta } = usePreferenze();
+  const { importo } = usePreferenze();
   const { t } = useTranslation();
   //i messaggi in basso compaiono sopra la barra delle schede, non sotto
   const spazioBarra = useSpazioBarra();
@@ -235,24 +224,11 @@ export default function StatsScreen() {
 
   //la ciambella con il totale: sopra la legenda sugli schermi stretti, accanto sugli altri
   const ciambella = (
-    <View style={styles.ciambella}>
-      <PieChart
-        data={pieData}
-        donut
-        radius={largo ? 110 : 75}
-        innerRadius={largo ? 86 : 60}
-        //il buco della ciambella e' un cerchio pieno, bianco se non si dice altro
-        innerCircleColor={colors.surface}
-        centerLabelComponent={() => (
-          <View style={styles.centroCiambella}>
-            <Text style={styles.totalLabel} numberOfLines={2}>
-              {categoriaAperta ? nomeCategoria(categoriaAperta.category_name) : t("statistiche.speso")}
-            </Text>
-            <Text style={styles.totalAmount}>{importo(categoriaAperta ? categoriaAperta.total : total)}</Text>
-          </View>
-        )}
-      />
-    </View>
+    <Ciambella
+      dati={pieData}
+      etichetta={categoriaAperta ? nomeCategoria(categoriaAperta.category_name) : t("statistiche.speso")}
+      valore={importo(categoriaAperta ? categoriaAperta.total : total)}
+    />
   );
 
   return (
@@ -273,28 +249,7 @@ export default function StatsScreen() {
         <View style={[styles.card, largo && styles.cardLarga]}>
           {/* sul computer c'e' posto per importi e percentuali insieme: l'interruttore non serve */}
           {!loading && stats.length > 0 && !largo && (
-            <View style={styles.cifreRiga}>
-              <View style={styles.cifre}>
-                <Pressable
-                  style={[styles.cifraVoce, cifre === "importi" && styles.cifraScelta]}
-                  onPress={() => scegliCifre("importi")}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("statistiche.mostraImporti")}
-                  accessibilityState={{ selected: cifre === "importi" }}
-                >
-                  <Text style={[styles.cifraTesto, cifre === "importi" && styles.cifraTestoScelto]}>{simbolo(valuta)}</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.cifraVoce, cifre === "percentuali" && styles.cifraScelta]}
-                  onPress={() => scegliCifre("percentuali")}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("statistiche.mostraPercentuali")}
-                  accessibilityState={{ selected: cifre === "percentuali" }}
-                >
-                  <Text style={[styles.cifraTesto, cifre === "percentuali" && styles.cifraTestoScelto]}>%</Text>
-                </Pressable>
-              </View>
-            </View>
+            <SelettoreCifre cifre={cifre} onScegli={scegliCifre} />
           )}
           <View style={[styles.cardCorpo, stretto && styles.cardColonna]}>
           {loading ? (
@@ -339,114 +294,28 @@ export default function StatsScreen() {
                     <View style={styles.freccina} />
                   </View>
                 )}
-                {stats.map((item, indice) => {
-                  //con una sola voce dentro, aprire non aggiungerebbe niente
-                  const apribile = item.subcategories.length > 1;
-                  const isAperta = categoriaAperta?.category_name === item.category_name;
-                  const nome = nomeCategoria(item.category_name);
-                  //se resterebbe fuori una sola voce, tanto vale mostrarla
-                  const voci = tutteVisibili || item.subcategories.length <= SOTTOCATEGORIE_VISIBILI + 1
-                    ? item.subcategories
-                    : item.subcategories.slice(0, SOTTOCATEGORIE_VISIBILI);
-                  const altre = item.subcategories.slice(voci.length);
-                  const colore = colorePerGruppo(item.category_name);
-                  return (
-                    <View key={item.category_name}>
-                      <Pressable
-                        disabled={!apribile}
-                        onPress={() => apriCategoria(item.category_name)}
-                        style={({ pressed }) => [
-                          styles.legendRow,
-                          (indice > 0 || largo) && styles.legendRowSeparata,
-                          sbiadita(item.category_name) && styles.rigaSbiadita,
-                          pressed && styles.premuto,
-                        ]}
-                        accessibilityRole={apribile ? "button" : undefined}
-                        accessibilityLabel={apribile
-                          ? t(isAperta ? "statistiche.chiudiCategoria" : "statistiche.apriCategoria", { categoria: nome })
-                          : undefined}
-                        accessibilityState={apribile ? { expanded: isAperta } : undefined}
-                      >
-                        <View style={styles.legendLeft}>
-                          {/* l'icona oltre al colore: la fetta si riconosce anche
-                              da chi distingue male i colori */}
-                          <IconaCategoria gruppo={item.category_name} dimensione={30} />
-                          <Text style={styles.legendLabel} numberOfLines={2}>{nome}</Text>
-                        </View>
-                        {largo ? (
-                          <>
-                            <Text style={[styles.legendPercentage, styles.colonnaImporto]}>{importo(item.total)}</Text>
-                            <Text style={styles.colonnaPercentuale}>{percentuale(item.total)}%</Text>
-                          </>
-                        ) : (
-                          <Text style={styles.legendPercentage}>{cifra(item.total)}</Text>
-                        )}
-                        {/* lo spazio resta anche senza freccia: gli importi restano in colonna */}
-                        <View style={styles.freccina}>
-                          {apribile && (
-                            <MaterialCommunityIcons name={isAperta ? "chevron-up" : "chevron-down"} size={20} color={colors.textMuted} />
-                          )}
-                        </View>
-                      </Pressable>
-                      {isAperta && (
-                        <View style={styles.sottocategorie}>
-                          {voci.map((sub) => (
-                            <View key={sub.category_name} style={styles.sottocategoria}>
-                              <View style={styles.sottocategoriaTesti}>
-                                <Text style={styles.sottocategoriaNome} numberOfLines={1}>{nomeCategoria(sub.category_name)}</Text>
-                                <Text style={styles.sottocategoriaImporto}>{largo ? importo(sub.total) : cifra(sub.total)}</Text>
-                              </View>
-                              {/* barra rispetto alla voce piu' grande: si confrontano meglio delle fette */}
-                              <View style={styles.binario}>
-                                <View
-                                  style={[
-                                    styles.barra,
-                                    { width: `${(sub.total / item.subcategories[0].total) * 100}%`, backgroundColor: colore },
-                                  ]}
-                                />
-                              </View>
-                            </View>
-                          ))}
-                          {altre.length > 0 && (
-                            <Pressable
-                              style={({ pressed }) => [styles.altre, pressed && styles.premuto]}
-                              onPress={() => setTutteVisibili(true)}
-                              accessibilityRole="button"
-                            >
-                              <Text style={styles.altreTesto}>
-                                {t("statistiche.altre", {
-                                  numero: altre.length,
-                                  importo: importo(altre.reduce((somma, sub) => somma + sub.total, 0)),
-                                })}
-                              </Text>
-                              <MaterialCommunityIcons name="chevron-right" size={18} color={colors.primaryDark} />
-                            </Pressable>
-                          )}
-                        </View>
-                      )}
-                    </View>
-                  );
-                })}
+                {stats.map((item, indice) => (
+                  <RigaCategoria
+                    key={item.category_name}
+                    item={item}
+                    separata={indice > 0 || largo}
+                    isAperta={categoriaAperta?.category_name === item.category_name}
+                    sbiadita={sbiadita(item.category_name)}
+                    tutteVisibili={tutteVisibili}
+                    onApri={() => apriCategoria(item.category_name)}
+                    onMostraTutte={() => setTutteVisibili(true)}
+                    cifra={cifra}
+                    percentuale={percentuale}
+                  />
+                ))}
                 {remaining > 0 && (
-                  <View style={[styles.legendRow, styles.legendRowSeparata, categoriaAperta != null && styles.rigaSbiadita]}>
-                    <View style={styles.legendLeft}>
-                      {/* un anello vuoto, grigio come la sua fetta: e' il pezzo di ciambella
-                          che resta, non una categoria, quindi niente icona */}
-                      <View style={[styles.legendaAnello, { borderColor: colors.donutRemaining }]} />
-                      <Text style={styles.legendLabel} numberOfLines={1}>
-                        {meseInCorso ? t("statistiche.disponibile") : t("statistiche.avanzato")}
-                      </Text>
-                    </View>
-                    {largo ? (
-                      <>
-                        <Text style={[styles.legendPercentage, styles.legendaResto, styles.colonnaImporto]}>{importo(remaining)}</Text>
-                        <Text style={styles.colonnaPercentuale}>{percentuale(remaining)}%</Text>
-                      </>
-                    ) : (
-                      <Text style={[styles.legendPercentage, styles.legendaResto]}>{cifra(remaining)}</Text>
-                    )}
-                    <View style={styles.freccina} />
-                  </View>
+                  <RigaResto
+                    resto={remaining}
+                    meseInCorso={meseInCorso}
+                    sbiadita={categoriaAperta != null}
+                    cifra={cifra}
+                    percentuale={percentuale}
+                  />
                 )}
               </View>
               {!stretto && !largo && ciambella}
@@ -460,35 +329,11 @@ export default function StatsScreen() {
             qui sotto, che porta alla schermata completa con il giorno di inizio */}
         <View style={largo ? styles.colonnaLaterale : undefined}>
         {!loading && stats.length > 0 && vista === "mese" && (cycleOffset < 0 || budgetMensile != null) && (
-          <View style={[styles.budgetRiga, largo && styles.senzaMargine]}>
-            <IconaCerchio icona="cash" sfondo={colors.primary} dimensione={32} />
-            <View style={styles.budgetTesti}>
-              <Text style={styles.budgetEtichetta}>{t("statistiche.budget")}</Text>
-              <Text style={styles.budgetValore}>
-                {budgetMensile != null ? importo(budgetMensile) : t("statistiche.budgetNonImpostato")}
-              </Text>
-            </View>
-            <Pressable
-              style={({ pressed }) => [styles.matita, pressed && styles.premuto]}
-              onPress={apriModificaBudget}
-              accessibilityRole="button"
-              accessibilityLabel={t("statistiche.modificaBudget")}
-            >
-              <MaterialCommunityIcons name="pencil" size={20} color={colors.primaryDark} />
-            </Pressable>
-          </View>
+          <RigaBudget budgetMensile={budgetMensile} onModifica={apriModificaBudget} />
         )}
         {/* sul computer, accanto: quanto resta, la domanda che segue la ciambella */}
         {largo && !loading && stats.length > 0 && budgetMensile != null && (
-          <View style={styles.riquadroResto}>
-            <Text style={styles.budgetEtichetta}>
-              {meseInCorso ? t("statistiche.disponibile") : t("statistiche.avanzato")}
-            </Text>
-            <Text style={styles.restoValore}>{importo(remaining)}</Text>
-            <Text style={styles.restoTesto}>
-              {t("statistiche.usato", { percentuale: Math.round((total / budgetMensile) * 100) })}
-            </Text>
-          </View>
+          <RiquadroResto resto={remaining} meseInCorso={meseInCorso} usato={Math.round((total / budgetMensile) * 100)} />
         )}
         </View>
         </View>
@@ -509,36 +354,20 @@ export default function StatsScreen() {
 
       </PaginaScorrevole>
 
-      <Portal>
-        <Dialog visible={modificaBudget} onDismiss={() => setModificaBudget(false)} style={[finestra.finestra, largo && DIALOGO_LARGO]}>
-          <Dialog.Title style={finestra.titolo}>{t("statistiche.budget")}</Dialog.Title>
-          <Dialog.Content>
-            <Text style={styles.dialogPeriodo}>{periodo}</Text>
-            <TextInput
-              value={nuovoBudget}
-              onChangeText={(testo) => {
-                setNuovoBudget(testo);
-                setErroreBudget("");
-              }}
-              keyboardType="decimal-pad"
-              mode="outlined"
-              autoFocus
-              left={<TextInput.Affix text={simbolo(valuta)} />}
-              error={erroreBudget !== ""}
-            />
-            {erroreBudget !== "" && <Text style={styles.dialogErrore}>{erroreBudget}</Text>}
-            <Text style={styles.dialogSpiegazione}>
-              {cycleOffset === 0 ? t("statistiche.budgetDaOra") : t("statistiche.budgetSoloPeriodo")}
-            </Text>
-          </Dialog.Content>
-          <PulsantiDialogo
-            conferma={t("statistiche.salva")}
-            onConferma={salvaBudget}
-            onAnnulla={() => setModificaBudget(false)}
-            loading={salvataggio}
-          />
-        </Dialog>
-      </Portal>
+      <FinestraBudget
+        visible={modificaBudget}
+        periodo={periodo}
+        valore={nuovoBudget}
+        onValore={(testo) => {
+          setNuovoBudget(testo);
+          setErroreBudget("");
+        }}
+        errore={erroreBudget}
+        inCorso={salvataggio}
+        meseInCorso={cycleOffset === 0}
+        onSalva={salvaBudget}
+        onChiudi={() => setModificaBudget(false)}
+      />
 
       <Snackbar
     wrapperStyle={{ marginBottom: spazioBarra }} visible={snackbarVisible} onDismiss={() => setSnackbarVisible(false)} duration={3000}>
