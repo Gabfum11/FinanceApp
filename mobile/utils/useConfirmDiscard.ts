@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 import { useNavigation } from "expo-router";
-import { usePreventRemove } from "expo-router/react-navigation";
+import { CommonActions, usePreventRemove } from "expo-router/react-navigation";
 
 type AzioneBloccata = Parameters<Parameters<typeof usePreventRemove>[1]>[0]["data"]["action"];
 
@@ -46,8 +46,31 @@ export function useConfirmDiscard(modificato: boolean, testi?: Testi) {
       evento.returnValue = "";
     }
     window.addEventListener("beforeunload", avvisa);
-    return () => window.removeEventListener("beforeunload", avvisa);
-  }, [modificato]);
+
+    //l'indietro del browser (o del telefono nella PWA) non passa da usePreventRemove:
+    //il router ricarica lo stato precedente da se'. Si ascolta in cattura, prima
+    //del router, si torna avanti alla schermata e si chiede
+    let ripristino = false;
+    function indietro(evento: PopStateEvent) {
+      if (ripristino) {
+        ripristino = false;
+        evento.stopImmediatePropagation();
+        return;
+      }
+      //con un'altra schermata sopra (es. l'import aperto da nuova spesa) decide lei
+      if (uscitaConsentita.current || !navigation.isFocused()) return;
+      evento.stopImmediatePropagation();
+      ripristino = true;
+      //shortcut: presume che fosse un indietro; un avanti del browser da qui e' raro
+      window.history.go(1);
+      setAzioneInAttesa(CommonActions.goBack());
+    }
+    window.addEventListener("popstate", indietro, true);
+    return () => {
+      window.removeEventListener("beforeunload", avvisa);
+      window.removeEventListener("popstate", indietro, true);
+    };
+  }, [modificato, navigation]);
 
   return {
     lasciaUscire: () => {
@@ -65,6 +88,8 @@ export function useConfirmDiscard(modificato: boolean, testi?: Testi) {
       onConfirm: () => {
         const azione = azioneInAttesa;
         setAzioneInAttesa(null);
+        //confermato: l'uscita non va piu' bloccata, ne' da usePreventRemove ne' dal browser
+        uscitaConsentita.current = true;
         if (azione) navigation.dispatch(azione);
       },
       onDismiss: () => setAzioneInAttesa(null),
