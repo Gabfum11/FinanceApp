@@ -124,12 +124,15 @@ const creaStili = (colors: Colori) =>
     azioniLarghe: {
       flexDirection: "row-reverse",
       justifyContent: "flex-start",
+      //con etichette lunghe i due pulsanti non stanno in 392px: vanno a capo
+      flexWrap: "wrap",
     },
     pulsante: {
       borderRadius: radius.pill,
     },
     pulsanteLargo: {
       minWidth: 120,
+      flexGrow: 1,
     },
     //il grigio dei separatori qui spariva (1,3:1 sullo sfondo): serve un
     //contorno che si veda, senza competere con la conferma
