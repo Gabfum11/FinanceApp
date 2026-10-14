@@ -1,7 +1,8 @@
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { View, Image, ScrollView } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { StatusBar } from "expo-status-bar";
+import { useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useTranslation } from "react-i18next";
 import { PRIVACY_URL } from "@/config";
@@ -42,6 +43,13 @@ export function Landing() {
   const { t } = useTranslation();
   const [contatto, setContatto] = useState(false);
   const [accesso, setAccesso] = useState<ModoAccesso | null>(null);
+
+  //?accedi=1: chi arriva da una sessione scaduta, dal reset password o dal vecchio /login.
+  //Dopo il primo disegno: la pagina statica e' generata senza indirizzo
+  const { accedi } = useLocalSearchParams<{ accedi?: string }>();
+  useEffect(() => {
+    if (accedi) setAccesso("accesso");
+  }, [accedi]);
 
   //stabile: la finestra la usa per ascoltare Esc solo mentre e' aperta
   const chiudiAccesso = useCallback(() => setAccesso(null), []);

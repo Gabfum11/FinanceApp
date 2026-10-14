@@ -281,7 +281,7 @@ export function ModuloRegistrazione({ onErrore, onCambia }: Props) {
         {onCambia ? (
           <Text style={styles.linkAction} role="link" onPress={onCambia}>{t("accesso.accedi")}</Text>
         ) : (
-          <Link href="/login">
+          <Link href="/?accedi=1">
             <Text style={styles.linkAction}>{t("accesso.accedi")}</Text>
           </Link>
         )}

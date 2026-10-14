@@ -42,7 +42,7 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     if (esito === "errore") return response;
     if (esito === "rifiutato") {
       await cancellaSessione();
-      router.replace("/login");
+      router.replace("/?accedi=1");
       return response;
     }
     attuale = await tokenDiAccesso();
@@ -51,7 +51,7 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   const ripetuta = await richiesta(path, options, attuale);
   if (await sessioneScaduta(ripetuta)) {
     await cancellaSessione();
-    router.replace("/login");
+    router.replace("/?accedi=1");
   }
   return ripetuta;
 }

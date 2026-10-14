@@ -278,7 +278,7 @@ export default function ResetPassword(){
             <Button
                 mode="contained"
                 style={styles.button}
-                onPress={()=>router.replace("/login")}
+                onPress={()=>router.replace("/?accedi=1")}
                 labelStyle={styles.buttonLabel}
             >
                 {t("reset.vaiAccesso")}

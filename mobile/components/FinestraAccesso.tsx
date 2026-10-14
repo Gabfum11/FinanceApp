@@ -23,7 +23,7 @@ type Props = {
 /**
  * Accesso e registrazione sopra la landing, sul computer e sul telefono: chi
  * legge la pagina non la perde di vista, e passa da un modulo all'altro senza
- * cambiare pagina. /login e /register restano per chi ci arriva da un link.
+ * cambiare pagina. /register resta per chi ci arriva da un link; /login rimanda qui (?accedi=1).
  *
  * Esc, un clic fuori e la ✕ chiudono, come nelle altre finestre del computer.
  *

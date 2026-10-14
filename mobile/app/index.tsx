@@ -2,14 +2,13 @@ import { Redirect, type Href } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, ActivityIndicator, Platform } from "react-native";
 import { haSessione, rinnovaSeInScadenza } from "@/utils/session";
-import { presentazioneVista } from "@/utils/presentazione";
 import { segnaPaginaPronta } from "@/utils/avvio";
 import { Landing } from "@/components/Landing";
 
 // La porta d'ingresso: chi ha una sessione va alla home, gli altri vedono
 // - nel browser, anche aperto dall'icona sulla Home: la landing, ogni volta
 //   (e' anche la pagina che legge Google); dopo un logout si torna qui
-// - nell'app nativa: la presentazione la prima volta, poi il login
+// - nell'app nativa: la presentazione
 const NEL_BROWSER = Platform.OS === "web";
 
 export default function Index() {
@@ -22,8 +21,8 @@ export default function Index() {
 
       if (sessione) setDestinazione("/(tabs)/home");
       else if (NEL_BROWSER) setDestinazione("landing");
-      //chi ha gia' visto la presentazione non deve rivederla
-      else setDestinazione((await presentazioneVista()) ? "/login" : "/presentazione");
+      //shortcut: senza /login l'app nativa parte sempre dalla presentazione, da rivedere con la pulizia del codice nativo
+      else setDestinazione("/presentazione");
 
       //il rinnovo parte DOPO aver deciso dove andare: verificare il token prima
       //significava tenere l'utente sullo spinner in attesa della rete, e senza
