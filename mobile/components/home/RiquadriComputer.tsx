@@ -18,7 +18,7 @@ export type Rinnovo = {
   category_name?: string | null; category_group?: string | null;
 };
 
-//la ciambella piccola e le prime quattro categorie
+//la ciambella piccola e tutte le categorie: ogni fetta ha la sua riga
 export function RiquadroCategorie({ categorie, restoBudget, importo }: {
   categorie: CategoriaStat[];
   //la parte grigia della ciambella: quanto resta del budget
@@ -55,7 +55,7 @@ export function RiquadroCategorie({ categorie, restoBudget, importo }: {
             )}
           />
           <View style={styles.miniLegenda}>
-            {categorie.slice(0, 4).map((c) => (
+            {categorie.map((c) => (
               <View key={c.category_name} style={styles.miniRiga}>
                 <IconaCategoria gruppo={c.category_name} dimensione={24} />
                 <Text style={styles.miniNome} numberOfLines={1}>{nomeCategoria(c.category_name)}</Text>
