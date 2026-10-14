@@ -18,10 +18,10 @@ Web app per gestire le finanze personali: spese, budget e abbonamenti, con un as
 ## Funzionalità
 
 - **Spese e categorie**, con budget mensile e statistiche per mese e per anno
-- **Abbonamenti** con rinnovi automatici e promemoria
-- **Assistente AI**: scrivi la spesa come la diresti a voce, l'app ricava importo, data e categoria
-- **Import dell'estratto conto** (xlsx, xls, csv): pulisce i nomi dei negozi, propone le categorie e riconosce i doppioni
-- **Valute estere** convertite in euro
+- **Abbonamenti** con rinnovi automatici o manuali
+- **Assistente AI**: scrivi la spesa in linguaggio naturale, l'app ricava importo, data e categoria
+- **Import dell'estratto conto** (xlsx, xls, csv): pulisce i nomi dei negozi, propone le categorie e riconosce i doppioni(possibilità di annullare l'importo dal profilo)
+- **Valute estere** una spesa in un'altra valuta viene convertita con quella selezionata
 - **Esportazione** dei dati
 - Interfaccia in **italiano e inglese**, installabile sul telefono come app (PWA)
 
