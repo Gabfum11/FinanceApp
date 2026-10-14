@@ -319,6 +319,14 @@ export default function ProfileScreen() {
                         disabilitata={esportazione !== null}
                         destra={esportazione === "subscriptions" ? <ActivityIndicator size={18} /> : <MaterialCommunityIcons name="download" size={22} color={colors.chevron} />}
                     />
+                    <View style={styles.rowDivider} />
+                    {/* la stessa icona del pulsante Importa in Home */}
+                    <Riga
+                        icona="tray-arrow-down"
+                        colore={COLORI_RIGHE.esporta}
+                        etichetta={t("profilo.estratti")}
+                        onPress={() => router.push("/estratti_conto")}
+                    />
                 </View>
 
                 <Text style={styles.sectionLabel}>{t("profilo.sezioneSupporto")}</Text>

@@ -383,6 +383,18 @@
     "erroreSpesa": "Couldn't save the expense. Please try again.",
     "importoTroppoAlto": "The amount can be at most {{massimo}}"
   },
+  "estratti": {
+    "titolo": "Your bank statements",
+    "periodo": "{{dal}} to {{al}}",
+    "vediSpese": "View expenses",
+    "elimina": "Delete expenses",
+    "titoloEstratto": "Statement of {{data}}",
+    "eliminaTitolo_one": "Delete {{count}} expense?",
+    "eliminaTitolo_other": "Delete {{count}} expenses?",
+    "eliminaTesto": "These are the expenses from the statement uploaded on {{data}}, totalling {{totale}}.",
+    "nessuno": "You haven't uploaded any bank statements yet.",
+    "eliminate": "Expenses deleted"
+  },
   "importa": {
     "titolo": "Import transactions",
     "ingresso": "Import your bank statement",
@@ -621,6 +633,7 @@
     "cambiaValuta": "Change currency",
     "esportaSpese": "Export expenses",
     "esportaAbbonamenti": "Export subscriptions",
+    "estratti": "Your bank statements",
     "nienteSpese": "There are no expenses to export.",
     "nienteAbbonamenti": "There are no subscriptions to export.",
     "rivediTutorial": "Watch the tour again",

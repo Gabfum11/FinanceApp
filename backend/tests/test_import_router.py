@@ -259,3 +259,26 @@ def test_la_conferma_blocca_l_utente(db):
     from app.routers.import_estratto import utente_bloccato
     sql = str(utente_bloccato(db, 1).statement.compile(dialect=postgresql.dialect()))
     assert "FOR UPDATE" in sql
+
+
+def test_la_conferma_usa_il_blocco(client, categorie, utente):
+    from app.routers import import_estratto
+    with patch.object(import_estratto, "utente_bloccato", wraps=import_estratto.utente_bloccato) as blocco:
+        assert conferma(client, [riga_ok(categorie["spesa"])]).status_code == 201
+    blocco.assert_called_once()
+
+
+def test_elenco_raggruppa_per_caricamento(client, db, categorie, utente):
+    conferma(client, [riga_ok(categorie["spesa"]), riga_ok(categorie["spesa"], data="2026-09-05", importo=10)])
+    db.add(models.Expense(user_id=utente, description="A mano", amount=5, date=date(2026, 9, 2)))
+    db.commit()
+    [estratto] = client.get("/import/").json()
+    assert estratto["codice"] == CODICE
+    assert (estratto["spese"], estratto["totale"]) == (2, 73.1)
+    assert (estratto["dal"], estratto["al"]) == ("2026-09-02", "2026-09-05")
+
+
+def test_elenco_non_mostra_gli_estratti_altrui(client, categorie, utente, make_user, login_as):
+    conferma(client, [riga_ok(categorie["spesa"])])
+    login_as(make_user(email="altro@example.com"))
+    assert client.get("/import/").json() == []

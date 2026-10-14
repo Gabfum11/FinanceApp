@@ -187,6 +187,32 @@ def conferma(request: Request, dati: schemas.ImportConferma, db: Session = Depen
     return {"codice": codice, "importate": len(dati.righe)}
 
 
+@router.get("/")
+def elenco(db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    """Gli estratti conto caricati, il piu' recente in alto. Si raggruppa in
+    Python: gli importi sono cifrati e il database non li sa sommare."""
+    spese = (
+        db.query(models.Expense)
+        .filter(models.Expense.user_id == current_user.id, models.Expense.importazione_id.isnot(None))
+        .all()
+    )
+    gruppi: dict[str, list[models.Expense]] = {}
+    for spesa in spese:
+        gruppi.setdefault(spesa.importazione_id, []).append(spesa)
+    estratti = [
+        {
+            "codice": codice,
+            "caricato_il": min(s.created_at for s in gruppo).isoformat(),
+            "spese": len(gruppo),
+            "totale": round(sum(s.amount for s in gruppo), 2),
+            "dal": min(s.date for s in gruppo).isoformat(),
+            "al": max(s.date for s in gruppo).isoformat(),
+        }
+        for codice, gruppo in gruppi.items()
+    ]
+    return sorted(estratti, key=lambda e: e["caricato_il"], reverse=True)
+
+
 @router.delete("/{codice}")
 @limiter.limit("20/minute", key_func=user_or_ip)
 def annulla(request: Request, codice: UUID, db: Session = Depends(get_db),

@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useStili, useTema } from "@/utils/tema";
 import { creaStili } from "@/styles/import-estratto.styles";
 import { useSchermoLargo } from "@/utils/layout";
+import { router } from "expo-router";
 
 //il riquadro per scegliere il file; sul computer lo si puo' anche trascinare dentro
 export function FaseScelta({ onScegli, onFile }: { onScegli: () => void; onFile: (file: File) => void }) {
@@ -74,6 +75,10 @@ export function FaseScelta({ onScegli, onFile }: { onScegli: () => void; onFile:
           <Text style={styles.pulsanteTesto}>{t("importa.sceltaPulsante")}</Text>
         </Pressable>
       </View>
+      {/* chi ricarica un estratto spesso vuole prima togliere quello sbagliato */}
+      <Pressable onPress={() => router.replace("/estratti_conto")} accessibilityRole="link" style={styles.linkEstratti}>
+        <Text style={styles.linkEstrattiTesto}>{t("estratti.titolo")}</Text>
+      </Pressable>
     </View>
   );
 }

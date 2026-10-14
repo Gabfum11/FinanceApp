@@ -27,6 +27,8 @@ export const creaStili = (colors: Colori) =>
     },
     sceltaTitolo: { fontSize: fontSize.base, fontWeight: fontWeight.bold, color: colors.text },
     nota: { fontSize: fontSize.sm, color: colors.textMuted, textAlign: "center" },
+    linkEstratti: { alignSelf: "center", minHeight: 44, justifyContent: "center", paddingHorizontal: spacing.md },
+    linkEstrattiTesto: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.primaryDark, textDecorationLine: "underline" },
     pulsante: {
       minHeight: 46, borderRadius: radius.pill, backgroundColor: colors.primary, paddingHorizontal: spacing.xl,
       flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm,

@@ -42,6 +42,8 @@ class ExpenseOut(BaseModel): # rappresenta i dati che tu mandi al frontend dopo 
     original_amount: float | None = None
     original_currency: str | None = None
     exchange_rate: float | None = None
+    #codice dell'estratto conto da cui viene: "Vedi spese" filtra su questo
+    importazione_id: str | None = None
 
     class Config:
         from_attributes=True #serve per convertire un oggetto SQLAlchemy in un dizionario, altrimenti FastAPI non sa come fare e solleva un errore

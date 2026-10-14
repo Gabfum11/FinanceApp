@@ -20,6 +20,8 @@ export type Expense = {
   //spesa pagata in un'altra valuta: amount è già convertito
   original_amount?: number | null;
   original_currency?: string | null;
+  //codice dell'estratto conto da cui viene, solo per le spese importate
+  importazione_id?: string | null;
 };
 
 type Azioni = { onModifica: () => void; onElimina: () => void };

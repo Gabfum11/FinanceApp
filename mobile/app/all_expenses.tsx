@@ -2,7 +2,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { SectionList, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconButton, Text, Searchbar, Snackbar } from "react-native-paper";
-import { annullaImport } from "@/utils/importEstratto";
+import { annullaImport, giornoCaricamento } from "@/utils/importEstratto";
+import { PulsanteEliminaSpese } from "@/components/importa/PulsanteEliminaSpese";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/utils/apiFetch";
@@ -66,6 +67,9 @@ export default function ExpenseList() {
     //arrivando dall'import: quante spese sono entrate e il codice per annullarle
     const { importate, codice } = useLocalSearchParams<{ importate?: string; codice?: string }>();
     const [avvisoImport, setAvvisoImport] = useState<string | null>(null);
+    //arrivando da "I tuoi estratti conto": solo le spese di quell'estratto, senza altri filtri
+    const { estratto, caricato } = useLocalSearchParams<{ estratto?: string; caricato?: string }>();
+    const [confermaEstratto, setConfermaEstratto] = useState(false);
     useEffect(() => {
         if (importate && codice) setAvvisoImport(t("importa.importate", { count: Number(importate) }));
     }, [importate, codice]);
@@ -76,6 +80,13 @@ export default function ExpenseList() {
         router.setParams({ importate: undefined, codice: undefined });
         setAvvisoImport(riuscito ? t("importa.annullato") : t("importa.erroreAnnulla"));
         if (riuscito) loadExpenses();
+    }
+
+    async function eliminaEstratto() {
+        setConfermaEstratto(false);
+        if (!estratto) return;
+        if (await annullaImport(estratto)) router.back();
+        else setAvvisoImport(t("importa.erroreAnnulla"));
     }
 
     //i chip mostrano i gruppi, non le sottocategorie: con 46 voci sarebbero
@@ -96,6 +107,7 @@ export default function ExpenseList() {
         const from = range && toDateString(range.from);
         const to = range && toDateString(range.to);
         return expenses.filter((e) => {
+            if (estratto && e.importazione_id !== estratto) return false;
             if (categoryId !== null) {
                 //il chip porta l'id del gruppo, la spesa quello della sottocategoria:
                 //il confronto passa dal gruppo di appartenenza
@@ -115,7 +127,7 @@ export default function ExpenseList() {
                 normalize(gruppo?.name ?? "").includes(q)
             );
         });
-    }, [expenses, query, categoryId, period, offset, gruppoDiCategoria]);
+    }, [expenses, query, categoryId, period, offset, gruppoDiCategoria, estratto]);
 
     const total = useMemo(
         () => filtered.reduce((sum, e) => sum + e.amount, 0),
@@ -214,12 +226,15 @@ export default function ExpenseList() {
        <View style={[styles.container, largo && styles.containerLargo, largo && { maxWidth: LARGHEZZA_CONTENUTO + 80 }]}>
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
             <IconButton icon="chevron-left" onPress={()=>router.back()} />
-            <Text variant="titleMedium">{t("spese.titolo")}</Text>
+            <Text variant="titleMedium">
+                {estratto && caricato ? t("estratti.titoloEstratto", { data: giornoCaricamento(caricato) }) : t("spese.titolo")}
+            </Text>
             {hasFilters
                 ? <IconButton icon="filter-remove-outline" onPress={resetFilters} />
                 : <View style={styles.headerSpacer} />}
         </View>
 
+        {!estratto && <>
         <Searchbar
             placeholder={t("spese.cerca")}
             value={query}
@@ -246,6 +261,7 @@ export default function ExpenseList() {
         {categories.length > 0 && (
             <ChipGruppi gruppi={categories} scelto={categoryId} onScegli={setCategoryId} />
         )}
+        </>}
 
         {/* filtrando, la domanda successiva e' sempre "quanto ho speso in questo".
             Resta sempre montata: comparendo e sparendo sposterebbe la lista */}
@@ -259,6 +275,11 @@ export default function ExpenseList() {
                 </>
             )}
         </View>
+        {estratto && filtered.length > 0 && (
+            <View style={styles.eliminaEstratto}>
+                <PulsanteEliminaSpese onPress={() => setConfermaEstratto(true)} />
+            </View>
+        )}
 
         <SectionList
         style={styles.list} //senza flex la lista si adatta al contenuto e il layout si riassesta a ogni filtro
@@ -303,6 +324,17 @@ export default function ExpenseList() {
         >
             {avvisoImport}
         </Snackbar>
+
+        <ConfirmDialog
+            visible={confermaEstratto}
+            title={t("estratti.eliminaTitolo", { count: filtered.length })}
+            message={caricato ? t("estratti.eliminaTesto", { data: giornoCaricamento(caricato), totale: importo(total) }) : ""}
+            confirmLabel={t("comune.elimina")}
+            destructive
+            icon="trash-can"
+            onConfirm={eliminaEstratto}
+            onDismiss={() => setConfermaEstratto(false)}
+        />
 
         <ConfirmDialog
             visible={daEliminare !== null}

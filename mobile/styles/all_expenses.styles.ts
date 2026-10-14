@@ -140,6 +140,12 @@ export const creaStili = (colors: Colori) =>
     paddingHorizontal: 20,
     height: 32, //fissa: altrimenti comparendo e sparendo sposta la lista sotto
   },
+  //"Elimina spese" sotto il totale, quando si guardano le spese di un estratto conto
+  eliminaEstratto: {
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+    alignItems: "flex-end",
+  },
   summaryCount: {
     fontSize: fontSize.sm,
     color: colors.textMuted,

@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import { apiFetch } from "@/utils/apiFetch";
+import { localeAttuale } from "@/utils/date";
 
 // L'import dell'estratto conto parla con tre chiamate del backend
 // (backend/app/routers/import_estratto.py): qui stanno i tipi delle risposte
@@ -126,4 +127,28 @@ export async function annullaImport(codice: string): Promise<boolean> {
 /** Le righe che bloccano "Importa": selezionate ma ancora senza categoria. */
 export function daScegliere(righe: RigaImport[]): RigaImport[] {
   return righe.filter((r) => r.selezionata && r.categoria_id === null);
+}
+
+/** Un estratto conto caricato, come lo raggruppa GET /import/. */
+export type Estratto = { codice: string; caricato_il: string; spese: number; totale: number; dal: string; al: string };
+
+/** null = errore di rete o del server: la schermata lo distingue da "nessuno". */
+export async function elencoEstratti(): Promise<Estratto[] | null> {
+  try {
+    const risposta = await apiFetch("/import/");
+    return risposta.ok ? ((await risposta.json()) as Estratto[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** "12 ottobre", con l'ora per le card; l'anno solo se non e' quello in corso. */
+export function giornoCaricamento(caricatoIl: string, conOra = false): string {
+  const data = new Date(caricatoIl);
+  return data.toLocaleString(localeAttuale(), {
+    day: "numeric",
+    month: "long",
+    ...(data.getFullYear() !== new Date().getFullYear() && { year: "numeric" }),
+    ...(conOra && { hour: "2-digit", minute: "2-digit" }),
+  });
 }

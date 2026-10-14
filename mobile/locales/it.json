@@ -383,6 +383,18 @@
     "erroreSpesa": "Non è stato possibile salvare la spesa. Riprova.",
     "importoTroppoAlto": "L'importo può essere al massimo {{massimo}}"
   },
+  "estratti": {
+    "titolo": "I tuoi estratti conto",
+    "periodo": "dal {{dal}} al {{al}}",
+    "vediSpese": "Vedi spese",
+    "elimina": "Elimina spese",
+    "titoloEstratto": "Estratto del {{data}}",
+    "eliminaTitolo_one": "Eliminare {{count}} spesa?",
+    "eliminaTitolo_other": "Eliminare {{count}} spese?",
+    "eliminaTesto": "Sono le spese dell'estratto conto caricato il {{data}}, per un totale di {{totale}}.",
+    "nessuno": "Non hai ancora caricato estratti conto.",
+    "eliminate": "Spese eliminate"
+  },
   "importa": {
     "titolo": "Importa movimenti",
     "ingresso": "Importa l'estratto conto",
@@ -621,6 +633,7 @@
     "cambiaValuta": "Cambia valuta",
     "esportaSpese": "Esporta spese",
     "esportaAbbonamenti": "Esporta abbonamenti",
+    "estratti": "I tuoi estratti conto",
     "nienteSpese": "Non ci sono spese da esportare.",
     "nienteAbbonamenti": "Non ci sono abbonamenti da esportare.",
     "rivediTutorial": "Rivedi il tutorial",

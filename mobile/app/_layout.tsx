@@ -76,6 +76,7 @@ function Contenuto() {
           <Stack.Screen name="verify_email" options={{ headerShown: false }} />
           <Stack.Screen name="resetPassword" options={{ headerShown: false }} />
           <Stack.Screen name="all_expenses" options={{ headerShown: false }} />
+          <Stack.Screen name="estratti_conto" options={{ headerShown: false }} />
           <Stack.Screen name="set_budget" options={{ presentation: largo ? "transparentModal" : "card", headerShown: false }} />
           <Stack.Screen name="modify_profile" options={{ presentation: largo ? "transparentModal" : "card", headerShown: false }} />
           <Stack.Screen name="changePassw" options={{ presentation: largo ? "transparentModal" : "card", headerShown: false }} />
