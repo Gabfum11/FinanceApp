@@ -38,7 +38,7 @@ TESTI = {
         "file_abbonamenti": "abbonamenti",
     },
     "en": {
-        "email_oggetto_verifica_email": "Verify your email",
+        "email_oggetto_verifica_email": "Verify your account",
         "email_oggetto_reset_password": "Reset your password",
         "email_corpo": "Your code is: {codice}\n\nIt expires in 10 minutes.",
         "notifica_titolo": "{nome} renews tomorrow",
