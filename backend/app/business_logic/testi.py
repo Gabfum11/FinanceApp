@@ -70,9 +70,7 @@ TESTI = {
     },
 }
 
-#i nomi delle categorie restano in italiano nel database (sono anche la chiave
-#della categorizzazione): si traducono solo dove l'utente li legge. Gli stessi
-#di mobile/locales/en.json
+#le categorie son in italiano perchè quel nome serve per la categorizzazione automatica, ma se l'utente ha lingua inglese, le mostriamo in inglese
 _CATEGORIE_EN = {
     "Cibo e bevande": "Food & drink", "Spesa alimentare": "Grocery shopping", "Pranzi e cene": "Lunch & dinner",
     "Bar e caffè": "Bars & coffee", "Acquisti": "Shopping", "Abbigliamento": "Clothing", "Scarpe": "Shoes",
@@ -100,9 +98,9 @@ def testo(lingua: str | None, chiave: str, **valori) -> str:
 
 
 def nome_categoria(nome: str | None, lingua: str | None) -> str:
-    if not nome or lingua_valida(lingua) == "it":
-        return nome or ""
+    if lingua_valida(lingua) == "it":
+        return nome
     if nome.endswith(" (generico)"):
         gruppo = nome.removesuffix(" (generico)")
-        return f"{_CATEGORIE_EN.get(gruppo, gruppo)} (general)"
+        return f"{_CATEGORIE_EN.get(gruppo)} (general)"
     return _CATEGORIE_EN.get(nome, nome)
