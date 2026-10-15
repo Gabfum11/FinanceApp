@@ -71,7 +71,7 @@ class Expense(Base):
     date = Column(Date, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
 
     #spesa pagata in un'altra valuta (es. 40 GBP a Londra): amount resta nella
@@ -117,7 +117,7 @@ class Subscriptions(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now()) #server_default serve per salvare con l'orario aggiornato
     is_active=Column(Boolean, default=True)
     #index: i rinnovi bloccano gli abbonamenti dell'utente a ogni lettura
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     #la next_date per cui il promemoria push e' gia' partito: se il cron chiama
     #due volte lo stesso giorno, il secondo giro non manda doppioni
@@ -133,7 +133,7 @@ class Subscriptions(Base):
 class OtpCode(Base):
     __tablename__ = "otp_codes"
     id = Column(Integer, primary_key=True) #non serve mettere autoincrement, sqlalchemy assume che lo sia
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     code = Column(String, nullable=False)  # es. "482913"
     purpose = Column(String, nullable=False)  # "email_verification" o "password_reset"
     expires_at = Column(DateTime(timezone=True), nullable=False)
@@ -145,7 +145,7 @@ class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     #solo l'hash: chi riuscisse a leggere il database non potrebbe usare i token
     token_hash = Column(String, unique=True, nullable=False, index=True)
     expires_at = Column(DateTime(timezone=True), nullable=False)
@@ -162,7 +162,7 @@ class BudgetHistory(Base):
     __tablename__ = "budget_history"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     #vuoto = da qui in poi nessun budget: serve a tenere fermo un periodo quando
     #si corregge quello prima, se allora un budget non c'era
     amount = Column(NumeroCifrato, nullable=True)
