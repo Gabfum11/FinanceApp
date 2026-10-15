@@ -7,8 +7,8 @@ e' in elenco ricade sull'italiano.
 
 TESTI = {
     "it": {
-        "email_oggetto_verifica": "Verifica il tuo account",
-        "email_oggetto_reset": "Reimposta la tua password",
+        "email_oggetto_verifica_email": "Verifica il tuo indirizzo email",
+        "email_oggetto_reset_password": "Reimposta la tua password",
         "email_corpo": "Il tuo codice è: {codice}\n\nScade tra 10 minuti.",
         "notifica_titolo": "{nome} si rinnova domani",
         "frequenza_monthly": "mensile",
@@ -38,8 +38,8 @@ TESTI = {
         "file_abbonamenti": "abbonamenti",
     },
     "en": {
-        "email_oggetto_verifica": "Verify your account",
-        "email_oggetto_reset": "Reset your password",
+        "email_oggetto_verifica_email": "Verify your email",
+        "email_oggetto_reset_password": "Reset your password",
         "email_corpo": "Your code is: {codice}\n\nIt expires in 10 minutes.",
         "notifica_titolo": "{nome} renews tomorrow",
         "frequenza_monthly": "monthly",

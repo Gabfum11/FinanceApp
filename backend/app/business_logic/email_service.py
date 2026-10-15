@@ -15,7 +15,7 @@ def generate_otp_code() -> str: #6 cifre da un generatore crittografico: random.
 
 async def send_otp_email(to_email: str, code: str, purpose: str, lingua: str | None = "it"):
     #nella lingua dell'utente: per la registrazione e' quella scelta nell'app prima dell'account
-    subject = testo(lingua, "email_oggetto_verifica" if purpose == "email_verification" else "email_oggetto_reset")
+    subject = testo(lingua, "email_oggetto_verifica_email" if purpose == "email_verification" else "email_oggetto_reset_password")
     body = testo(lingua, "email_corpo", codice=code)
 
     #Render (piano gratuito) blocca le porte SMTP in uscita, quindi l'invio
@@ -32,7 +32,7 @@ async def send_otp_email(to_email: str, code: str, purpose: str, lingua: str | N
                 "textContent": body,
             },
         )
-    response.raise_for_status() #senza, un rifiuto di Brevo (chiave sbagliata, mittente non verificato) passerebbe inosservato
+    response.raise_for_status() #controlla che la chiamata HTTP sia andata a buon fine: se no lancia un'eccezione
 
 
 #dove arrivano i messaggi del modulo «Scrivici»: se non e' impostata, alla
