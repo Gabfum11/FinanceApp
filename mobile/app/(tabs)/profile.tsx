@@ -29,6 +29,14 @@ import { FinestraEliminaAccount } from "@/components/profilo/FinestraEliminaAcco
 //Nell'app nativa la landing non c'e' e si va al login
 const DOPO_USCITA = Platform.OS === "web" ? "/" : "/login";
 
+//nel browser si ricarica la pagina: con router.replace("/") la index gia' aperta
+//sotto le schede ricordava "c'e' una sessione" e rimandava alla Home.
+//Ricaricando si butta anche cio' che resta in memoria dell'utente uscito
+function vaiDopoUscita(router: ReturnType<typeof useRouter>) {
+    if (Platform.OS === "web") window.location.replace(DOPO_USCITA);
+    else router.replace(DOPO_USCITA);
+}
+
 
 
 export default function ProfileScreen() {
@@ -135,7 +143,7 @@ export default function ProfileScreen() {
             await dimenticaDispositivo(false);
             //i token in uso sono appena stati invalidati: vanno buttati anche qui
             await cancellaSessione();
-            router.replace(DOPO_USCITA);
+            vaiDopoUscita(router);
         } catch {
             //senza rete la revoca non parte: l'utente resta dov'e'
         } finally {
@@ -148,7 +156,7 @@ export default function ProfileScreen() {
         await dimenticaDispositivo(false);
         //l'account non esiste piu': i token vanno buttati anche qui
         await cancellaSessione();
-        router.replace(DOPO_USCITA);
+        vaiDopoUscita(router);
     }
 
     //a ogni ritorno sulla scheda, non solo alla prima apertura:
@@ -178,7 +186,7 @@ export default function ProfileScreen() {
         await dimenticaDispositivo();
         //il server revoca il refresh token: copiato altrove, non varrebbe piu'
         await chiudiSessione();
-        router.replace(DOPO_USCITA);
+        vaiDopoUscita(router);
     }
 
     //disconnetti ed elimina: sotto le sezioni sul telefono, sotto l'account sul computer.
