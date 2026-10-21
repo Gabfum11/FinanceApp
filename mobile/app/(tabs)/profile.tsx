@@ -33,7 +33,8 @@ const DOPO_USCITA = Platform.OS === "web" ? "/" : "/login";
 //sotto le schede ricordava "c'e' una sessione" e rimandava alla Home.
 //Ricaricando si butta anche cio' che resta in memoria dell'utente uscito
 function vaiDopoUscita(router: ReturnType<typeof useRouter>) {
-    if (Platform.OS === "web") window.location.replace(DOPO_USCITA);
+    //window.location non conosce il baseUrl di app.json: "/" porterebbe alla radice di github.io
+    if (Platform.OS === "web") window.location.replace(`${process.env.EXPO_BASE_URL ?? ""}/`);
     else router.replace(DOPO_USCITA);
 }
 
