@@ -38,8 +38,6 @@ def register(request:Request, user: schemas.UserCreate, background_tasks: Backgr
         if  existing_user.is_verified:
             raise HTTPException(status_code=400, detail="Email already registered")
         else:
-            db.query(models.OtpCode).filter(models.OtpCode.user_id==existing_user.id).delete()
-            db.query(models.BudgetHistory).filter(models.BudgetHistory.user_id==existing_user.id).delete()
             db.delete(existing_user)
             db.commit()
 
@@ -189,6 +187,7 @@ def login_for_swagger(request: Request, form_data: OAuth2PasswordRequestForm = D
     hash_salvato = auth_user.hashed_password if auth_user is not None else None #come in /login: niente scorciatoie sui tempi
     if not security.verify_password(form_data.password, hash_salvato) or auth_user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
     if not auth_user.is_active:
         raise HTTPException(status_code=403, detail="User not active")
     if not auth_user.is_verified:
