@@ -3,10 +3,13 @@ import { type Colori, fontSize, fontWeight } from "./tokens";
 
 export const creaStili = (colors: Colori) =>
   StyleSheet.create({
-    container: {
+    //solo la pagina: nella finestra il modulo sta sotto il marchio
+    pagina: {
         flex:1, //dice di occupare tutto lo spazio disponibile
-        alignItems:"center",
         paddingTop:100
+    },
+    container: {
+        alignItems:"center",
     },
     iconContainer: {
     width: 64,

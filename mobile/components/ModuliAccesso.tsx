@@ -148,7 +148,8 @@ export function ModuloAccesso({ onErrore, onCambia }: Props) {
   );
 }
 
-export function ModuloRegistrazione({ onErrore, onCambia }: Props) {
+/** nella finestra il codice si chiede li'; senza, si apre la pagina /verify_email */
+export function ModuloRegistrazione({ onErrore, onCambia, onRegistrato }: Props & { onRegistrato?: (email: string) => void }) {
   const styles = useStili(creaStili);
   const router = useRouter();
   const { t } = useTranslation();
@@ -189,6 +190,10 @@ export function ModuloRegistrazione({ onErrore, onCambia }: Props) {
         return;
       }
       const data = await response.json();
+      if (onRegistrato) {
+        onRegistrato(data.email);
+        return;
+      }
       router.push({
         pathname: "/verify_email",
         params: { email: data.email },
@@ -230,7 +235,7 @@ export function ModuloRegistrazione({ onErrore, onCambia }: Props) {
         label={t("comune.password")}
         value={password}
         onChangeText={setPassword}
-        secureTextEntry={!showPassword} //nasconde i caratteri(mostra pallini o asteriscghi)
+        secureTextEntry={!showPassword} //nasconde i caratteri(mostra pallini o asterischi)
         autoComplete="new-password"
         mode="outlined"
         outlineStyle={styles.inputOutline}

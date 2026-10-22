@@ -5,6 +5,7 @@ import { IconButton, Text } from "react-native-paper";
 import { useSchermoStretto } from "@/utils/layout";
 import { useTranslation } from "react-i18next";
 import { ModuloAccesso, ModuloRegistrazione } from "@/components/ModuliAccesso";
+import { ModuloVerifica } from "@/components/ModuloVerifica";
 import { useStili } from "@/utils/tema";
 import { creaStili as creaStiliVelo } from "@/styles/finestra-computer.styles";
 import { fontSize, fontWeight, spacing, type Colori } from "@/styles/tokens";
@@ -40,27 +41,37 @@ export function FinestraAccesso({ modo, onCambia, onDismiss }: Props) {
   //l'errore sta sotto il modulo, vicino al pulsante: una Snackbar finirebbe
   //in fondo alla pagina, dietro il velo della finestra
   const [errore, setErrore] = useState("");
+  //dopo la registrazione il codice si chiede qui, senza lasciare la landing
+  const [daVerificare, setDaVerificare] = useState<string | null>(null);
 
   //un errore del modulo di prima non vale per l'altro
-  useEffect(() => setErrore(""), [modo]);
+  useEffect(() => setErrore(""), [modo, daVerificare]);
+  //riaprendo la finestra si riparte dai moduli
+  useEffect(() => {
+    if (!modo) setDaVerificare(null);
+  }, [modo]);
 
-  //il Modal resta sopra anche alle pagine aperte da qui (codice di verifica,
-  //password dimenticata): si chiude quando la landing perde il focus
+  //mentre si aspetta il codice Esc e un clic fuori chiuderebbero per sbaglio
+  //una registrazione a meta': resta solo la ✕
+  const chiudiFuori = daVerificare ? () => {} : onDismiss;
+
+  //il Modal resta sopra anche alle pagine aperte da qui (password
+  //dimenticata): si chiude quando la landing perde il focus
   useFocusEffect(useCallback(() => onDismiss, [onDismiss]));
 
   useEffect(() => {
     if (!modo || Platform.OS !== "web") return;
     function tasto(evento: KeyboardEvent) {
-      if (evento.key === "Escape") onDismiss();
+      if (evento.key === "Escape") chiudiFuori();
     }
     window.addEventListener("keydown", tasto);
     return () => window.removeEventListener("keydown", tasto);
-  }, [modo, onDismiss]);
+  }, [modo, chiudiFuori]);
 
   return (
-    <Modal visible={modo !== null} transparent animationType="fade" onRequestClose={onDismiss}>
+    <Modal visible={modo !== null} transparent animationType="fade" onRequestClose={chiudiFuori}>
       <View style={[velo.velo, stretto && styles.veloStretto]}>
-        <Pressable style={velo.fuori} onPress={onDismiss} accessibilityLabel={t("comune.chiudi")} />
+        <Pressable style={velo.fuori} onPress={chiudiFuori} accessibilityLabel={t("comune.chiudi")} />
         <View style={[velo.finestra, styles.finestra]} role="dialog" aria-modal>
           <ScrollView contentContainerStyle={[styles.contenuto, stretto && styles.contenutoStretto]} keyboardShouldPersistTaps="handled">
             <View style={styles.marchio}>
@@ -68,8 +79,10 @@ export function FinestraAccesso({ modo, onCambia, onDismiss }: Props) {
               <Text style={styles.nomeApp}>TrackIt</Text>
             </View>
             {/* key: passando all'altro modulo i campi ripartono vuoti */}
-            {modo === "registrazione" ? (
-              <ModuloRegistrazione key="registrazione" onErrore={setErrore} onCambia={() => onCambia("accesso")} />
+            {daVerificare ? (
+              <ModuloVerifica email={daVerificare} onErrore={setErrore} />
+            ) : modo === "registrazione" ? (
+              <ModuloRegistrazione key="registrazione" onErrore={setErrore} onCambia={() => onCambia("accesso")} onRegistrato={setDaVerificare} />
             ) : (
               <ModuloAccesso key="accesso" onErrore={setErrore} onCambia={() => onCambia("registrazione")} />
             )}
