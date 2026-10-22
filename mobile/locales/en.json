@@ -84,7 +84,8 @@
     "verifica": "Verify",
     "nonValido": "Invalid code",
     "controllaCifre": "Check the digits you entered",
-    "erroreInvio": "Couldn't send the code"
+    "erroreInvio": "Couldn't send the code",
+    "troppiInvii": "You've requested too many codes: check your spam folder or try again in an hour"
   },
   "verificaEmail": {
     "verificata": "Email verified",

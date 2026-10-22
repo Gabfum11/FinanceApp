@@ -84,7 +84,8 @@
     "verifica": "Verifica",
     "nonValido": "Codice non valido",
     "controllaCifre": "Controlla le cifre che hai inserito",
-    "erroreInvio": "Errore nell'invio del codice"
+    "erroreInvio": "Errore nell'invio del codice",
+    "troppiInvii": "Hai richiesto troppi codici: controlla lo spam o riprova tra un'ora"
   },
   "verificaEmail": {
     "verificata": "Email verificata",

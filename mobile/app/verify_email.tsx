@@ -27,6 +27,9 @@ export default function VerifyEmail(){
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [snackbarVisible, setSnackbarVisible] = useState(false);
+    //il backend accetta 3 codici l'ora (registrazione + 2 reinvii) e oltre tace: lo diciamo noi
+    //shortcut: si azzera ricaricando la pagina, basta finché è solo un avviso di cortesia
+    const [reinvii, setReinvii] = useState(0);
 
     useEffect(()=>{
         if (secondsleft===0) return;
@@ -58,6 +61,7 @@ export default function VerifyEmail(){
             console.log("nuovo codice inviato")
             setSecondsLeft(60);
             setCode("");
+            setReinvii((n) => n + 1);
 
         }catch(error){
              console.log("errore di rete", error)
@@ -123,7 +127,9 @@ export default function VerifyEmail(){
             style={styles.hiddenInput}
             />
             <Text>{t("codice.nonRicevuto")}</Text>
-            {secondsleft>0  ?(
+            {reinvii>=2 ? (
+                <Text style={styles.remainingTime}>{t("codice.troppiInvii")}</Text>
+            ) : secondsleft>0  ?(
                 <Text style={styles.remainingTime}>{t("codice.riprovaTra", { tempo: formatTime(secondsleft) })}</Text>
             ):(
                <Text style={styles.resendCodeText} onPress={ loading ? undefined:handleResendCode}>{loading ? t("codice.invioInCorso") : t("codice.inviaNuovo")}</Text>
