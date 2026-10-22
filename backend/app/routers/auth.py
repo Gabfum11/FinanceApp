@@ -27,6 +27,23 @@ def _session_tokens(db: Session, user: models.User) -> dict:
         "token_type": "bearer",
     }
 
+
+def _crea_e_invia_otp(db: Session, background_tasks: BackgroundTasks, user: models.User, purpose: str):
+    """Salva un nuovo codice valido 10 minuti e lo manda per email dopo la risposta."""
+    otp_code = email_service.generate_otp_code()
+    db.add(models.OtpCode(
+        user_id=user.id,
+        code=otp_code,
+        purpose=purpose,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
+    ))
+    db.commit()
+    #l'email parte dopo la risposta: aspettare Brevo solo per gli account
+    #esistenti renderebbe la risposta piu' lenta, e il tempo li rivelerebbe.
+    #E se Brevo non risponde l'account esiste gia': l'utente chiede un nuovo
+    #codice invece di vedere un errore
+    background_tasks.add_task(_invia_otp, user.email, otp_code, purpose, user.language, user.id)
+
 #response model dice a FastAPI che qualunque cosa la funzione restituisca, formattala secondo questo schema pydantic prima di mandarla al client
 @router.post("/register", response_model=schemas.UserOut)
 @limiter.limit("5/hour") #per impedire che qualcuno faccia richieste di registrazione a raffica, limitando a 5 richieste per ora per IP
@@ -50,22 +67,7 @@ def register(request:Request, user: schemas.UserCreate, background_tasks: Backgr
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    otp_code=email_service.generate_otp_code()
-    expire_at=datetime.now(timezone.utc) + timedelta(minutes=10)
-    new_otp= models.OtpCode(
-        user_id=new_user.id,
-        code=otp_code,
-        purpose="email_verification",
-        expires_at=expire_at,
-    )
-    db.add(new_otp)
-    db.commit()
-    db.refresh(new_otp)
-    #dopo la risposta, come in /resendOTP: se Brevo non risponde l'account esiste
-    #gia', e l'utente puo' chiedere un nuovo codice invece di vedere un errore
-    background_tasks.add_task(
-        _invia_otp, normalized_email, otp_code, "email_verification", new_user.language, new_user.id
-    )
+    _crea_e_invia_otp(db, background_tasks, new_user, "email_verification")
     return new_user
 
 @router.post("/verify-otp", response_model=schemas.Token)
@@ -304,22 +306,7 @@ def resendOTP(request: Request, payload: schemas.ResendOtp, background_tasks: Ba
             #stessa risposta di sempre: chi chiede non deve capire se l'account esiste
             db.commit()
             return risposta
-        otp_code=email_service.generate_otp_code()
-        expire_at=datetime.now(timezone.utc) + timedelta(minutes=10)
-        new_otp= models.OtpCode(
-            user_id=auth_user.id,
-            code=otp_code,
-            purpose=payload.purpose,
-            expires_at=expire_at,
-        )
-        db.add(new_otp)
-        db.commit()
-        db.refresh(new_otp)
-        #l'email parte dopo la risposta: aspettare Brevo solo per gli account
-        #esistenti renderebbe la risposta piu' lenta, e il tempo li rivelerebbe
-        background_tasks.add_task(
-            _invia_otp, payload.email, otp_code, payload.purpose, auth_user.language, auth_user.id
-        )
+        _crea_e_invia_otp(db, background_tasks, auth_user, payload.purpose)
     return risposta
 
 
