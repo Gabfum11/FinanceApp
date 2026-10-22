@@ -39,8 +39,8 @@ export function RigaBudget({ budgetMensile, onModifica }: { budgetMensile: numbe
   );
 }
 
-//solo sul computer, accanto alla ciambella: quanto resta e quanto e' stato usato
-export function RiquadroResto({ resto, meseInCorso, usato }: { resto: number; meseInCorso: boolean; usato: number }) {
+//solo sul computer, accanto alla ciambella: quanto resta
+export function RiquadroResto({ resto, meseInCorso }: { resto: number; meseInCorso: boolean }) {
   const styles = useStili(creaStili);
   const { importo } = usePreferenze();
   const { t } = useTranslation();
@@ -51,7 +51,6 @@ export function RiquadroResto({ resto, meseInCorso, usato }: { resto: number; me
         {meseInCorso ? t("statistiche.disponibile") : t("statistiche.avanzato")}
       </Text>
       <Text style={styles.restoValore}>{importo(resto)}</Text>
-      <Text style={styles.restoTesto}>{t("statistiche.usato", { percentuale: usato })}</Text>
     </View>
   );
 }

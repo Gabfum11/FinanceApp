@@ -176,10 +176,6 @@ export const creaStili = (colors: Colori) =>
         color: colors.primaryDark,
         fontVariant: ["tabular-nums"],
     },
-    restoTesto: {
-        fontSize: fontSize.md,
-        color: colors.textSecondary,
-    },
     //il budget del periodo mostrato, con la matita per cambiarlo
     budgetRiga: {
         flexDirection: "row",

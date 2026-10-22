@@ -591,7 +591,6 @@
     "budgetDaOra": "Applies from this period on, until you change it. Past periods stay as they are.",
     "salva": "Save",
     "erroreBudget": "Couldn't save the budget",
-    "usato": "You've used {{percentuale}}% of your budget.",
     "categoria": "Category",
     "importo": "Amount",
     "vista": "Statistics period",

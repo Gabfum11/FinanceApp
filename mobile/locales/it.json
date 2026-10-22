@@ -591,7 +591,6 @@
     "budgetDaOra": "Vale da questo periodo in poi, finché non lo cambi. I periodi passati non cambiano.",
     "salva": "Salva",
     "erroreBudget": "Non è stato possibile salvare il budget",
-    "usato": "Hai usato il {{percentuale}}% del budget.",
     "categoria": "Categoria",
     "importo": "Importo",
     "vista": "Periodo delle statistiche",

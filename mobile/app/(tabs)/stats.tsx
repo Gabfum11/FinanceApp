@@ -333,7 +333,7 @@ export default function StatsScreen() {
         )}
         {/* sul computer, accanto: quanto resta, la domanda che segue la ciambella */}
         {largo && !loading && stats.length > 0 && budgetMensile != null && (
-          <RiquadroResto resto={remaining} meseInCorso={meseInCorso} usato={Math.round((total / budgetMensile) * 100)} />
+          <RiquadroResto resto={remaining} meseInCorso={meseInCorso} />
         )}
         </View>
         </View>
