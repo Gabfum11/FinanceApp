@@ -66,7 +66,7 @@ class TestEspressioniNonRiconosciute:
 
     @pytest.mark.parametrize(
         "espressione",
-        ["il 3", "la settimana scorsa", "due giorni fa", "2026-09-15", "", "   ", "domani"],
+        ["la settimana scorsa", "due giorni fa", "2026-09-15", "", "   ", "domani"],
     )
     def test_restituisce_none(self, espressione):
         assert _resolve_date_expr(espressione, DOMENICA) is None
@@ -87,3 +87,19 @@ class TestInvarianti:
         """Il modello dava risultati diversi sulla stessa frase: qui è deterministico."""
         risultati = {_resolve_date_expr(espressione, DOMENICA) for _ in range(5)}
         assert len(risultati) == 1
+
+class TestSoloGiorno:
+    def test_giorno_passato_e_di_questo_mese(self):
+        assert _resolve_date_expr("il 18", DOMENICA) == date(2026, 9, 18)
+
+    def test_giorno_futuro_e_del_mese_scorso(self):
+        assert _resolve_date_expr("il 25", DOMENICA) == date(2026, 8, 25)
+
+    def test_abbonamento_puo_partire_nel_futuro(self):
+        assert _resolve_date_expr("il 25", DOMENICA, allow_future=True) == date(2026, 9, 25)
+
+    def test_gennaio_torna_a_dicembre(self):
+        assert _resolve_date_expr("il 20", date(2026, 1, 10)) == date(2025, 12, 20)
+
+    def test_giorno_inesistente(self):
+        assert _resolve_date_expr("il 31", date(2026, 10, 5)) is None

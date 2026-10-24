@@ -24,7 +24,7 @@ WEEKDAYS_IT = ["lunedi'", "martedi'", "mercoledi'", "giovedi'", "venerdi'", "sab
 
 
 def _normalizza(testo: str) -> str:
-    return " ".join(testo.lower().split())
+    return " ".join(testo.lower().split()) #unisce le parole della lista in una stringa tramite il join
 
 
 def memoria_categorie(user_id: int, db: Session) -> list[tuple[str, int]]:
@@ -36,7 +36,7 @@ def memoria_categorie(user_id: int, db: Session) -> list[tuple[str, int]]:
     righe = (
         db.query(models.Expense.description, models.Expense.category_id)
         .join(models.Category, models.Expense.category_id == models.Category.id)
-        #le vecchie spese possono puntare a un gruppo, che non si assegna piu'
+        #le vecchie spese possono puntare a un gruppo, dal 22/9 ci sono le sottocategorie
         .filter(models.Expense.user_id == user_id, models.Category.parent_id.isnot(None))
         .order_by(models.Expense.date.desc(), models.Expense.id.desc())
         #shortcut: ogni descrizione va decifrata a ogni messaggio, quindi solo le
@@ -123,10 +123,21 @@ _DATE_WITH_MONTH_NAME = re.compile(r"^(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?([a-
 # in inglese anche col mese davanti: "September 3", "Sept 3rd, 2025"
 _DATE_MONTH_FIRST = re.compile(r"^([a-z]+)\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?(?:\s+(\d{4}))?$")
 _DATE_NUMERIC = re.compile(r"^(\d{1,2})[/\-.](\d{1,2})(?:[/\-.](\d{2}|\d{4}))?$")
-
+_DATE_DAY_ONLY = re.compile(r"^(\d{1,2})$")
 
 def _resolve_absolute_date(expr: str, today: date, allow_future: bool) -> date | None:
     """Data con giorno e mese espliciti. Senza anno si intende l'ultima volta che e' capitata."""
+    solo_giorno = _DATE_DAY_ONLY.match(expr)
+    if solo_giorno:
+        day = int(solo_giorno.group(1))
+        year, month = today.year, today.month
+        #"il 28" scritto il 24 e' quello del mese scorso; un abbonamento invece puo' partire tra qualche giorno
+        if day > today.day and not allow_future:
+            year, month = (year, month - 1) if month > 1 else (year - 1, 12)
+        try:
+            return date(year, month, day)
+        except ValueError: #"il 31" in un mese di 30 giorni
+            return None
     m = _DATE_WITH_MONTH_NAME.match(expr)
     primo_il_mese = _DATE_MONTH_FIRST.match(expr) if not m else None
     if m:
@@ -203,14 +214,14 @@ def extract_expense_from_text(
     #la categoria esce dalla stessa chiamata: chiederla a parte costerebbe una seconda richiesta
     if category_names:
         if categories_by_group:
-            #un elenco di 47 voci di fila e' difficile da percorrere: raggruppandole
-            #il modello restringe prima l'ambito e poi sceglie dentro quello
             elenco = "; ".join(
                 f"{gruppo}: " + ", ".join(f'"{n}"' for n in sorted(nomi))
                 for gruppo, nomi in sorted(categories_by_group.items())
             )
         else:
             elenco = ", ".join(f'"{n}"' for n in category_names)
+            #l'elenco deve arrivare come prompt nella maniera più pulita e distinguibile possibile
+            
 
         category_rule = (
             'imposta "category" con una tra le voci elencate, raggruppate per ambito: '
@@ -243,6 +254,7 @@ def extract_expense_from_text(
                         '"lunedi", "martedi", "mercoledi", "giovedi", "venerdi", "sabato", "domenica", '
                         'oppure una data con giorno e mese copiata com\'e\', con l\'anno solo se il testo lo dice '
                         '(es. "3 settembre", "3 settembre 2025", "3/9"). '
+                        'Se il testo dice solo il giorno del mese preceduto da "il", copialo così\' (es. "il 18"). '
                         'Il testo puo\' essere anche in inglese: in quel caso copia l\'espressione inglese, '
                         'tra "today", "yesterday", "day before yesterday", i giorni della settimana '
                         '("monday"... "sunday", anche con "last" davanti) o una data come "3 September" o "September 3". '
