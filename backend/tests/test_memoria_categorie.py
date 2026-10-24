@@ -10,7 +10,7 @@ import pytest
 
 from app import models
 from app.business_logic import categorization
-from app.routers.expenses import proponi_spesa
+from app.business_logic.proposta_spesa import proponi_spesa
 
 OGGI = date(2026, 10, 9)
 

@@ -6,12 +6,15 @@ from sqlalchemy.orm import Session
 from app import models
 from app.business_logic import categorization, domande, security
 from app.business_logic.oggi import oggi
+from app.business_logic.proposta_spesa import proponi_spesa
 from app.database import get_db
-from app.routers.expenses import limiti_groq, proponi_spesa, SERVIZIO_OCCUPATO
+from app.routers.expenses import limiti_groq
 from app.routers.subscriptions import run_due_renewals
 from app.state import consuma_quota_groq
 
 router = APIRouter(prefix="/assistant", tags=["assistant"])
+
+SERVIZIO_OCCUPATO = "Troppe richieste in questo momento. Riprova tra qualche istante."
 
 #oltre non e' piu' una frase da chat, e ogni carattere finisce nel prompt
 MAX_CARATTERI = 500 #oltre viene rifiutato
