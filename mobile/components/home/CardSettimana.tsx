@@ -51,7 +51,7 @@ export function CardSettimana({ weeklyStats, saldoVisibile, importo, largo }: {
       frontColor: isToday ? colors.primary : colors.overlayMuted,
       topLabelComponent: () => (
         <Text style={styles.weeklyBarLabel}>
-          {saldoVisibile ? formatta(day.total, 0) : "••"}
+          {saldoVisibile ? formatta(day.total) : "••"}
         </Text>
       ),
     };
