@@ -263,7 +263,7 @@ def rispondi_a_domanda(
             for c in chiamate
         ]
         #temporanea, per il debug in produzione: scrive le parole cercate dagli utenti
-        logger.info("funzioni scelte: %s", [(c.function.name, c.function.arguments) for c in chiamate])
+        logger.debug("funzioni scelte: %s", [(c.function.name, c.function.arguments) for c in chiamate])
         quota()
         return _testo_semplice(_chiama_modello(
             [{"role": "system", "content": _istruzioni_risposta(utente, giorno, risultati)}, *domanda],
