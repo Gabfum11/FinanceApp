@@ -80,8 +80,9 @@ def _righe(db: Session, utente: models.User, inizio: date, fine: date, categoria
     righe = query.all()
     if testo:
         #la descrizione e' cifrata nel database: si cerca dopo averla letta
-        cercato = str(testo).casefold()
-        righe = [r for r in righe if cercato in r.description.casefold()]
+        #piu' parole: "calcio" da sola non trova "calcetto", i sinonimi li sceglie il modello
+        parole = [str(p).casefold() for p in (testo if isinstance(testo, list) else [testo]) if p]
+        righe = [r for r in righe if any(p in r.description.casefold() for p in parole)]
     return righe
 
 
@@ -226,7 +227,12 @@ _PERIODO = {
 #i parametri facoltativi ammettono null: il modello a volte lo scrive invece di
 #ometterli, e Groq rifiuterebbe la richiesta intera per un parametro fuori schema
 _CATEGORIA = {"type": ["string", "null"], "description": "nome di un gruppo o di una sottocategoria, in italiano"}
-_TESTO = {"type": ["string", "null"], "description": "parola cercata nella descrizione, es. un negozio"}
+_TESTO = {"type": ["array", "null"], "items": {"type": "string"},
+          "description": "parole cercate nella descrizione (basta una): un negozio, un prodotto, "
+                         "un'attivita'. Metti sempre anche sinonimi, diminutivi, abbreviazioni, "
+                         "marchi e varianti in italiano e in inglese, perche' l'utente le scrive "
+                         "a modo suo (es. [\"benzina\", \"carburante\", \"rifornimento\", \"diesel\", "
+                         "\"eni\", \"q8\"])"}
 
 
 def _strumento(nome, descrizione, proprieta=None, obbligatori=()):

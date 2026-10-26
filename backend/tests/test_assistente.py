@@ -67,6 +67,7 @@ def spesa(db, utente_id, giorno, importo, categoria=None, descrizione="spesa"):
     "spese di settembre",
     "ciao",
     "Quanto ho speso nel 2025",
+    "Qual'è il totale di marzo 2026",
 ])
 def test_riconosce_le_domande(testo):
     assert domande.sembra_una_domanda(testo)
@@ -124,6 +125,14 @@ class TestFunzioni:
         spesa(db, utente.id, date(2026, 9, 3), 20.0, descrizione="sconto 50%")
         assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", testo="conad")["totale"] == 10.0
         assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", testo="%")["totale"] == 20.0
+
+    def test_il_testo_accetta_sinonimi(self, db, utente):
+        spesa(db, utente.id, date(2026, 9, 3), 8.0, descrizione="Calcetto giovedi'")
+        spesa(db, utente.id, date(2026, 9, 5), 10.0, descrizione="partita di calcio")
+        spesa(db, utente.id, date(2026, 9, 6), 30.0, descrizione="Tennis")
+        r = conti_spese.esegui_strumento("totale_spese", json.dumps(
+            {"da": "2026-09-01", "a": "2026-09-30", "testo": ["calcio", "calcetto"]}), db, utente, OGGI)
+        assert (r["totale"], r["numero_spese"]) == (18.0, 2)
 
     @pytest.mark.parametrize("parametri", [
         {"da": "settembre", "a": "2026-09-30"},
