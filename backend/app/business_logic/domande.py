@@ -56,11 +56,11 @@ def sembra_una_domanda(testo: str) -> bool:
     if pulito.endswith("?"):
         return True
     #una spesa ha sempre un importo: senza cifre non puo' esserlo
-    #("spese di settembre", "ciao")
-    if not re.search(r"\d", pulito):
+    #("spese di settembre", "ciao") 
+    if not re.search(r"\d", pulito): #è vero se non c'è nessuna cifra
         return True
-    parole = re.findall(r"[a-zàèéìòù']+", pulito)
-    return bool(parole) and parole[0].strip("'") in _PAROLE_DOMANDA
+    parole = re.findall(r"[a-zàèéìòù']+", pulito) 
+    return bool(parole) and parole[0].strip("'").split("'")[0] in _PAROLE_DOMANDA
 
 
 # ---------------------------------------------------------------------------
@@ -96,7 +96,8 @@ def _regole_risposta(utente: models.User) -> str:
     return (
         f"Rispondi sempre {_LINGUE.get(utente.language, 'in italiano')}, "
         "in al massimo quattro frasi di testo semplice: niente markdown, elenchi puntati, "
-        "tabelle o JSON. Importi con due decimali, scritti come si usa nella lingua della "
+        "tabelle o JSON. Se la domanda chiede di confrontare piu' di tre periodi o categorie, "
+        "puoi usare fino a sei frasi, per nominarli tutti. Importi con due decimali, scritti come si usa nella lingua della "
         "risposta (in italiano 354,00 €), con il simbolo della valuta invece del codice. "
         "Se i dati sono filtrati per categoria o per testo, nominali nella risposta, "
         "cosi' l'utente vede di cosa e' il totale. Quando citi una singola "
@@ -123,7 +124,9 @@ def _istruzioni_scelta(db: Session, utente: models.User, giorno: date) -> str:
         "chiedere altre. Scegli quelle che bastano a rispondere: totali_mensili per "
         "confrontare mesi, totali_per_periodi per confrontare periodi che non sono mesi "
         "interi, spese_per_categoria per sapere in cosa si spende di piu', elenco_spese "
-        "per le singole spese. "
+        "per le singole spese. Se la domanda riguarda una cosa precisa (un'attivita', "
+        "un prodotto, un negozio) e non una categoria intera, filtra con testo e "
+        "passa tutte le parole con cui l'utente potrebbe averla scritta. "
         + _contesto(utente, giorno)
         + f"Categorie, per gruppo: {categorie}. Come categoria passa solo il nome, "
         "senza il gruppo davanti, oppure il nome di un gruppo. "
@@ -259,6 +262,7 @@ def rispondi_a_domanda(
              "risultato": esegui_strumento(c.function.name, c.function.arguments, db, utente, giorno)}
             for c in chiamate
         ]
+        logger.debug("funzioni scelte: %s", [(c.function.name, c.function.arguments) for c in chiamate])
         quota()
         return _testo_semplice(_chiama_modello(
             [{"role": "system", "content": _istruzioni_risposta(utente, giorno, risultati)}, *domanda],

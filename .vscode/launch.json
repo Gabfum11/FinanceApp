@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend (uvicorn)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      // senza --reload: il riavvio automatico gira in un altro processo e i breakpoint non scattano
+      "args": ["app.main:app", "--host", "0.0.0.0"],
+      "cwd": "${workspaceFolder}/backend",
+      "python": "${workspaceFolder}/backend/venv/Scripts/python.exe",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "justMyCode": true
+    }
+  ]
+}
