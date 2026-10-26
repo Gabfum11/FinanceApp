@@ -10,6 +10,8 @@ import { apiFetch } from "@/utils/apiFetch";
 import { intestazioneGiorno, localeAttuale, toDateString } from "@/utils/date";
 import { creaStili } from "@/styles/all_expenses.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { AvvisoEliminazione } from "@/components/AvvisoEliminazione";
+import { useEliminaConAnnulla } from "@/utils/eliminazione";
 import { BarraPeriodo } from "@/components/BarraPeriodo";
 import { usePreferenze } from "@/utils/preferenze";
 import { useTranslation } from "react-i18next";
@@ -63,7 +65,7 @@ export default function ExpenseList() {
     //gruppo appartiene ciascuna, informazione che sta solo nel backend
     const [gruppoDiCategoria, setGruppoDiCategoria] = useState<Map<number, Gruppo>>(new Map());
     //id della spesa in attesa di conferma: null quando il dialogo e' chiuso
-    const [daEliminare, setDaEliminare] = useState<number | null>(null);
+    const [daEliminare, setDaEliminare] = useState<Expense | null>(null);
     //arrivando dall'import: quante spese sono entrate e il codice per annullarle
     const { importate, codice } = useLocalSearchParams<{ importate?: string; codice?: string }>();
     const [avvisoImport, setAvvisoImport] = useState<string | null>(null);
@@ -211,16 +213,23 @@ export default function ExpenseList() {
             },
         });
     }
-    function confirmDelete(expenseId: number) {
-        setDaEliminare(expenseId);
+    function confirmDelete(expense: Expense) {
+        setDaEliminare(expense);
     }
-    async function handleDelete(expenseId:number) {
+    const eliminazione = useEliminaConAnnulla<Expense>(
+        async (expense) => (await apiFetch(`/expenses/${expense.id}`, { method: "DELETE" })).ok,
+        (expense, visibile) => setExpenses((prev) => visibile
+            //rimessa nell'ordine del server: per data, a parita' di giorno la piu' recente in cima
+            ? [...prev, expense].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id)
+            : prev.filter((exp) => exp.id !== expense.id)),
+    );
+    function handleDelete(expense: Expense) {
         setDaEliminare(null);
-        const response=await apiFetch(`/expenses/${expenseId}`, {method:"DELETE"});
-        if(response.ok){
-            setExpenses((prev) => prev.filter((exp) => exp.id !== expenseId)); //serve ad aggiornare la lista a schermo filtrando le spese, il cui id non corrisponde a quello della spesa cancellata
-        }
-        
+        eliminazione.avvia(expense, {
+            fatto: t("spese.eliminata"),
+            nonRiuscito: t("spese.nonEliminata"),
+            dettaglio: `${expense.description} · ${importo(expense.amount)}`,
+        });
     }
     return (
        <View style={[styles.container, largo && styles.containerLargo, largo && { maxWidth: LARGHEZZA_CONTENUTO + 80 }]}>
@@ -292,14 +301,14 @@ export default function ExpenseList() {
         )}
         ListHeaderComponent={largo && filtered.length > 0 ? <IntestazioneTabella /> : null}
         renderItem={({ item, index, section })=> largo ? (
-            <RigaTabella item={item} onModifica={() => openEdit(item)} onElimina={() => confirmDelete(item.id)} />
+            <RigaTabella item={item} onModifica={() => openEdit(item)} onElimina={() => confirmDelete(item)} />
         ) : (
             <RigaSpesa
                 item={item}
                 prima={index === 0}
                 ultima={index === section.data.length - 1}
                 onModifica={() => openEdit(item)}
-                onElimina={() => confirmDelete(item.id)}
+                onElimina={() => confirmDelete(item)}
             />
         )}
         ListEmptyComponent={
@@ -324,6 +333,8 @@ export default function ExpenseList() {
         >
             {avvisoImport}
         </Snackbar>
+
+        <AvvisoEliminazione avviso={eliminazione.avviso} onChiudi={eliminazione.chiudi} />
 
         <ConfirmDialog
             visible={confermaEstratto}

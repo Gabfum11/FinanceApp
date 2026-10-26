@@ -1,12 +1,13 @@
 import { router, useFocusEffect } from "expo-router";
 import { FlatList, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { IconButton, Snackbar, Text } from "react-native-paper";
+import { IconButton, Text } from "react-native-paper";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { creaStili as creaStiliSpese } from "@/styles/all_expenses.styles";
 import { creaStili } from "@/styles/estratti_conto.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { AvvisoEliminazione, type Avviso } from "@/components/AvvisoEliminazione";
 import { PulsanteEliminaSpese } from "@/components/importa/PulsanteEliminaSpese";
 import { annullaImport, elencoEstratti, giornoCaricamento, type Estratto } from "@/utils/importEstratto";
 import { fromDateString, localeAttuale } from "@/utils/date";
@@ -31,21 +32,35 @@ export default function EstrattiConto() {
   //null finche' non arriva la prima risposta: niente "nessun estratto" in anticipo
   const [estratti, setEstratti] = useState<Estratto[] | null>(null);
   const [daEliminare, setDaEliminare] = useState<Estratto | null>(null);
-  const [avviso, setAvviso] = useState<string | null>(null);
+  const [avviso, setAvviso] = useState<Avviso | null>(null);
 
   useFocusEffect(
     useCallback(() => {
-      elencoEstratti().then((elenco) => (elenco ? setEstratti(elenco) : setAvviso(t("errori.rete"))));
+      elencoEstratti().then((elenco) =>
+        elenco ? setEstratti(elenco) : setAvviso({ id: Date.now(), tipo: "errore", titolo: t("errori.rete") }),
+      );
     }, [t]),
   );
 
+  //niente Annulla: sono molte spese insieme, e l'estratto si puo' ricaricare
   async function elimina(estratto: Estratto) {
     setDaEliminare(null);
     if (await annullaImport(estratto.codice)) {
       setEstratti((prima) => prima?.filter((e) => e.codice !== estratto.codice) ?? null);
-      setAvviso(t("estratti.eliminate"));
+      setAvviso({
+        id: Date.now(),
+        tipo: "fatto",
+        titolo: t("estratti.eliminate", { count: estratto.spese }),
+        dettaglio: t("estratti.titoloEstratto", { data: giornoCaricamento(estratto.caricato_il) }),
+      });
     } else {
-      setAvviso(t("importa.erroreAnnulla"));
+      setAvviso({
+        id: Date.now(),
+        tipo: "errore",
+        titolo: t("estratti.nonEliminate"),
+        dettaglio: t("errori.eliminazione"),
+        azione: { label: t("comune.riprova"), onPress: () => elimina(estratto) },
+      });
     }
   }
 
@@ -96,9 +111,7 @@ export default function EstrattiConto() {
         }
       />
 
-      <Snackbar visible={avviso !== null} onDismiss={() => setAvviso(null)}>
-        {avviso}
-      </Snackbar>
+      <AvvisoEliminazione avviso={avviso} onChiudi={() => setAvviso(null)} />
 
       <ConfirmDialog
         visible={daEliminare !== null}

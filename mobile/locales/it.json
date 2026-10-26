@@ -46,7 +46,8 @@
     "cambio": "Cambio non disponibile in questo momento",
     "nonTrovato": "Elemento non trovato: forse è stato eliminato",
     "troppiRinnovi": "Troppi rinnovi da registrare da quella data. Scegli una data più recente.",
-    "nonInviato": "Messaggio non inviato. Riprova tra poco."
+    "nonInviato": "Messaggio non inviato. Riprova tra poco.",
+    "eliminazione": "Controlla la connessione e riprova"
   },
   "accesso": {
     "legaleGoogle": "Continuando con Google confermi di aver letto l'",
@@ -394,7 +395,9 @@
     "eliminaTitolo_other": "Eliminare {{count}} spese?",
     "eliminaTesto": "Sono le spese dell'estratto conto caricato il {{data}}, per un totale di {{totale}}.",
     "nessuno": "Non hai ancora caricato estratti conto.",
-    "eliminate": "Spese eliminate"
+    "eliminate_one": "{{count}} spesa eliminata",
+    "eliminate_other": "{{count}} spese eliminate",
+    "nonEliminate": "Spese non eliminate"
   },
   "importa": {
     "titolo": "Importa movimenti",
@@ -476,6 +479,8 @@
     "nessunaSpesa": "Nessuna spesa registrata",
     "eliminaTitolo": "Elimina spesa",
     "eliminaTesto": "Sei sicuro di voler eliminare questa spesa?",
+    "eliminata": "Spesa eliminata",
+    "nonEliminata": "Spesa non eliminata",
     "colonnaDescrizione": "Descrizione",
     "colonnaCategoria": "Categoria",
     "colonnaData": "Data",
@@ -533,6 +538,8 @@
     "riattivaTesto": "Sei sicuro di voler riattivare questo abbonamento?",
     "eliminaTitolo": "Elimina abbonamento",
     "eliminaTesto": "Sei sicuro di voler eliminare questo abbonamento?",
+    "eliminato": "Abbonamento eliminato",
+    "nonEliminato": "Abbonamento non eliminato",
     "attivi": "Abbonamenti attivi",
     "manuale": "Manuale",
     "nessuno": "Nessun abbonamento",

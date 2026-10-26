@@ -46,7 +46,8 @@
     "cambio": "Exchange rate unavailable right now",
     "nonTrovato": "Item not found: it may have been deleted",
     "troppiRinnovi": "Too many past renewals from that date. Pick a more recent one.",
-    "nonInviato": "Message not sent. Please try again shortly."
+    "nonInviato": "Message not sent. Please try again shortly.",
+    "eliminazione": "Check your connection and try again"
   },
   "accesso": {
     "legaleGoogle": "By continuing with Google you confirm you've read the ",
@@ -394,7 +395,9 @@
     "eliminaTitolo_other": "Delete {{count}} expenses?",
     "eliminaTesto": "These are the expenses from the statement uploaded on {{data}}, totalling {{totale}}.",
     "nessuno": "You haven't uploaded any bank statements yet.",
-    "eliminate": "Expenses deleted"
+    "eliminate_one": "{{count}} expense deleted",
+    "eliminate_other": "{{count}} expenses deleted",
+    "nonEliminate": "Expenses not deleted"
   },
   "importa": {
     "titolo": "Import transactions",
@@ -476,6 +479,8 @@
     "nessunaSpesa": "No expenses yet",
     "eliminaTitolo": "Delete expense",
     "eliminaTesto": "Are you sure you want to delete this expense?",
+    "eliminata": "Expense deleted",
+    "nonEliminata": "Expense not deleted",
     "colonnaDescrizione": "Description",
     "colonnaCategoria": "Category",
     "colonnaData": "Date",
@@ -533,6 +538,8 @@
     "riattivaTesto": "Are you sure you want to resume this subscription?",
     "eliminaTitolo": "Delete subscription",
     "eliminaTesto": "Are you sure you want to delete this subscription?",
+    "eliminato": "Subscription deleted",
+    "nonEliminato": "Subscription not deleted",
     "attivi": "Active subscriptions",
     "manuale": "Manual",
     "nessuno": "No subscriptions",

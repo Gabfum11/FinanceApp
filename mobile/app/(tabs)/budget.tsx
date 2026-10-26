@@ -7,6 +7,8 @@ import { useCallback, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
 import { creaStili } from "@/styles/budget.styles";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { AvvisoEliminazione } from "@/components/AvvisoEliminazione";
+import { useEliminaConAnnulla } from "@/utils/eliminazione";
 import { PaginaScorrevole } from "@/components/PaginaScorrevole";
 import { useSpazioBarra } from "@/utils/barraSchede";
 import { useTranslation } from "react-i18next";
@@ -158,11 +160,20 @@ export default function BudgetScreen() {
       if (tipo === "elimina") handleDelete(subId);
       else HandlePause(subId);
     }
-    async function handleDelete(subscription_id:number) {
-        const response=await apiFetch(`/subscriptions/${subscription_id}`, {method:"DELETE"});
-        if(response.ok){
-            setSubscriptions((prev) => prev.filter((exp) => exp.id !== subscription_id)); //serve ad aggiornare la lista a schermo filtrando le spese, il cui id non corrisponde a quello della spesa cancellata
-        }
+    const eliminazione = useEliminaConAnnulla<Subscription>(
+      async (sub) => (await apiFetch(`/subscriptions/${sub.id}`, { method: "DELETE" })).ok,
+      (sub, visibile) => setSubscriptions((prev) => visibile
+        ? [...prev, sub].sort((a, b) => a.id - b.id)
+        : prev.filter((s) => s.id !== sub.id)),
+    );
+    function handleDelete(subscription_id:number) {
+        const sub = subscriptions.find((s) => s.id === subscription_id);
+        if (!sub) return;
+        eliminazione.avvia(sub, {
+          fatto: t("abbonamenti.eliminato"),
+          nonRiuscito: t("abbonamenti.nonEliminato"),
+          dettaglio: `${sub.description} · ${importoIn(sub.amount, sub.currency)} · ${t(`frequenze.${sub.frequency}`)}`,
+        });
     }
     async function HandlePause(Subid:number){
       const response= await apiFetch(`/subscriptions/${Subid}/toggle`, { method: "PATCH" });
@@ -318,6 +329,8 @@ export default function BudgetScreen() {
       >
         {t("abbonamenti.erroreCaricamento")}
       </Snackbar>
+
+      <AvvisoEliminazione avviso={eliminazione.avviso} onChiudi={eliminazione.chiudi} wrapperStyle={{ marginBottom: spazioBarra }} />
     </View>
   );
 }
