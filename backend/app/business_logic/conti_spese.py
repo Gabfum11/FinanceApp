@@ -230,7 +230,7 @@ _CATEGORIA = {"type": ["string", "null"], "description": "nome di un gruppo o di
 _TESTO = {"type": ["array", "null"], "items": {"type": "string"},
           "description": "parole cercate nella descrizione (basta una): un negozio, un prodotto, "
                          "un'attivita'. Metti sempre anche sinonimi, diminutivi, abbreviazioni, "
-                         "marchi e varianti in italiano e in inglese, perche' l'utente le scrive "
+                         "marchi e varianti nella lingua della domanda, perche' l'utente le scrive "
                          "a modo suo (es. [\"benzina\", \"carburante\", \"rifornimento\", \"diesel\", "
                          "\"eni\", \"q8\"])"}
 
