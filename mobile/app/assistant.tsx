@@ -133,7 +133,7 @@ export default function AssistantScreen() {
         ultimoScambio.current = { domanda: userMessage.text ?? "", risposta: data.testo };
         setMessages((prev) => [
           ...prev,
-          { id: Date.now().toString(), sender: "system", text: data.testo },
+          { id: Date.now().toString(), sender: "system", text: data.testo, fonte: data.fonte },
         ]);
         return;
       }

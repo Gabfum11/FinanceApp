@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.business_logic import categorization
-from app.business_logic.conti_spese import DESCRIZIONI, STRUMENTI, esegui_strumento
+from app.business_logic.conti_spese import DESCRIZIONI, STRUMENTI, esegui_strumento, fonte
 from app.business_logic.budget import get_budget_cycle
 from app.logging_config import get_logger
 
@@ -231,11 +231,18 @@ def _scambio_precedente(precedente: dict | None) -> list:
             {"role": "assistant", "content": precedente["risposta"]}]
 
 
+def _con_fonte(testo: str | None, fonte_spese: dict | None) -> dict | None:
+    return {"testo": testo, "fonte": fonte_spese} if testo else None
+
+
 def rispondi_a_domanda(
     testo: str, db: Session, utente: models.User, giorno: date, quota: Callable[[], None],
     precedente: dict | None = None,
-) -> str | None:
+) -> dict | None:
     """La risposta da mostrare in chat, o None se il modello non ne ha data una.
+
+    {"testo": ..., "fonte": ...}: la fonte (conti_spese.fonte) sono le spese
+    lette per rispondere, None se la risposta non ne ha usate.
 
     Al massimo due richieste a Groq: nella prima il modello sceglie le
     funzioni, nella seconda riceve i risultati e risponde. quota() viene
@@ -253,7 +260,7 @@ def rispondi_a_domanda(
         chiamate = (scelta.tool_calls or [])[:MAX_FUNZIONI]
         if not chiamate:
             #ha risposto subito: un saluto, o una domanda che non riguarda le spese
-            return _testo_semplice(scelta)
+            return _con_fonte(_testo_semplice(scelta), None)
 
         #ogni dato e' descritto a parole e non con il nome della funzione:
         #vedendo il nome, il modello prova a richiamarla
@@ -265,10 +272,11 @@ def rispondi_a_domanda(
         #temporanea, per il debug in produzione: scrive le parole cercate dagli utenti
         logger.debug("funzioni scelte: %s", [(c.function.name, c.function.arguments) for c in chiamate])
         quota()
-        return _testo_semplice(_chiama_modello(
+        risposta = _testo_semplice(_chiama_modello(
             [{"role": "system", "content": _istruzioni_risposta(utente, giorno, risultati)}, *domanda],
             con_strumenti=False,
         ))
+        return _con_fonte(risposta, fonte([(c.function.name, c.function.arguments) for c in chiamate], db, utente))
     except RateLimitError:
         logger.warning("limite di frequenza di Groq raggiunto")
         raise categorization.ServizioOccupato()

@@ -103,6 +103,57 @@ export const creaStili = (colors: Colori) =>
         fontWeight: fontWeight.semibold,
         lineHeight: 24,
     },
+    //con la fonte la bolla prende tutta la larghezza: l'elenco aperto ha bisogno di spazio
+    conFonte: {
+        width: "85%",
+    },
+    // riga della fonte sotto la risposta, separata dal testo come gli esempi
+    fonte: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        minHeight: 44,
+        marginTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+    },
+    fonteTesto: {
+        flex: 1,
+        fontSize: fontSize.sm,
+        color: colors.textMuted,
+    },
+    fonteElenco: {
+        backgroundColor: colors.surfaceAlt,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 2,
+    },
+    fonteRiga: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        paddingVertical: 8,
+    },
+    fonteRigaBordo: {
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+    },
+    fonteData: {
+        width: 52,
+        fontSize: fontSize.xs,
+        color: colors.textMuted,
+    },
+    fonteDescrizione: {
+        flex: 1,
+        fontSize: fontSize.sm,
+        color: colors.text,
+    },
+    fonteImporto: {
+        fontSize: fontSize.sm,
+        fontWeight: fontWeight.semibold,
+        color: colors.text,
+        fontVariant: ["tabular-nums"],
+    },
     // card di esito dopo il salvataggio
     savedCard: {
         alignSelf: "stretch",

@@ -252,6 +252,38 @@ class TestFunzioni:
         assert g["altre_sottocategorie"] == {"numero": 2, "totale": 21.0}
         assert sum(c["totale"] for c in g["categorie"]) + g["altre_sottocategorie"]["totale"] == g["totale"]
 
+    def test_la_fonte_rilegge_le_spese_con_gli_stessi_filtri(self, db, utente, make_user):
+        altro = make_user(email="altro@example.com")
+        spesa(db, utente.id, date(2026, 9, 3), 40.0, descrizione="Benzina Eni")
+        spesa(db, utente.id, date(2026, 9, 9), 30.0, descrizione="Benzina Q8")
+        spesa(db, utente.id, date(2026, 9, 5), 99.0, descrizione="Cena")
+        spesa(db, altro, date(2026, 9, 4), 77.0, descrizione="Benzina")
+        settembre = {"da": "2026-09-01", "a": "2026-09-30", "testo": ["benzina"]}
+        f = conti_spese.fonte([
+            ("totale_spese", json.dumps(settembre)),
+            #stesso periodo in un'altra funzione: le spese contano una volta
+            ("elenco_spese", json.dumps(settembre)),
+            ("stato_budget", "{}"),
+        ], db, utente)
+        assert f["numero_spese"] == 2
+        assert (f["da"], f["a"], f["testo_cercato"]) == ("2026-09-01", "2026-09-30", ["benzina"])
+        assert [s["importo"] for s in f["spese"]] == [40.0, 30.0]
+
+    def test_la_fonte_di_piu_periodi_li_copre_tutti(self, db, utente):
+        spesa(db, utente.id, date(2026, 8, 3), 25.0)
+        spesa(db, utente.id, date(2026, 9, 3), 40.0)
+        f = conti_spese.fonte([("totali_per_periodi", json.dumps({"periodi": [
+            {"da": "2026-08-01", "a": "2026-08-31"}, {"da": "2026-09-01", "a": "2026-09-30"}]}))], db, utente)
+        assert (f["da"], f["a"], f["numero_spese"]) == ("2026-08-01", "2026-09-30", 2)
+
+    @pytest.mark.parametrize("chiamate", [
+        [("stato_budget", "{}"), ("abbonamenti_attivi", "{}")],
+        [("totale_spese", json.dumps({"da": "settembre", "a": "2026-09-30"}))],
+        [("totale_spese", "non json")],
+    ])
+    def test_niente_fonte_senza_spese_lette(self, db, utente, chiamate):
+        assert conti_spese.fonte(chiamate, db, utente) is None
+
     def test_stato_budget(self, db, utente):
         spesa(db, utente.id, date(2026, 10, 2), 120.0)
         spesa(db, utente.id, date(2026, 9, 30), 999.0)
@@ -308,7 +340,8 @@ class TestDialogo:
         with patch.object(domande, "_chiama_modello", modello):
             testo = domande.rispondi_a_domanda("quanto a settembre?", db, utente, OGGI, lambda: quota.append(1))
 
-        assert testo == "A settembre hai speso 42,50 €."
+        assert testo["testo"] == "A settembre hai speso 42,50 €."
+        assert testo["fonte"]["numero_spese"] == 1
         assert "totale: 42.5" in dati_inviati(ricevuti[1])
         assert len(quota) == 2, "ogni richiesta a Groq passa dalla quota"
 
@@ -339,7 +372,8 @@ class TestDialogo:
 
         with patch.object(domande, "_chiama_modello", modello):
             testo = domande.rispondi_a_domanda("budget?", db, utente, OGGI, lambda: None)
-        assert testo == "Ecco il budget."
+        #il budget non conta spese: niente fonte da mostrare
+        assert testo == {"testo": "Ecco il budget.", "fonte": None}
         assert giri == [True, False]
 
     def test_piu_funzioni_nello_stesso_giro(self, db, utente):
@@ -413,7 +447,7 @@ class TestDialogo:
 
     def test_niente_grassetto_markdown(self, db, utente):
         with patch.object(domande, "_chiama_modello", return_value=risposta_modello("Hai speso **10 €**.")):
-            assert domande.rispondi_a_domanda("quanto?", db, utente, OGGI, lambda: None) == "Hai speso 10 €."
+            assert domande.rispondi_a_domanda("quanto?", db, utente, OGGI, lambda: None) == {"testo": "Hai speso 10 €.", "fonte": None}
 
     def test_quota_esaurita_ferma_il_dialogo(self, db, utente):
         def quota():
@@ -456,6 +490,9 @@ class TestDialogo:
 
 # --- endpoint ----------------------------------------------------------------
 
+RISPOSTA = {"testo": "Hai speso 10 €.", "fonte": None}
+
+
 def invia(client, testo, token="Bearer tok"):
     return client.post("/assistant/message", json={"text": testo}, headers={"Authorization": token})
 
@@ -480,14 +517,14 @@ class TestEndpoint:
 
     def test_una_domanda_non_passa_dall_estrazione(self, client, connesso):
         with patch("app.business_logic.categorization.extract_expense_from_text") as estrazione, \
-             patch.object(domande, "rispondi_a_domanda", return_value="Hai speso 10 €."):
+             patch.object(domande, "rispondi_a_domanda", return_value=RISPOSTA):
             r = invia(client, "Quanto ho speso?")
-        assert r.json() == {"tipo": "risposta", "testo": "Hai speso 10 €."}
+        assert r.json() == {"tipo": "risposta", **RISPOSTA}
         estrazione.assert_not_called()
 
     def test_senza_cifre_va_alle_domande_senza_estrazione(self, client, connesso):
         with patch("app.business_logic.categorization.extract_expense_from_text") as estrazione, \
-             patch.object(domande, "rispondi_a_domanda", return_value="Hai speso 10 €.") as risposta:
+             patch.object(domande, "rispondi_a_domanda", return_value=RISPOSTA) as risposta:
             r = invia(client, "spese di settembre")
         assert r.json()["tipo"] == "risposta"
         risposta.assert_called_once()
@@ -510,7 +547,7 @@ class TestEndpoint:
             assert invia(client, "Quanto ho speso?").status_code == 503
 
     def test_lo_scambio_precedente_passa_alla_domanda(self, client, connesso):
-        with patch.object(domande, "rispondi_a_domanda", return_value="ok") as risposta:
+        with patch.object(domande, "rispondi_a_domanda", return_value=RISPOSTA) as risposta:
             client.post("/assistant/message", headers={"Authorization": "Bearer tok"}, json={
                 "text": "Quali sono?",
                 "precedente": {"domanda": " Spese di settembre ", "risposta": "x" * 2000},
@@ -520,7 +557,7 @@ class TestEndpoint:
     @pytest.mark.parametrize("precedente", [None, "testo", {"domanda": "a"}, {"domanda": 1, "risposta": "b"},
                                             {"domanda": " ", "risposta": "b"}])
     def test_uno_scambio_precedente_non_valido_viene_ignorato(self, client, connesso, precedente):
-        with patch.object(domande, "rispondi_a_domanda", return_value="ok") as risposta:
+        with patch.object(domande, "rispondi_a_domanda", return_value=RISPOSTA) as risposta:
             r = client.post("/assistant/message", headers={"Authorization": "Bearer tok"},
                             json={"text": "Quali sono?", "precedente": precedente})
         assert r.status_code == 200

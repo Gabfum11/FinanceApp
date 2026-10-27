@@ -63,7 +63,7 @@ def messaggio(request: Request, dati: dict, db: Session = Depends(get_db), curre
     """Un messaggio scritto all'assistente: una spesa da registrare o una domanda.
 
     Risponde {"tipo": "spesa", "spesa": {...}} con la proposta per la card di
-    conferma, oppure {"tipo": "risposta", "testo": "..."}.
+    conferma, oppure {"tipo": "risposta", "testo": "...", "fonte": {...} | null}.
     """
     testo = str(dati.get("text") or "").strip() #messaggio dell'utente, senza spazi iniziali/finali
     if not testo or len(testo) > MAX_CARATTERI:
@@ -90,4 +90,4 @@ def messaggio(request: Request, dati: dict, db: Session = Depends(get_db), curre
 
     if risposta is None:
         raise HTTPException(status_code=422, detail="Non sono riuscito a rispondere")
-    return {"tipo": "risposta", "testo": risposta}
+    return {"tipo": "risposta", **risposta}

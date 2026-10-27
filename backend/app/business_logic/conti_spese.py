@@ -65,7 +65,7 @@ def _righe(db: Session, utente: models.User, inizio: date, fine: date, categoria
     padre = aliased(models.Category)
     query = (
         db.query(models.Expense.date, models.Expense.description, models.Expense.amount,
-                 models.Category.name, padre.name)
+                 models.Category.name, padre.name, models.Expense.id)
         .outerjoin(models.Category, models.Expense.category_id == models.Category.id)
         .outerjoin(padre, models.Category.parent_id == padre.id)
         .filter(
@@ -233,6 +233,52 @@ def abbonamenti_attivi(db, utente, giorno):
         })
     return {"abbonamenti": elenco, "costo_mensile_stimato": round(totale, 2),
             "abbonamenti_in_altre_valute_esclusi_dal_totale": altre_valute}
+
+
+#budget e abbonamenti non contano spese: la loro risposta non ha un elenco da mostrare
+_LEGGONO_SPESE = {"totale_spese", "totali_per_periodi", "spese_per_categoria", "elenco_spese", "totali_mensili"}
+
+
+def fonte(chiamate: list[tuple[str, str]], db: Session, utente: models.User) -> dict | None:
+    """Le spese da cui vengono i numeri della risposta, per la riga sotto il messaggio.
+
+    Si rileggono con gli stessi parametri delle funzioni scelte, senza passare
+    dal modello: l'elenco che vede l'utente e' quello che ha prodotto i totali.
+    """
+    righe, periodi, filtri = {}, [], []
+    for nome, argomenti in chiamate:
+        if nome not in _LEGGONO_SPESE:
+            continue
+        try:
+            p = json.loads(argomenti or "{}")
+        except ValueError:
+            continue
+        if not isinstance(p, dict):
+            continue
+        #spese_per_categoria non filtra: con un filtro inventato l'elenco direbbe il falso
+        categoria, testo = (None, None) if nome == "spese_per_categoria" else (p.get("categoria"), p.get("testo"))
+        intervalli = p.get("periodi") if nome == "totali_per_periodi" else [p]
+        for i in (intervalli[:MAX_PERIODI] if isinstance(intervalli, list) else []):
+            try:
+                inizio, fine = _periodo(i.get("da"), i.get("a"))
+                trovate = _righe(db, utente, inizio, fine, categoria, testo)
+            except (ParametroNonValido, AttributeError):
+                continue #la funzione ha gia' risposto con un errore: niente da mostrare
+            periodi.append((inizio, fine))
+            filtri.append(_filtri(categoria, testo))
+            #due funzioni sullo stesso periodo trovano le stesse spese: contano una volta
+            righe.update({r.id: r for r in trovate})
+    if not periodi:
+        return None
+    spese = sorted(righe.values(), key=lambda r: -r.amount)
+    return {
+        "numero_spese": len(spese),
+        "da": min(i for i, _ in periodi).isoformat(), "a": max(f for _, f in periodi).isoformat(),
+        #filtri diversi fra le chiamate non si riassumono in una riga: non si mostrano
+        **(filtri[0] if all(f == filtri[0] for f in filtri) else {}),
+        "spese": [{"data": r.date.isoformat(), "descrizione": r.description, "importo": round(r.amount, 2)}
+                  for r in spese[:MAX_ELENCO]],
+    }
 
 
 _PERIODO = {
