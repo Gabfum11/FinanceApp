@@ -276,6 +276,12 @@ class TestFunzioni:
             {"da": "2026-08-01", "a": "2026-08-31"}, {"da": "2026-09-01", "a": "2026-09-30"}]}))], db, utente)
         assert (f["da"], f["a"], f["numero_spese"]) == ("2026-08-01", "2026-09-30", 2)
 
+    def test_la_fonte_manda_piu_spese_dell_elenco(self, db, utente):
+        for i in range(conti_spese.MAX_ELENCO + 5):
+            spesa(db, utente.id, date(2026, 9, 1), 10.0 + i)
+        f = conti_spese.fonte([("totale_spese", json.dumps({"da": "2026-09-01", "a": "2026-09-30"}))], db, utente)
+        assert len(f["spese"]) == f["numero_spese"] == conti_spese.MAX_ELENCO + 5
+
     @pytest.mark.parametrize("chiamate", [
         [("stato_budget", "{}"), ("abbonamenti_attivi", "{}")],
         [("totale_spese", json.dumps({"da": "settembre", "a": "2026-09-30"}))],

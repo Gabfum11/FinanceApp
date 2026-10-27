@@ -17,6 +17,8 @@ from app.business_logic.budget import get_budget_cycle
 #un periodo piu' lungo non serve a nessuna domanda sensata e allungherebbe le query
 MAX_GIORNI_PERIODO = 3660
 MAX_ELENCO = 15
+#la fonte le manda tutte, l'app le apre a blocchi: il tetto vale per periodi lunghissimi
+MAX_FONTE = 500
 
 # ---------------------------------------------------------------------------
 # Le funzioni che il modello puo' chiamare
@@ -277,7 +279,7 @@ def fonte(chiamate: list[tuple[str, str]], db: Session, utente: models.User) -> 
         #filtri diversi fra le chiamate non si riassumono in una riga: non si mostrano
         **(filtri[0] if all(f == filtri[0] for f in filtri) else {}),
         "spese": [{"data": r.date.isoformat(), "descrizione": r.description, "importo": round(r.amount, 2)}
-                  for r in spese[:MAX_ELENCO]],
+                  for r in spese[:MAX_FONTE]],
     }
 
 

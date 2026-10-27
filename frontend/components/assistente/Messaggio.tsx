@@ -30,8 +30,10 @@ export type Fonte = {
   a: string;
   categoria?: string;
   testo_cercato?: string | string[];
-  spese: { data: string; descrizione: string; importo: number }[]; //le piu' alte, al massimo 15
+  spese: { data: string; descrizione: string; importo: number }[]; //dalla piu' alta, al massimo 500
 };
+
+const BLOCCO = 15;
 
 export type ChatMessage = {
   id: string;
@@ -49,6 +51,7 @@ function RigaFonte({ fonte }: { fonte: Fonte }) {
   const { importo } = usePreferenze();
   const { t } = useTranslation();
   const [aperta, setAperta] = useState(false);
+  const [mostrate, setMostrate] = useState(BLOCCO);
 
   //l'anno solo se serve: "1 gen – 31 dic" di un altro anno sembrerebbe quest'anno
   const anno = fonte.da.slice(0, 4);
@@ -68,7 +71,7 @@ function RigaFonte({ fonte }: { fonte: Fonte }) {
     periodo,
     parole ?? categoria,
   ].filter(Boolean).join(" · ");
-  const altre = fonte.numero_spese - fonte.spese.length;
+  const prossime = Math.min(BLOCCO, fonte.spese.length - mostrate);
   const apribile = fonte.spese.length > 0;
 
   return (
@@ -89,17 +92,24 @@ function RigaFonte({ fonte }: { fonte: Fonte }) {
       </Pressable>
       {aperta && (
         <View style={styles.fonteElenco}>
-          {fonte.spese.map((s, i) => (
+          {fonte.spese.slice(0, mostrate).map((s, i) => (
             <View key={i} style={[styles.fonteRiga, i > 0 && styles.fonteRigaBordo]}>
               <Text style={styles.fonteData}>{giorno(s.data)}</Text>
               <Text style={styles.fonteDescrizione} numberOfLines={1}>{s.descrizione}</Text>
               <Text style={styles.fonteImporto}>{importo(s.importo)}</Text>
             </View>
           ))}
-          {altre > 0 && (
-            <View style={[styles.fonteRiga, styles.fonteRigaBordo]}>
-              <Text style={styles.fonteTesto}>{t("assistente.altreSpese", { count: altre })}</Text>
-            </View>
+          {prossime > 0 && (
+            <Pressable
+              style={[styles.fonteRiga, styles.fonteRigaBordo]}
+              onPress={() => setMostrate(mostrate + BLOCCO)}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.fonteTesto, { color: colors.primary }]}>
+                {t("assistente.mostraAltre", { count: prossime })}
+              </Text>
+              <MaterialCommunityIcons name="chevron-down" size={18} color={colors.primary} />
+            </Pressable>
           )}
         </View>
       )}
