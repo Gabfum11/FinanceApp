@@ -1,6 +1,6 @@
 """Testi che partono dal server, nella lingua dell'utente (User.language).
 
-L'app ha i suoi in mobile/locales; qui ci sono solo quelli che l'utente legge
+L'app ha i suoi in frontend/locales; qui ci sono solo quelli che l'utente legge
 senza passare dall'app: email, notifiche, file esportati. Una lingua che non
 e' in elenco ricade sull'italiano.
 """

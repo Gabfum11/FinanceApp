@@ -47,7 +47,7 @@ Web app per gestire le finanze personali: spese, budget e abbonamenti, con un as
 
 ```
 backend/   API FastAPI, modelli del database, migrazioni e test
-mobile/    frontend Expo (web e mobile con lo stesso codice)
+frontend/  frontend Expo (web e mobile con lo stesso codice)
 ```
 
 ## Avvio in locale
@@ -68,7 +68,7 @@ Serve un file `backend/.env` con almeno `DATABASE_URL`, `SECRET_KEY` e `CHIAVE_C
 **Frontend:**
 
 ```bash
-cd mobile
+cd frontend
 npm install
 cp .env.example .env
 npx expo start --web

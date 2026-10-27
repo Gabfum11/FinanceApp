@@ -11,32 +11,32 @@ backend/**/*.pyc
 backend/finance.db
 
 # === Mobile (Expo/React Native) ===
-mobile/node_modules/
-mobile/.expo/
-mobile/dist/
-mobile/web-build/
-mobile/expo-env.d.ts
-mobile/.kotlin/
-mobile/*.orig.*
-mobile/*.jks
-mobile/*.p8
-mobile/*.p12
-mobile/*.key
-mobile/*.mobileprovision
-mobile/.metro-health-check*
-mobile/npm-debug.*
-mobile/yarn-debug.*
-mobile/yarn-error.*
-mobile/.env
-mobile/.env*.local
-mobile/*.tsbuildinfo
-mobile/app-example
-mobile/ios
-mobile/android
+frontend/node_modules/
+frontend/.expo/
+frontend/dist/
+frontend/web-build/
+frontend/expo-env.d.ts
+frontend/.kotlin/
+frontend/*.orig.*
+frontend/*.jks
+frontend/*.p8
+frontend/*.p12
+frontend/*.key
+frontend/*.mobileprovision
+frontend/.metro-health-check*
+frontend/npm-debug.*
+frontend/yarn-debug.*
+frontend/yarn-error.*
+frontend/.env
+frontend/.env*.local
+frontend/*.tsbuildinfo
+frontend/app-example
+frontend/ios
+frontend/android
 
 # Pacchetto completo dei pulsanti Google (66 file, tutte le varianti e densita'):
 # nel repo bastano i 3 PNG in uso, copiati in assets/images/google/
-mobile/assets/images/Android + Web/
+frontend/assets/images/Android + Web/
 
 # === Test ===
 backend/.coverage

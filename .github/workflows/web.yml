@@ -5,7 +5,7 @@ name: Web app
 on:
   push:
     branches: [main]
-    paths: ["mobile/**", ".github/workflows/web.yml"]
+    paths: ["frontend/**", ".github/workflows/web.yml"]
   workflow_dispatch:
 
 permissions:
@@ -23,14 +23,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: mobile
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: mobile/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       # le EXPO_PUBLIC_ finiscono nel bundle: lo stesso backend dell'app Android
       - run: npx expo export --platform web
@@ -40,7 +40,7 @@ jobs:
           EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: 927557604432-7amto0tovrub15bm31l2i8o4isobs0u6.apps.googleusercontent.com
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: mobile/dist
+          path: frontend/dist
 
   deploy:
     needs: build
