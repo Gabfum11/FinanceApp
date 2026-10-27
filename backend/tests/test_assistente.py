@@ -214,6 +214,44 @@ class TestFunzioni:
             {"mese": "2026-09", "totale": 20.0},
         ]
 
+    def test_i_mesi_tagliati_dal_periodo_lo_dicono(self, db, utente):
+        spesa(db, utente.id, date(2026, 7, 20), 10.0)
+        r = conti_spese.totali_mensili(db, utente, OGGI, "2026-07-15", "2026-09-10")
+        assert (r["da"], r["a"]) == ("2026-07-15", "2026-09-10")
+        assert r["mesi"] == [
+            {"mese": "2026-07", "dal": "2026-07-15", "totale": 10.0},
+            {"mese": "2026-08", "totale": 0.0},
+            {"mese": "2026-09", "al": "2026-09-10", "totale": 0.0},
+        ]
+
+    def test_totali_mensili_con_testo(self, db, utente):
+        spesa(db, utente.id, date(2026, 8, 3), 40.0, descrizione="Benzina Eni")
+        spesa(db, utente.id, date(2026, 8, 4), 99.0, descrizione="Cena")
+        r = conti_spese.esegui_strumento("totali_mensili", json.dumps(
+            {"da": "2026-08-01", "a": "2026-08-31", "testo": ["benzina"]}), db, utente, OGGI)
+        assert r["mesi"] == [{"mese": "2026-08", "totale": 40.0}]
+        assert r["testo_cercato"] == ["benzina"]
+
+    def test_i_periodi_oltre_il_tetto_sono_dichiarati(self, db, utente):
+        periodi = [{"da": "2026-09-01", "a": "2026-09-01"}] * (conti_spese.MAX_PERIODI + 2)
+        r = conti_spese.esegui_strumento("totali_per_periodi", json.dumps({"periodi": periodi}), db, utente, OGGI)
+        assert len(r["periodi"]) == conti_spese.MAX_PERIODI
+        assert r["periodi_chiesti_ma_esclusi"] == 2
+
+    def test_le_sottocategorie_oltre_le_cinque_tornano_nel_totale(self, db, utente):
+        gruppo = models.Category(name="Svago")
+        db.add(gruppo)
+        db.flush()
+        for i in range(7):
+            figlia = models.Category(name=f"Svago {i}", parent_id=gruppo.id)
+            db.add(figlia)
+            db.flush()
+            spesa(db, utente.id, date(2026, 9, 3), 10.0 + i, figlia.id)
+        g = conti_spese.spese_per_categoria(db, utente, OGGI, "2026-09-01", "2026-09-30")["gruppi"][0]
+        assert len(g["categorie"]) == 5
+        assert g["altre_sottocategorie"] == {"numero": 2, "totale": 21.0}
+        assert sum(c["totale"] for c in g["categorie"]) + g["altre_sottocategorie"]["totale"] == g["totale"]
+
     def test_stato_budget(self, db, utente):
         spesa(db, utente.id, date(2026, 10, 2), 120.0)
         spesa(db, utente.id, date(2026, 9, 30), 999.0)

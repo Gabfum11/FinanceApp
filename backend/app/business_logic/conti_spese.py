@@ -105,8 +105,8 @@ def totale_spese(db, utente, giorno, da, a, categoria=None, testo=None):
     }
 
 
-#oltre, un confronto non si legge piu' in quattro frasi
-MAX_PERIODI = 6
+#un anno di mesi o di settimane; i confronti fra mesi vanno a totali_mensili, senza tetto
+MAX_PERIODI = 12
 
 
 def totali_per_periodi(db, utente, giorno, periodi, categoria=None, testo=None):
@@ -118,7 +118,9 @@ def totali_per_periodi(db, utente, giorno, periodi, categoria=None, testo=None):
         if not isinstance(p, dict):
             raise ParametroNonValido("ogni periodo e' {\"da\": ..., \"a\": ...}")
         risultati.append(totale_spese(db, utente, giorno, p.get("da"), p.get("a"), categoria, testo))
-    return {"periodi": risultati}
+    #detto nel risultato: senza, il modello rispondeva come se li avesse tutti
+    esclusi = len(periodi) - len(risultati)
+    return {"periodi": risultati, **({"periodi_chiesti_ma_esclusi": esclusi} if esclusi else {})}
 
 
 def spese_per_categoria(db, utente, giorno, da, a):
@@ -127,14 +129,18 @@ def spese_per_categoria(db, utente, giorno, da, a):
     for r in _righe(db, utente, inizio, fine):
         sotto = r[3] or "Senza categoria"
         gruppi[r[4] or sotto][sotto] += r.amount
-    elenco = sorted(
-        ({"gruppo": g, "totale": round(sum(s.values()), 2),
-          #le prime cinque bastano a spiegare un gruppo e tengono corta la risposta
-          "categorie": [{"categoria": n, "totale": round(t, 2)}
-                        for n, t in sorted(s.items(), key=lambda x: -x[1])[:5]]}
-         for g, s in gruppi.items()),
-        key=lambda x: -x["totale"],
-    )
+    elenco = []
+    for g, s in gruppi.items():
+        ordinate = sorted(s.items(), key=lambda x: -x[1])
+        gruppo = {"gruppo": g, "totale": round(sum(s.values()), 2),
+                  #le prime cinque bastano a spiegare un gruppo e tengono corta la risposta
+                  "categorie": [{"categoria": n, "totale": round(t, 2)} for n, t in ordinate[:5]]}
+        #il resto a parte: sommando solo le cinque, il modello non ritroverebbe il totale
+        if len(ordinate) > 5:
+            gruppo["altre_sottocategorie"] = {"numero": len(ordinate) - 5,
+                                              "totale": round(sum(t for _, t in ordinate[5:]), 2)}
+        elenco.append(gruppo)
+    elenco.sort(key=lambda x: -x["totale"])
     #detta esplicitamente: confrontando da solo le cifre, il modello indicava a
     #volte come piu' alta una categoria piu' piccola (77,50 contro 80,00)
     tutte = [(c["categoria"], c["totale"]) for g in elenco for c in g["categorie"]]
@@ -168,18 +174,27 @@ def elenco_spese(db, utente, giorno, da, a, categoria=None, testo=None, ordine="
     }
 
 
-def totali_mensili(db, utente, giorno, da, a, categoria=None):
+def totali_mensili(db, utente, giorno, da, a, categoria=None, testo=None):
     inizio, fine = _periodo(da, a)
-    mesi: dict[str, float] = defaultdict(float)
+    totali: dict[str, float] = defaultdict(float)
+    for r in _righe(db, utente, inizio, fine, categoria, testo):
+        totali[r.date.strftime("%Y-%m")] += r.amount
     #anche i mesi senza spese: "a luglio zero" e' un'informazione, non un buco
+    mesi = []
     cursore = inizio.replace(day=1)
     while cursore <= fine:
-        mesi[cursore.strftime("%Y-%m")] = 0.0
-        cursore = (cursore + timedelta(days=32)).replace(day=1)
-    for r in _righe(db, utente, inizio, fine, categoria):
-        mesi[r.date.strftime("%Y-%m")] += r.amount
-    return {**_filtri(categoria, None),
-            "mesi": [{"mese": m, "totale": round(t, 2)} for m, t in sorted(mesi.items())]}
+        prossimo = (cursore + timedelta(days=32)).replace(day=1)
+        mese = {"mese": cursore.strftime("%Y-%m")}
+        #un mese tagliato dal periodo lo dice: senza, "2026-09" con quattro
+        #giorni diventava "a settembre hai speso solo 48 euro"
+        if cursore < inizio:
+            mese["dal"] = inizio.isoformat()
+        if prossimo - timedelta(days=1) > fine:
+            mese["al"] = fine.isoformat()
+        mese["totale"] = round(totali[mese["mese"]], 2)
+        mesi.append(mese)
+        cursore = prossimo
+    return {"da": inizio.isoformat(), "a": fine.isoformat(), **_filtri(categoria, testo), "mesi": mesi}
 
 
 def stato_budget(db, utente, giorno):
@@ -258,7 +273,7 @@ STRUMENTI = [
                 "limite": {"type": ["integer", "null"], "description": f"massimo {MAX_ELENCO}"}},
                ("da", "a")),
     _strumento("totali_mensili", "Totale di ogni mese del periodo, per andamenti e confronti.",
-               {**_PERIODO, "categoria": _CATEGORIA}, ("da", "a")),
+               {**_PERIODO, "categoria": _CATEGORIA, "testo": _TESTO}, ("da", "a")),
     _strumento("stato_budget", "Budget del ciclo in corso: speso, rimanente, giorni alla fine."),
     _strumento("abbonamenti_attivi", "Abbonamenti attivi con costo e prossimo addebito."),
 ]
