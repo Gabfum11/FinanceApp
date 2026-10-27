@@ -150,13 +150,16 @@
       "testo": "Your monthly spending split by category. Go back to past months to compare."
     },
     "assistente": {
-      "domanda": "How much did I spend at bars last month?",
-      "risposta": "Last month you spent {{importo}} on {{categoria}} across 18 expenses.",
+      "domanda": "How much did I spend on fuel last month?",
+      "risposta": "Last month you spent {{importo}} on fuel across {{count}} expenses.",
       "seguito": "And the month before?",
-      "risposta2": "The month before, {{importo}} across 12 expenses: last month you spent {{differenza}} more."
+      "risposta2": "The month before, {{importo}} across {{count}} expenses: last month you spent {{differenza}} more.",
+      "pieno": "Full tank",
+      "autostrada": "Motorway fuel",
+      "benzina": "Fuel"
     },
     "descrizioni": {
-      "assistente": "Example: ask the assistant how much you spent at bars last month and it answers with the total and a comparison with the month before",
+      "assistente": "Example: ask the assistant how much you spent on fuel last month and it answers with the total, a comparison with the month before and the expenses it used to answer",
       "spese": "Example: type an expense in your own words and it's saved with amount, date and category",
       "budget": "Example: this month's budget with what you spent and what's left, and your spending day by day this week",
       "statistiche": "Example: this month's spending split by category in a donut chart, with the part of the budget still available",

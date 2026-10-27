@@ -150,13 +150,16 @@
       "testo": "Le spese del mese divise per categoria. Torna ai mesi passati per confrontarli."
     },
     "assistente": {
-      "domanda": "Quanto ho speso al bar il mese scorso?",
-      "risposta": "Il mese scorso in {{categoria}} hai speso {{importo}} in 18 spese.",
+      "domanda": "Quanto ho speso di benzina il mese scorso?",
+      "risposta": "Il mese scorso hai speso {{importo}} di benzina in {{count}} spese.",
       "seguito": "E il mese prima?",
-      "risposta2": "Il mese prima {{importo}} in 12 spese: il mese scorso hai speso {{differenza}} in più."
+      "risposta2": "Il mese prima {{importo}} in {{count}} spese: il mese scorso hai speso {{differenza}} in più.",
+      "pieno": "Pieno di benzina",
+      "autostrada": "Benzina autostrada",
+      "benzina": "Benzina"
     },
     "descrizioni": {
-      "assistente": "Esempio: chiedi all'assistente quanto hai speso al bar il mese scorso e ti risponde con il totale e il confronto con il mese prima",
+      "assistente": "Esempio: chiedi all'assistente quanto hai speso di benzina il mese scorso e ti risponde con il totale, il confronto con il mese prima e le spese usate per rispondere",
       "spese": "Esempio: scrivi una spesa a parole e viene registrata con importo, data e categoria",
       "budget": "Esempio: il budget del mese con quanto hai speso e quanto ti resta, e le spese giorno per giorno della settimana",
       "statistiche": "Esempio: le spese del mese divise per categoria in una ciambella, con la parte del budget ancora libera",

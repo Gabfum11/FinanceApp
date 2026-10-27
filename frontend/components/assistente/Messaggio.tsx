@@ -28,8 +28,6 @@ export type Fonte = {
   numero_spese: number;
   da: string;
   a: string;
-  categoria?: string;
-  testo_cercato?: string | string[];
   spese: { data: string; descrizione: string; importo: number }[]; //dalla piu' alta, al massimo 500
 };
 
@@ -44,7 +42,7 @@ export type ChatMessage = {
   fonte?: Fonte | null; //solo nelle risposte che hanno letto delle spese
 };
 
-//"Da 4 spese · 1–30 set · "benzina"": chiusa una riga, toccata l'elenco delle spese
+//"Da 4 spese · 1–30 set": chiusa una riga, toccata l'elenco delle spese
 function RigaFonte({ fonte }: { fonte: Fonte }) {
   const styles = useStili(creaStili);
   const { colors } = useTema();
@@ -61,16 +59,10 @@ function RigaFonte({ fonte }: { fonte: Fonte }) {
       day: "numeric", month: "short", ...(conAnno && { year: "numeric" }),
     });
   const periodo = fonte.da === fonte.a ? giorno(fonte.da) : `${giorno(fonte.da)} – ${giorno(fonte.a)}`;
-  const parole = fonte.testo_cercato ? [fonte.testo_cercato].flat().map((p) => `“${p}”`).join(", ") : null;
-  //il modello a volte scrive "Cibo: Pranzi e cene": conta il nome dopo i due punti
-  const categoria = fonte.categoria && fonte.categoria !== "tutte"
-    ? nomeCategoria(fonte.categoria.split(":").pop()!.trim())
-    : null;
   const riassunto = [
     fonte.numero_spese ? t("assistente.daSpese", { count: fonte.numero_spese }) : t("assistente.nessunaSpesa"),
     periodo,
-    parole ?? categoria,
-  ].filter(Boolean).join(" · ");
+  ].join(" · ");
   const prossime = Math.min(BLOCCO, fonte.spese.length - mostrate);
   const apribile = fonte.spese.length > 0;
 

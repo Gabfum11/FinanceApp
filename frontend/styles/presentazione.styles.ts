@@ -652,6 +652,57 @@ export const creaStili = (colors: Colori) =>
     lineHeight: 20,
     color: colors.text,
   },
+  //la riga della fonte e l'elenco hanno le misure di assistant.styles.ts
+  rispostaConFonte: {
+    width: "85%",
+  },
+  fonte: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minHeight: 44,
+    marginTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  fonteTesto: {
+    flex: 1,
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+  },
+  //bianco e non grigio come nell'app: qui la bolla della risposta e' gia' grigia
+  fonteElenco: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 2,
+  },
+  fonteRiga: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 8,
+  },
+  fonteRigaBordo: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  fonteData: {
+    width: 52,
+    fontSize: fontSize.xs,
+    color: colors.textMuted,
+  },
+  fonteDescrizione: {
+    flex: 1,
+    fontSize: fontSize.sm,
+    color: colors.text,
+  },
+  fonteImporto: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    fontVariant: ["tabular-nums"],
+  },
   pcCorpo: {
     paddingTop: 64,
     paddingBottom: 72,

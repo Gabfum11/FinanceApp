@@ -315,13 +315,62 @@ export function IllustrazioneStatistiche() {
   );
 }
 
+//benzina del mese scorso e di quello prima: poche spese, cosi' l'elenco
+//aperto e' completo e la somma torna con il totale della risposta
+const BENZINA = [
+  [{ giorno: 3, voce: "pieno", importo: 60 }, { giorno: 17, voce: "autostrada", importo: 52 }, { giorno: 28, voce: "benzina", importo: 30 }],
+  [{ giorno: 8, voce: "pieno", importo: 58 }, { giorno: 24, voce: "benzina", importo: 38.5 }],
+];
+const totale = (spese: (typeof BENZINA)[number]) => spese.reduce((s, x) => s + x.importo, 0);
+
+//la riga della fonte sotto la risposta, come in components/assistente/Messaggio.tsx,
+//ferma perche' e' un'immagine: la prima chiusa, la seconda aperta
+function FonteEsempio({ mesiFa, aperta }: { mesiFa: number; aperta: boolean }) {
+  const styles = useStili(creaStili);
+  const { colors } = useTema();
+  const { importo, lingua } = usePreferenze();
+  const { t } = useTranslation();
+  const oggi = new Date();
+  const primo = new Date(oggi.getFullYear(), oggi.getMonth() - mesiFa, 1);
+  const ultimo = new Date(oggi.getFullYear(), oggi.getMonth() - mesiFa + 1, 0);
+  //l'anno solo se non e' quest'anno, come nell'app
+  const opzioni: Intl.DateTimeFormatOptions = {
+    day: "numeric", month: "short", ...(primo.getFullYear() !== oggi.getFullYear() && { year: "numeric" }),
+  };
+  const giorno = (d: Date) => d.toLocaleDateString(localeDi(lingua), opzioni);
+  const spese = BENZINA[mesiFa - 1];
+  return (
+    <View>
+      <View style={styles.fonte}>
+        <MaterialCommunityIcons name="database-outline" size={16} color={colors.primary} />
+        <Text style={styles.fonteTesto}>
+          {t("assistente.daSpese", { count: spese.length })} · {giorno(primo)} – {giorno(ultimo)}
+        </Text>
+        <MaterialCommunityIcons name={aperta ? "chevron-up" : "chevron-down"} size={18} color={colors.textMuted} />
+      </View>
+      {aperta && (
+        <View style={styles.fonteElenco}>
+          {spese.map((s, i) => (
+            <View key={i} style={[styles.fonteRiga, i > 0 && styles.fonteRigaBordo]}>
+              <Text style={styles.fonteData}>{giorno(new Date(primo.getFullYear(), primo.getMonth(), s.giorno))}</Text>
+              <Text style={styles.fonteDescrizione} numberOfLines={1}>{t(`presentazione.assistente.${s.voce}`)}</Text>
+              <Text style={styles.fonteImporto}>{importo(s.importo)}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 // Accanto al titolo: una domanda all'assistente e il seguito, che fa capire
-// che ricorda lo scambio precedente. Niente nomi di mesi, che dovrebbero
-// cambiare con la data ("a settembre" letto a dicembre)
+// che ricorda lo scambio precedente. Niente nomi di mesi nel testo, che
+// dovrebbero cambiare con la data ("a settembre" letto a dicembre)
 export function IllustrazioneAssistente() {
   const styles = useStili(creaStili);
   const { importo } = usePreferenze();
   const { t } = useTranslation();
+  const [scorso, prima] = BENZINA.map(totale);
   return (
     <View style={styles.pcChat} role="img" aria-label={t("presentazione.descrizioni.assistente")}>
       <View style={styles.pcChatTesta}>
@@ -331,18 +380,22 @@ export function IllustrazioneAssistente() {
       <View style={styles.fumetto}>
         <Text style={styles.fumettoTesto}>{t("presentazione.assistente.domanda")}</Text>
       </View>
-      <View style={styles.risposta}>
+      <View style={[styles.risposta, styles.rispostaConFonte]}>
         <Text style={styles.rispostaTesto}>
-          {t("presentazione.assistente.risposta", { categoria: nomeCategoria("Bar e caffè"), importo: importo(46.8) })}
+          {t("presentazione.assistente.risposta", { importo: importo(scorso), count: BENZINA[0].length })}
         </Text>
+        <FonteEsempio mesiFa={1} aperta={false} />
       </View>
       <View style={styles.fumetto}>
         <Text style={styles.fumettoTesto}>{t("presentazione.assistente.seguito")}</Text>
       </View>
-      <View style={styles.risposta}>
+      <View style={[styles.risposta, styles.rispostaConFonte]}>
         <Text style={styles.rispostaTesto}>
-          {t("presentazione.assistente.risposta2", { importo: importo(31.2), differenza: importo(15.6) })}
+          {t("presentazione.assistente.risposta2", {
+            importo: importo(prima), differenza: importo(scorso - prima), count: BENZINA[1].length,
+          })}
         </Text>
+        <FonteEsempio mesiFa={2} aperta />
       </View>
     </View>
   );
