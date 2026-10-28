@@ -6,6 +6,7 @@ STRUMENTI descrive le funzioni al modello, esegui_strumento esegue la sua scelta
 """
 import inspect
 import json
+import re
 from collections import defaultdict
 from datetime import date, timedelta
 
@@ -83,8 +84,11 @@ def _righe(db: Session, utente: models.User, inizio: date, fine: date, categoria
     if testo:
         #la descrizione e' cifrata nel database: si cerca dopo averla letta
         #piu' parole: "calcio" da sola non trova "calcetto", i sinonimi li sceglie il modello
-        parole = [str(p).casefold() for p in (testo if isinstance(testo, list) else [testo]) if p]
-        righe = [r for r in righe if any(p in r.description.casefold() for p in parole)]
+        #a inizio parola: "eni" dentro "Freni" o "Trenitalia" gonfiava il totale.
+        #Prima puo' esserci una cifra, cosi' "%" trova ancora "50%"
+        cerca = [re.compile(r"(?<![^\W\d_])" + re.escape(str(p).casefold()))
+                 for p in (testo if isinstance(testo, list) else [testo]) if p]
+        righe = [r for r in righe if any(c.search(r.description.casefold()) for c in cerca)]
     return righe
 
 

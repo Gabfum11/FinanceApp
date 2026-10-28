@@ -126,6 +126,12 @@ class TestFunzioni:
         assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", testo="conad")["totale"] == 10.0
         assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", testo="%")["totale"] == 20.0
 
+    def test_il_testo_si_cerca_a_inizio_parola(self, db, utente):
+        spesa(db, utente.id, date(2026, 9, 3), 30.0, descrizione="ENI Roma")
+        spesa(db, utente.id, date(2026, 9, 4), 16.0, descrizione="Freni E Frizioni")
+        spesa(db, utente.id, date(2026, 9, 5), 6.0, descrizione="biglietto Trenitalia")
+        assert conti_spese.totale_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", testo="eni")["totale"] == 30.0
+
     def test_il_testo_accetta_sinonimi(self, db, utente):
         spesa(db, utente.id, date(2026, 9, 3), 8.0, descrizione="Calcetto giovedi'")
         spesa(db, utente.id, date(2026, 9, 5), 10.0, descrizione="partita di calcio")
