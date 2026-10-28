@@ -68,6 +68,8 @@ def spesa(db, utente_id, giorno, importo, categoria=None, descrizione="spesa"):
     "ciao",
     "Quanto ho speso nel 2025",
     "Qual'è il totale di marzo 2026",
+    "Quant'è il totale di marzo 2026",
+    "Dammi le spese del 2025",
 ])
 def test_riconosce_le_domande(testo):
     assert domande.sembra_una_domanda(testo)
