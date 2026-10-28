@@ -39,6 +39,8 @@ _PAROLE_DOMANDA = {
     "quanto", "quanta", "quanti", "quante", "qual", "quale", "quali", "quando",
     "dove", "come", "perche", "perché", "perchè", "cosa", "che", "chi",
     "mostrami", "dimmi", "elenca", "confronta", "riassumi", "riepilogo",
+    #"quant'è" arriva qui come "quant", tagliato all'apostrofo
+    "quant", "dammi", "fammi", "elencami", "vorrei",
     "how", "what", "which", "when", "where", "why", "who", "show", "list",
     "tell", "compare", "summarize", "summary", "did", "do", "does", "am",
     "is", "are", "can", "could",
@@ -127,6 +129,9 @@ def _istruzioni_scelta(db: Session, utente: models.User, giorno: date) -> str:
         "per le singole spese. Se la domanda riguarda una cosa precisa (un'attivita', "
         "un prodotto, un negozio) e non una categoria intera, filtra con testo e "
         "passa tutte le parole con cui l'utente potrebbe averla scritta. "
+        "Per i periodi non calcolare mai date: descrivili con mese, anno, unita con "
+        "indietro o unita con ultimi, e le date le ricava il server. Usa da e a solo "
+        "per giorni precisi detti dall'utente. "
         + _contesto(utente, giorno)
         + f"Categorie, per gruppo: {categorie}. Come categoria passa solo il nome, "
         "senza il gruppo davanti, oppure il nome di un gruppo. "
@@ -276,7 +281,7 @@ def rispondi_a_domanda(
             [{"role": "system", "content": _istruzioni_risposta(utente, giorno, risultati)}, *domanda],
             con_strumenti=False,
         ))
-        return _con_fonte(risposta, fonte([(c.function.name, c.function.arguments) for c in chiamate], db, utente))
+        return _con_fonte(risposta, fonte([(c.function.name, c.function.arguments) for c in chiamate], db, utente, giorno))
     except RateLimitError:
         logger.warning("limite di frequenza di Groq raggiunto")
         raise categorization.ServizioOccupato()
