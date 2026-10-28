@@ -352,6 +352,8 @@
     "yearly": "Annuale"
   },
   "spesa": {
+    "importo": "Importo",
+    "descrizione": "Descrizione",
     "titoloNuova": "Nuova spesa",
     "titoloNuovo": "Nuovo abbonamento",
     "titoloModificaSpesa": "Modifica spesa",

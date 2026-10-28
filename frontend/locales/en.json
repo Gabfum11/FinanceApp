@@ -352,6 +352,8 @@
     "yearly": "Yearly"
   },
   "spesa": {
+    "importo": "Amount",
+    "descrizione": "Description",
     "titoloNuova": "New expense",
     "titoloNuovo": "New subscription",
     "titoloModificaSpesa": "Edit expense",
