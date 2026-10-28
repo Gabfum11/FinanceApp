@@ -182,6 +182,9 @@ def _istruzioni_risposta(utente: models.User, giorno: date, risultati: list) -> 
         "server sulle sue spese. Non inventare mai cifre e non rifare somme che "
         "trovi gia' fatte. Non nominare spese, negozi, date o categorie che non compaiono "
         "nei dati: se non bastano a rispondere, dillo. "
+        #ricalcolandole, chiamava "24-25 ottobre" un ripiego per il "weekend del 26-27"
+        "Le date dei periodi nei dati le ha calcolate il server per questa domanda e sono "
+        "quelle giuste: usale cosi' come sono, senza ricalcolarle. "
         + _contesto(utente, giorno)
         + _regole_risposta(utente)
         + "\n\n" + INIZIO_DATI + _in_righe(risultati)
