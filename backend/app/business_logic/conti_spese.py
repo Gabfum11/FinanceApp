@@ -10,10 +10,11 @@ import re
 from collections import defaultdict
 from datetime import date, timedelta
 
+from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session, aliased
 
 from app import models
-from app.business_logic.budget import get_budget_cycle
+from app.business_logic.budget import get_budget_cycle, safe_day
 
 #un periodo piu' lungo non serve a nessuna domanda sensata e allungherebbe le query
 MAX_GIORNI_PERIODO = 3660
@@ -29,16 +30,79 @@ class ParametroNonValido(Exception):
     """Torna al modello come {"errore": ...}: nella risposta dice cosa non ha trovato."""
 
 
-def _periodo(da, a) -> tuple[date, date]:
+def _data(valore) -> date:
+    """AAAA-MM-GG. Un giorno oltre la fine del mese ("2026-09-31") vale l'ultimo:
+    rifiutandolo, il mese spariva dalla risposta ("non ho il totale di settembre")."""
+    trovata = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", str(valore))
     try:
-        inizio, fine = date.fromisoformat(str(da)), date.fromisoformat(str(a))
-    except ValueError:
+        anno, mese, giorno = map(int, trovata.groups())
+        return date(anno, mese, safe_day(anno, mese, giorno))
+    except (AttributeError, ValueError):
         raise ParametroNonValido("date nel formato AAAA-MM-GG, per esempio 2026-09-01")
+
+
+def _intero(valore, nome) -> int:
+    try:
+        return int(valore)
+    except (TypeError, ValueError):
+        raise ParametroNonValido(f"'{nome}' e' un numero intero")
+
+
+_UNITA = ("giorno", "settimana", "weekend", "mese", "trimestre", "anno")
+
+
+def _intervallo(p, giorno: date) -> tuple[date, date]:
+    """Primo e ultimo giorno di un periodo descritto dal modello.
+
+    Le date le calcola il server: da solo il modello sbagliava i conti
+    ("il weekend scorso" di mercoledi' 28 diventava 21-22, cioe' mer-gio).
+    """
+    if not isinstance(p, dict):
+        raise ParametroNonValido("il periodo e' un oggetto, per esempio {\"mese\": \"2026-09\"}")
+    unita = p.get("unita")
+    if p.get("mese"):
+        inizio = _data(f"{p['mese']}-01")
+        fine = inizio + relativedelta(months=1, days=-1)
+    elif p.get("anno"):
+        anno = _intero(p["anno"], "anno")
+        inizio, fine = _data(f"{anno:04d}-01-01"), date(anno, 12, 31)
+    elif p.get("ultimi") is not None:
+        n = _intero(p["ultimi"], "ultimi")
+        indietro = {"giorno": relativedelta(days=n), "settimana": relativedelta(weeks=n),
+                    "mese": relativedelta(months=n), "trimestre": relativedelta(months=3 * n),
+                    "anno": relativedelta(years=n)}.get(unita)
+        if n < 1 or indietro is None:
+            raise ParametroNonValido("'ultimi' vuole un numero da 1 in su e unita giorno, settimana, mese, trimestre o anno")
+        inizio, fine = giorno - indietro + timedelta(days=1), giorno
+    elif unita is not None:
+        n = _intero(p.get("indietro") or 0, "indietro")
+        lunedi = giorno - timedelta(days=giorno.weekday(), weeks=n)
+        primo_trimestre = date(giorno.year, 3 * ((giorno.month - 1) // 3) + 1, 1) - relativedelta(months=3 * n)
+        primo_mese = giorno.replace(day=1) - relativedelta(months=n)
+        intervalli = {
+            "giorno": (giorno - timedelta(days=n),) * 2,
+            "settimana": (lunedi, lunedi + timedelta(days=6)),
+            #il weekend della settimana: di mercoledi', 0 e' quello che arriva, 1 lo scorso
+            "weekend": (lunedi + timedelta(days=5), lunedi + timedelta(days=6)),
+            "mese": (primo_mese, primo_mese + relativedelta(months=1, days=-1)),
+            "trimestre": (primo_trimestre, primo_trimestre + relativedelta(months=3, days=-1)),
+            "anno": (date(giorno.year - n, 1, 1), date(giorno.year - n, 12, 31)),
+        }
+        if unita not in intervalli:
+            raise ParametroNonValido("unita sconosciuta, usa una di queste: " + ", ".join(_UNITA))
+        inizio, fine = intervalli[unita]
+    else:
+        inizio, fine = _data(p.get("da")), _data(p.get("a"))
     if fine < inizio:
         raise ParametroNonValido("'a' viene prima di 'da'")
     if (fine - inizio).days > MAX_GIORNI_PERIODO:
         raise ParametroNonValido("periodo troppo lungo: al massimo 10 anni")
     return inizio, fine
+
+
+def _periodo(da, a, giorno: date, periodo=None) -> tuple[date, date]:
+    #il modello manda "periodo"; da e a restano per chi chiama le funzioni direttamente
+    return _intervallo({"da": da, "a": a} if periodo is None else periodo, giorno)
 
 
 def _categorie_cercate(db: Session, nome) -> set[int] | None:
@@ -101,8 +165,8 @@ def _filtri(categoria, testo) -> dict:
     return {"categoria": categoria or "tutte", **({"testo_cercato": testo} if testo else {})}
 
 
-def totale_spese(db, utente, giorno, da, a, categoria=None, testo=None):
-    inizio, fine = _periodo(da, a)
+def totale_spese(db, utente, giorno, da=None, a=None, categoria=None, testo=None, periodo=None):
+    inizio, fine = _periodo(da, a, giorno, periodo)
     righe = _righe(db, utente, inizio, fine, categoria, testo)
     return {
         "da": inizio.isoformat(), "a": fine.isoformat(), **_filtri(categoria, testo),
@@ -118,19 +182,18 @@ MAX_PERIODI = 12
 def totali_per_periodi(db, utente, giorno, periodi, categoria=None, testo=None):
     """Piu' periodi in una sola funzione: il modello chiede raramente due funzioni insieme."""
     if not isinstance(periodi, list) or not periodi:
-        raise ParametroNonValido("'periodi' e' un elenco di {\"da\": ..., \"a\": ...}")
+        raise ParametroNonValido("'periodi' e' un elenco di periodi, per esempio [{\"mese\": \"2026-08\"}, {\"mese\": \"2026-09\"}]")
     risultati = []
     for p in periodi[:MAX_PERIODI]:
-        if not isinstance(p, dict):
-            raise ParametroNonValido("ogni periodo e' {\"da\": ..., \"a\": ...}")
-        risultati.append(totale_spese(db, utente, giorno, p.get("da"), p.get("a"), categoria, testo))
+        #_intervallo rifiuta da solo un periodo che non e' un oggetto
+        risultati.append(totale_spese(db, utente, giorno, categoria=categoria, testo=testo, periodo=p))
     #detto nel risultato: senza, il modello rispondeva come se li avesse tutti
     esclusi = len(periodi) - len(risultati)
     return {"periodi": risultati, **({"periodi_chiesti_ma_esclusi": esclusi} if esclusi else {})}
 
 
-def spese_per_categoria(db, utente, giorno, da, a):
-    inizio, fine = _periodo(da, a)
+def spese_per_categoria(db, utente, giorno, da=None, a=None, periodo=None):
+    inizio, fine = _periodo(da, a, giorno, periodo)
     gruppi: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
     for r in _righe(db, utente, inizio, fine):
         sotto = r[3] or "Senza categoria"
@@ -158,13 +221,15 @@ def spese_per_categoria(db, utente, giorno, da, a):
             "gruppi": elenco}
 
 
-def elenco_spese(db, utente, giorno, da, a, categoria=None, testo=None, ordine="importo", limite=10):
-    inizio, fine = _periodo(da, a)
+def elenco_spese(db, utente, giorno, da=None, a=None, categoria=None, testo=None, ordine="importo", limite=10,
+                 periodo=None):
+    inizio, fine = _periodo(da, a, giorno, periodo)
     righe = _righe(db, utente, inizio, fine, categoria, testo)
     if ordine == "data":
         righe.sort(key=lambda r: r.date, reverse=True)
     else:
-        righe.sort(key=lambda r: r.amount, reverse=True)
+        #senza il crescente, "la spesa piu' piccola" riceveva la piu' alta
+        righe.sort(key=lambda r: r.amount, reverse=ordine != "importo_crescente")
     try:
         limite = max(1, min(int(limite), MAX_ELENCO))
     except (TypeError, ValueError):
@@ -180,8 +245,8 @@ def elenco_spese(db, utente, giorno, da, a, categoria=None, testo=None, ordine="
     }
 
 
-def totali_mensili(db, utente, giorno, da, a, categoria=None, testo=None):
-    inizio, fine = _periodo(da, a)
+def totali_mensili(db, utente, giorno, da=None, a=None, categoria=None, testo=None, periodo=None):
+    inizio, fine = _periodo(da, a, giorno, periodo)
     totali: dict[str, float] = defaultdict(float)
     for r in _righe(db, utente, inizio, fine, categoria, testo):
         totali[r.date.strftime("%Y-%m")] += r.amount
@@ -245,7 +310,7 @@ def abbonamenti_attivi(db, utente, giorno):
 _LEGGONO_SPESE = {"totale_spese", "totali_per_periodi", "spese_per_categoria", "elenco_spese", "totali_mensili"}
 
 
-def fonte(chiamate: list[tuple[str, str]], db: Session, utente: models.User) -> dict | None:
+def fonte(chiamate: list[tuple[str, str]], db: Session, utente: models.User, giorno: date) -> dict | None:
     """Le spese da cui vengono i numeri della risposta, per la riga sotto il messaggio.
 
     Si rileggono con gli stessi parametri delle funzioni scelte, senza passare
@@ -263,12 +328,12 @@ def fonte(chiamate: list[tuple[str, str]], db: Session, utente: models.User) -> 
             continue
         #spese_per_categoria non filtra: con un filtro inventato l'elenco direbbe il falso
         categoria, testo = (None, None) if nome == "spese_per_categoria" else (p.get("categoria"), p.get("testo"))
-        intervalli = p.get("periodi") if nome == "totali_per_periodi" else [p]
+        intervalli = p.get("periodi") if nome == "totali_per_periodi" else [p.get("periodo") or p]
         for i in (intervalli[:MAX_PERIODI] if isinstance(intervalli, list) else []):
             try:
-                inizio, fine = _periodo(i.get("da"), i.get("a"))
+                inizio, fine = _intervallo(i, giorno)
                 trovate = _righe(db, utente, inizio, fine, categoria, testo)
-            except (ParametroNonValido, AttributeError):
+            except ParametroNonValido:
                 continue #la funzione ha gia' risposto con un errore: niente da mostrare
             periodi.append((inizio, fine))
             filtri.append(_filtri(categoria, testo))
@@ -287,10 +352,24 @@ def fonte(chiamate: list[tuple[str, str]], db: Session, utente: models.User) -> 
     }
 
 
-_PERIODO = {
-    "da": {"type": "string", "description": "primo giorno incluso, AAAA-MM-GG"},
-    "a": {"type": "string", "description": "ultimo giorno incluso, AAAA-MM-GG"},
+#un periodo si descrive, non si calcola: le date le ricava _intervallo
+_CAMPI_PERIODO = {
+    "mese": {"type": ["string", "null"], "description": "un mese intero, AAAA-MM (\"settembre\" -> \"2026-09\")"},
+    "anno": {"type": ["integer", "null"], "description": "un anno intero"},
+    "unita": {"type": ["string", "null"], "enum": [*_UNITA, None],
+              "description": "con indietro o con ultimi; settimana e weekend partono dal lunedi'"},
+    "indietro": {"type": ["integer", "null"],
+                 "description": "con unita: 0 quello in corso, 1 il precedente (\"il weekend scorso\", "
+                                "\"il mese scorso\"), 3 per \"tre settimane fa\""},
+    "ultimi": {"type": ["integer", "null"],
+               "description": "con unita: gli ultimi N fino a oggi compreso (\"ultimi 3 mesi\", \"ultimi 10 giorni\")"},
+    "da": {"type": ["string", "null"], "description": "AAAA-MM-GG, solo con a e solo per giorni precisi detti "
+                                                       "dall'utente (\"dal 3 al 10 settembre\")"},
+    "a": {"type": ["string", "null"], "description": "AAAA-MM-GG, ultimo giorno incluso"},
 }
+_PERIODO = {"periodo": {"type": "object", "properties": _CAMPI_PERIODO,
+                        "description": "uno solo fra: mese, anno, unita con indietro, unita con ultimi, da con a. "
+                                       "Non calcolare date"}}
 #i parametri facoltativi ammettono null: il modello a volte lo scrive invece di
 #ometterli, e Groq rifiuterebbe la richiesta intera per un parametro fuori schema
 _CATEGORIA = {"type": ["string", "null"], "description": "nome di un gruppo o di una sottocategoria, in italiano"}
@@ -311,21 +390,22 @@ def _strumento(nome, descrizione, proprieta=None, obbligatori=()):
 
 STRUMENTI = [
     _strumento("totale_spese", "Totale speso e numero di spese in un periodo, filtrabile.",
-               {**_PERIODO, "categoria": _CATEGORIA, "testo": _TESTO}, ("da", "a")),
+               {**_PERIODO, "categoria": _CATEGORIA, "testo": _TESTO}, ("periodo",)),
     _strumento("totali_per_periodi", "Totale di ciascun periodo, per confrontare periodi qualsiasi in una chiamata.",
-               {"periodi": {"type": "array", "items": {"type": "object", "properties": _PERIODO,
-                                                        "required": ["da", "a"]},
+               {"periodi": {"type": "array", "items": {"type": "object", "properties": _CAMPI_PERIODO},
                             "description": f"da 2 a {MAX_PERIODI} periodi"},
                 "categoria": _CATEGORIA, "testo": _TESTO}, ("periodi",)),
     _strumento("spese_per_categoria", "Totali del periodo divisi per gruppo e sottocategoria.",
-               _PERIODO, ("da", "a")),
+               _PERIODO, ("periodo",)),
     _strumento("elenco_spese", "Le singole spese del periodo, le piu' alte o le piu' recenti.",
                {**_PERIODO, "categoria": _CATEGORIA, "testo": _TESTO,
-                "ordine": {"type": ["string", "null"], "enum": ["importo", "data", None]},
+                "ordine": {"type": ["string", "null"], "enum": ["importo", "importo_crescente", "data", None],
+                           "description": "importo: dalla piu' alta; importo_crescente: dalla piu' piccola; "
+                                          "data: dalla piu' recente"},
                 "limite": {"type": ["integer", "null"], "description": f"massimo {MAX_ELENCO}"}},
-               ("da", "a")),
+               ("periodo",)),
     _strumento("totali_mensili", "Totale di ogni mese del periodo, per andamenti e confronti.",
-               {**_PERIODO, "categoria": _CATEGORIA, "testo": _TESTO}, ("da", "a")),
+               {**_PERIODO, "categoria": _CATEGORIA, "testo": _TESTO}, ("periodo",)),
     _strumento("stato_budget", "Budget del ciclo in corso: speso, rimanente, giorni alla fine."),
     _strumento("abbonamenti_attivi", "Abbonamenti attivi con costo e prossimo addebito."),
 ]

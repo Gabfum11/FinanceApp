@@ -182,6 +182,45 @@ class TestFunzioni:
         r = conti_spese.esegui_strumento("totali_per_periodi", json.dumps({"periodi": periodi}), db, utente, OGGI)
         assert "errore" in r
 
+    #OGGI e' mercoledi' 7 ottobre 2026
+    @pytest.mark.parametrize("periodo, atteso", [
+        ({"unita": "weekend", "indietro": 1}, ("2026-10-03", "2026-10-04")),
+        ({"unita": "weekend"}, ("2026-10-10", "2026-10-11")),
+        ({"unita": "settimana", "indietro": 1}, ("2026-09-28", "2026-10-04")),
+        ({"unita": "giorno", "indietro": 1}, ("2026-10-06", "2026-10-06")),
+        ({"unita": "mese", "indietro": 1}, ("2026-09-01", "2026-09-30")),
+        ({"unita": "mese", "indietro": 10}, ("2025-12-01", "2025-12-31")),
+        ({"unita": "trimestre", "indietro": 1}, ("2026-07-01", "2026-09-30")),
+        ({"unita": "anno", "indietro": 1}, ("2025-01-01", "2025-12-31")),
+        ({"ultimi": 3, "unita": "mese"}, ("2026-07-08", "2026-10-07")),
+        ({"ultimi": 10, "unita": "giorno"}, ("2026-09-28", "2026-10-07")),
+        ({"mese": "2026-02"}, ("2026-02-01", "2026-02-28")),
+        ({"anno": 2025}, ("2025-01-01", "2025-12-31")),
+        #settembre ha 30 giorni: il 31 vale l'ultimo, invece di far sparire il mese
+        ({"da": "2026-09-01", "a": "2026-09-31"}, ("2026-09-01", "2026-09-30")),
+    ])
+    def test_il_periodo_lo_calcola_il_server(self, db, utente, periodo, atteso):
+        r = conti_spese.esegui_strumento("totale_spese", json.dumps({"periodo": periodo}), db, utente, OGGI)
+        assert (r["da"], r["a"]) == atteso
+
+    @pytest.mark.parametrize("periodo", [
+        {"unita": "secolo"}, {"ultimi": 0, "unita": "mese"}, {"ultimi": 2, "unita": "weekend"},
+        {"mese": "settembre"}, {"unita": "mese", "indietro": "uno"}, {}, "settembre",
+    ])
+    def test_periodi_non_validi(self, db, utente, periodo):
+        r = conti_spese.esegui_strumento("totale_spese", json.dumps({"periodo": periodo}), db, utente, OGGI)
+        assert "errore" in r
+
+    def test_totali_per_periodi_descritti(self, db, utente):
+        spesa(db, utente.id, date(2026, 8, 3), 25.0)
+        spesa(db, utente.id, date(2026, 9, 3), 40.0)
+        r = conti_spese.esegui_strumento("totali_per_periodi", json.dumps(
+            {"periodi": [{"mese": "2026-08"}, {"unita": "mese", "indietro": 1}]}), db, utente, OGGI)
+        assert [p["totale"] for p in r["periodi"]] == [25.0, 40.0]
+        f = conti_spese.fonte([("totale_spese", json.dumps({"periodo": {"unita": "mese", "indietro": 1}}))],
+                              db, utente, OGGI)
+        assert (f["da"], f["a"], f["numero_spese"]) == ("2026-09-01", "2026-09-30", 1)
+
     def test_funzione_inesistente(self, db, utente):
         assert "errore" in conti_spese.esegui_strumento("cancella_tutto", "{}", db, utente, OGGI)
 
@@ -210,6 +249,12 @@ class TestFunzioni:
         assert len(r["spese"]) == conti_spese.MAX_ELENCO
         assert r["spese"][0]["importo"] == 29.0
         assert r["numero_spese"] == 30
+
+    def test_elenco_dalla_spesa_piu_piccola(self, db, utente):
+        for importo in (80.0, 2.5, 30.0):
+            spesa(db, utente.id, date(2026, 9, 1), importo)
+        r = conti_spese.elenco_spese(db, utente, OGGI, "2026-09-01", "2026-09-30", ordine="importo_crescente", limite=1)
+        assert [s["importo"] for s in r["spese"]] == [2.5]
 
     def test_i_mesi_senza_spese_valgono_zero(self, db, utente):
         spesa(db, utente.id, date(2026, 7, 10), 10.0)
@@ -272,7 +317,7 @@ class TestFunzioni:
             #stesso periodo in un'altra funzione: le spese contano una volta
             ("elenco_spese", json.dumps(settembre)),
             ("stato_budget", "{}"),
-        ], db, utente)
+        ], db, utente, OGGI)
         assert f["numero_spese"] == 2
         assert (f["da"], f["a"], f["testo_cercato"]) == ("2026-09-01", "2026-09-30", ["benzina"])
         assert [s["importo"] for s in f["spese"]] == [40.0, 30.0]
@@ -281,13 +326,13 @@ class TestFunzioni:
         spesa(db, utente.id, date(2026, 8, 3), 25.0)
         spesa(db, utente.id, date(2026, 9, 3), 40.0)
         f = conti_spese.fonte([("totali_per_periodi", json.dumps({"periodi": [
-            {"da": "2026-08-01", "a": "2026-08-31"}, {"da": "2026-09-01", "a": "2026-09-30"}]}))], db, utente)
+            {"da": "2026-08-01", "a": "2026-08-31"}, {"da": "2026-09-01", "a": "2026-09-30"}]}))], db, utente, OGGI)
         assert (f["da"], f["a"], f["numero_spese"]) == ("2026-08-01", "2026-09-30", 2)
 
     def test_la_fonte_manda_piu_spese_dell_elenco(self, db, utente):
         for i in range(conti_spese.MAX_ELENCO + 5):
             spesa(db, utente.id, date(2026, 9, 1), 10.0 + i)
-        f = conti_spese.fonte([("totale_spese", json.dumps({"da": "2026-09-01", "a": "2026-09-30"}))], db, utente)
+        f = conti_spese.fonte([("totale_spese", json.dumps({"da": "2026-09-01", "a": "2026-09-30"}))], db, utente, OGGI)
         assert len(f["spese"]) == f["numero_spese"] == conti_spese.MAX_ELENCO + 5
 
     @pytest.mark.parametrize("chiamate", [
@@ -296,7 +341,7 @@ class TestFunzioni:
         [("totale_spese", "non json")],
     ])
     def test_niente_fonte_senza_spese_lette(self, db, utente, chiamate):
-        assert conti_spese.fonte(chiamate, db, utente) is None
+        assert conti_spese.fonte(chiamate, db, utente, OGGI) is None
 
     def test_stato_budget(self, db, utente):
         spesa(db, utente.id, date(2026, 10, 2), 120.0)
