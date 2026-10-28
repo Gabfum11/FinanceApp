@@ -71,17 +71,20 @@ def messaggio(request: Request, dati: dict, db: Session = Depends(get_db), curre
 
     quota = QuotaGroq()
     try:
-        #la scelta tra spesa e domanda si fa una volta sola, senza il modello:
-        #una spesa non riconosciuta non riprova come domanda, che costerebbe
-        #una terza richiesta a Groq
+        #la scelta tra spesa e domanda si fa senza il modello. Una frase mandata
+        #all'estrazione passa alle domande solo se il modello la riconosce come
+        #domanda: due richieste in piu' a Groq, ma solo in quei casi
         if not domande.sembra_una_domanda(testo):
             quota()
-            proposta = proponi_spesa(testo, db, current_user, giorno)
-            if proposta is None:
-                #l'app risponde "non ho capito" e suggerisce il punto
-                #interrogativo, nel caso fosse una domanda
-                raise HTTPException(status_code=422, detail="Non sono riuscito a capire la spesa")
-            return {"tipo": "spesa", "spesa": proposta}
+            try:
+                proposta = proponi_spesa(testo, db, current_user, giorno)
+                if proposta is None:
+                    #l'app risponde "non ho capito" e suggerisce il punto
+                    #interrogativo, nel caso fosse una domanda
+                    raise HTTPException(status_code=422, detail="Non sono riuscito a capire la spesa")
+                return {"tipo": "spesa", "spesa": proposta}
+            except categorization.UnaDomanda:
+                pass
         #i rinnovi scaduti devono comparire nei totali, come nelle statistiche
         run_due_renewals(db, current_user.id, giorno)
         risposta = domande.rispondi_a_domanda(testo, db, current_user, giorno, quota, _precedente(dati))

@@ -590,12 +590,27 @@ class TestEndpoint:
         estrazione.assert_not_called()
 
     def test_una_spesa_non_riconosciuta_non_riprova_come_domanda(self, client, connesso):
-        """Riprovare costerebbe una terza richiesta a Groq."""
+        """Una spesa scritta male non deve diventare una risposta: l'utente crederebbe di averla registrata."""
         with patch("app.business_logic.categorization.extract_expense_from_text", return_value=None), \
              patch.object(domande, "rispondi_a_domanda") as risposta:
             r = invia(client, "spese 2026")
         assert r.status_code == 422
         risposta.assert_not_called()
+
+    def test_una_domanda_riconosciuta_dall_estrazione_riceve_risposta(self, client, connesso):
+        with patch("app.business_logic.categorization.extract_expense_from_text",
+                   side_effect=categorization.UnaDomanda), \
+             patch.object(domande, "rispondi_a_domanda", return_value=RISPOSTA) as risposta:
+            r = invia(client, "spese dal 3 al 10 settembre")
+        assert r.json() == {"tipo": "risposta", **RISPOSTA}
+        risposta.assert_called_once()
+
+    def test_l_estrazione_segnala_la_domanda(self):
+        domanda = SimpleNamespace(choices=[SimpleNamespace(
+            message=SimpleNamespace(content='{"error": "question"}'))])
+        with patch.object(categorization.groq_client.chat.completions, "create", return_value=domanda), \
+             pytest.raises(categorization.UnaDomanda):
+            categorization.extract_expense_from_text("spese dal 3 al 10 settembre", oggi=OGGI)
 
     def test_nessuna_risposta_da_422(self, client, connesso):
         with patch.object(domande, "rispondi_a_domanda", return_value=None):

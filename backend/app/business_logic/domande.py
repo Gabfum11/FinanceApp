@@ -50,9 +50,9 @@ _PAROLE_DOMANDA = {
 def sembra_una_domanda(testo: str) -> bool:
     """Spesa o domanda, deciso senza chiamare il modello: costa zero.
 
-    La scelta e' definitiva: una frase mandata all'estrazione che non risulta
-    una spesa non passa poi alle domande, perche' costerebbe una terza
-    richiesta a Groq. Per questo i casi dubbi pendono verso la domanda.
+    Una frase mandata all'estrazione passa poi alle domande solo se il modello
+    la riconosce come domanda (categorization.UnaDomanda), al costo di una
+    terza richiesta a Groq. Per questo i casi dubbi pendono verso la domanda.
     """
     pulito = testo.strip().lower()
     if pulito.endswith("?"):

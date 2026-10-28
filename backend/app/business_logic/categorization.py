@@ -18,6 +18,15 @@ class ServizioOccupato(Exception):
     scritto una frase corretta lo porta a riscriverla e fallire di nuovo.
     """
 
+
+class UnaDomanda(Exception):
+    """L'estrazione ha riconosciuto una domanda mandata come spesa ("spese dal 3 al 10 settembre").
+
+    Distinta dal None di "non ho capito": solo quando lo dice il modello la
+    frase passa alle domande, cosi' una spesa scritta male non diventa una
+    risposta e l'utente sa che non e' stata registrata.
+    """
+
 groq_client=Groq( api_key=os.environ.get("GROQ_API_KEY"),)
 
 WEEKDAYS_IT = ["lunedi'", "martedi'", "mercoledi'", "giovedi'", "venerdi'", "sabato", "domenica"]
@@ -281,6 +290,10 @@ def extract_expense_from_text(
                         'Esempio di forma: {"description": "Benzina", "amount": 60.0, "date_expr": "3 settembre", "category": "Carburante"}. '
                         'Esempio di forma: {"description": "Palestra", "amount": 60.0, "date_expr": null, "category": "Palestra", "recurring": true, "frequency": "monthly"}. '
                         'Esempio di forma: {"description": "Cena", "amount": 40.0, "date_expr": "ieri", "category": "Pranzi e cene", "currency": "GBP"}. '
+                        'se il testo chiede di vedere o contare spese gia\' fatte e non ha un importo da registrare '
+                        '(anni e giorni non sono importi), per esempio "spese dal 3 al 10 settembre", '
+                        '"benzina a settembre 2026" o "ristoranti ultimi 3 mesi", rispondi esattamente con '
+                        '{"error": "question"}. '
                         'se il testo non descrive una spesa, mancano dei dati, oppure contiene parole generiche, rispondi esattamente con '
                         '{"error": "not_an_expense"}'
                     ),
@@ -297,13 +310,15 @@ def extract_expense_from_text(
         )
         raw = chat_completion.choices[0].message.content.strip()
         parsed = json.loads(raw) #converte la risposta in un dizionario python
+        if parsed.get("error") == "question":
+            raise UnaDomanda()
         if "error" in parsed:
             return None
         description = parsed.get("description", "").strip() #se groq per qualche motivo non include la descrizione, essa è "" di default
         amount = float(parsed.get("amount"))
         recurring= bool(parsed.get("recurring", False))
         frequency= parsed.get("frequency")
-        if not description or amount is None or amount <= 0:
+        if not description or amount <= 0:
             return None
         valid_frequencies=["monthly","weekly", "yearly"]
         if recurring and frequency not in valid_frequencies:
@@ -335,6 +350,8 @@ def extract_expense_from_text(
         #restituire None permette all'endpoint di dare il messaggio giusto
         logger.warning("limite di frequenza di Groq raggiunto")
         raise ServizioOccupato()
+    except UnaDomanda:
+        raise
     except Exception:
         #l'utente riceve solo "non ho capito": senza questa riga un guasto di
         #Groq sarebbe indistinguibile da una frase scritta male
