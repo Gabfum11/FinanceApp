@@ -330,7 +330,9 @@ export const creaStili = (tokens: Colori) => {
     paddingTop: 8,
     paddingBottom: 28,
     overflow: "hidden",
-    maxHeight: "75%", //con 59 voci un foglio basso obbligherebbe a scorrere troppo
+    //altezza fissa e non massima: filtrando le voci il foglio si accorciava
+    //e la ricerca, ancorata in basso, scendeva mentre si scriveva
+    height: "75%", //con 59 voci un foglio basso obbligherebbe a scorrere troppo
   },
   modalOverlayLargo: {
     justifyContent: "center",
@@ -340,7 +342,7 @@ export const creaStili = (tokens: Colori) => {
   modalSheetLargo: {
     width: "100%",
     maxWidth: 480,
-    maxHeight: "80%",
+    height: "80%", //come sul telefono: la finestra non si restringe filtrando
     borderRadius: 24,
     paddingTop: 12,
     paddingBottom: 12,
