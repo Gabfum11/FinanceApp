@@ -63,8 +63,11 @@ export function RigaImportata({ riga, separata, onCambiaSelezione, onModifica }:
   const meta = [riga.categoria_nome ? nomeCategoria(riga.categoria_nome) : null, giornoBreve(riga.data)]
     .filter(Boolean)
     .join(" · ");
-  const testoMessaggio = riga.messaggio
-    ? t(`importa.msg_${riga.messaggio}`, {
+  //scelta la categoria il suo avviso non serve piu'; il messaggio resta nella
+  //riga perche' decide la sezione, e la riga non deve saltare altrove
+  const messaggio = riga.messaggio === "categoria" && riga.categoria_id !== null ? null : riga.messaggio;
+  const testoMessaggio = messaggio
+    ? t(`importa.msg_${messaggio}`, {
         importo: riga.rimborso_importo != null ? importo(riga.rimborso_importo) : "",
         data: riga.rimborso_data ? giornoBreve(riga.rimborso_data) : "",
         nome: riga.simile_nome ?? "",
@@ -98,9 +101,9 @@ export function RigaImportata({ riga, separata, onCambiaSelezione, onModifica }:
       <View style={styles.rigaTesti}>
         <Text style={[styles.rigaNome, !riga.selezionata && styles.rigaNomeEsclusa]}>{riga.nome}</Text>
         <Text style={styles.rigaMeta}>{meta}</Text>
-        {riga.messaggio && (
+        {messaggio && (
           <View style={[styles.messaggio, { backgroundColor: colori[1] }]}>
-            <MaterialCommunityIcons name={ICONE[riga.messaggio] ?? "information"} size={14} color={colori[0]} />
+            <MaterialCommunityIcons name={ICONE[messaggio] ?? "information"} size={14} color={colori[0]} />
             <Text style={[styles.messaggioTesto, { color: colori[0] }]}>{testoMessaggio}</Text>
           </View>
         )}
