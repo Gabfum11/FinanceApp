@@ -120,9 +120,10 @@ def test_foglio_che_dichiara_una_dimensione_sbagliata():
         [datetime(2026, 9, 27), datetime(2026, 9, 27), -4.0, "P2P A ROSSI   MARIO per cocktail"],
         [datetime(2026, 9, 29), datetime(2026, 9, 26), -4.0, "Pagamento Google Pay PASSION FRUIT 26/09/2026 23.33 BARI Op. 673184"],
     ]))
+    #vale la data valuta (26/09, quella del pagamento), non la contabile (29/09)
     assert leggi_estratto(contenuto, OGGI) == [
         Movimento(date(2026, 9, 27), "P2P A ROSSI   MARIO per cocktail", 4.0, True),
-        Movimento(date(2026, 9, 29), "Pagamento Google Pay PASSION FRUIT 26/09/2026 23.33 BARI Op. 673184", 4.0, True),
+        Movimento(date(2026, 9, 26), "Pagamento Google Pay PASSION FRUIT 26/09/2026 23.33 BARI Op. 673184", 4.0, True),
     ]
 
 

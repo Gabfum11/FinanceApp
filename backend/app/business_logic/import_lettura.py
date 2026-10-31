@@ -109,9 +109,10 @@ MAX_RIGHE_FOGLIO = MAX_RIGHE + RIGHE_INTESTAZIONE + 50
 MAX_COLONNE = 50
 
 #nomi delle colonne per ruolo, gia' normalizzati (minuscoli, senza punteggiatura).
-#L'ordine conta: "data valuta" va ignorata prima che "data" la prenda
+#"data valuta" ha un ruolo suo: sulle carte (Postepay) e' il giorno del pagamento, la contabile arriva dopo
 RUOLI = {
-    "ignora": ["data valuta", "valuta", "divisa", "currency", "saldo", "saldo contabile",
+    "data_valuta": ["data valuta"],
+    "ignora": ["valuta", "divisa", "currency", "saldo", "saldo contabile",
                "saldo disponibile", "balance"],
     "data": ["data operazione", "data contabile", "data registrazione", "data contabilizzazione",
              "data", "date", "giorno"],
@@ -332,7 +333,9 @@ def _verifica_colonne(righe: list[list], colonne: dict[str, list[int]], oggi: da
     def per_data(v):
         return leggi_data(v, oggi)
 
-    buone = [p for p in colonne["data"] if _quota(righe, p, per_data) >= QUOTA_MINIMA]
+    #la data valuta, se leggibile, vince sulle altre
+    candidate = colonne.get("data_valuta", []) + colonne["data"]
+    buone = [p for p in candidate if _quota(righe, p, per_data) >= QUOTA_MINIMA]
     if not buone:
         buone = [p for p in range(larghezza) if p not in occupate and _quota(righe, p, per_data) >= QUOTA_MINIMA]
     if not buone:
