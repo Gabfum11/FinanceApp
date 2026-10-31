@@ -744,10 +744,6 @@ export const creaStili = (colors: Colori) =>
     flexBasis: 300,
     gap: 12,
   },
-  pcNota: {
-    fontSize: fontSize.sm,
-    color: colors.textMuted,
-  },
   // --- invito finale, prima del piè di pagina ---
   pcInvito: {
     flexDirection: "row",

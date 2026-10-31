@@ -171,7 +171,6 @@
       "testo": "Download the Excel or CSV file from your bank and upload it to TrackIt. Transactions become expenses, already sorted by category.",
       "punto1": "Flags duplicates and expenses already recorded by your subscriptions",
       "punto2": "You review everything before importing, and can undo right after",
-      "punto3": "Works with .xlsx, .xls and .csv, up to 2,000 transactions",
       "file": "bank_statement.xlsx",
       "letto": "48 transactions read"
     },

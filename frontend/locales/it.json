@@ -171,7 +171,6 @@
       "testo": "Scarica dalla banca il file Excel o CSV e caricalo in TrackIt. I movimenti diventano spese, già divise per categoria.",
       "punto1": "Segnala i doppioni e le spese già registrate dagli abbonamenti",
       "punto2": "Tu controlli prima di importare, e puoi annullare subito dopo",
-      "punto3": "Funziona con .xlsx, .xls e .csv, fino a 2.000 movimenti",
       "file": "estratto_conto.xlsx",
       "letto": "48 movimenti letti"
     },

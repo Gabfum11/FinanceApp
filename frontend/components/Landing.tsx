@@ -59,15 +59,13 @@ export function Landing() {
   //l'ordine dei figli invertito: quando va a capo l'illustrazione resta sopra.
   //L'illustrazione e' un'immagine con una descrizione: i suoi testi sono
   //importi di esempio, che letti uno per uno da un lettore di schermo non dicono nulla
-  function riga(indice: number, titolo: string, testo: string, descrizione: string, illustrazione: ReactNode, nota?: string) {
+  function riga(indice: number, titolo: string, testo: string, descrizione: string, illustrazione: ReactNode) {
     return (
       <View style={[styles.pcRiga, indice % 2 === 1 && styles.pcRigaInvertita]}>
         <View style={styles.pcIllustrazione} role="img" aria-label={descrizione}>{illustrazione}</View>
         <View style={styles.pcRigaTesti}>
           <Text role="heading" aria-level={3} style={styles.pcRiquadroTitolo}>{titolo}</Text>
-          <Text style={styles.pcRiquadroTesto}>{testo}</Text>
-          {nota && <Text style={styles.pcNota}>{nota}</Text>}
-        </View>
+          <Text style={styles.pcRiquadroTesto}>{testo}</Text>        </View>
       </View>
     );
   }
@@ -116,8 +114,7 @@ export function Landing() {
             t("presentazione.importa.titolo"),
             `${t("presentazione.importa.testo")} ${t("presentazione.importa.punto2")}`,
             t("presentazione.descrizioni.importa"),
-            <IllustrazioneImport />,
-            t("presentazione.importa.punto3")
+            <IllustrazioneImport />
           )}
           {riga(
             1,
