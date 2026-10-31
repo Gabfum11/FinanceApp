@@ -110,19 +110,19 @@ MAX_COLONNE = 50
 
 #nomi delle colonne per ruolo, gia' normalizzati (minuscoli, senza punteggiatura).
 #L'ordine conta: "data valuta" va ignorata prima che "data" la prenda
-RUOLI = [
-    ("ignora", ["data valuta", "valuta", "divisa", "currency", "saldo", "saldo contabile",
-                "saldo disponibile", "balance"]),
-    ("data", ["data operazione", "data contabile", "data registrazione", "data contabilizzazione",
-              "data", "date", "giorno"]),
-    ("uscite", ["addebiti", "addebito", "dare", "uscite", "uscita", "importo dare"]),
-    ("entrate", ["accrediti", "accredito", "avere", "entrate", "entrata", "importo avere"]),
-    ("verso", ["segno", "d/a", "dare/avere", "verso", "tipo movimento"]),
-    ("importo", ["importo", "importo eur", "importo euro", "amount", "ammontare"]),
-    ("descrizione", ["descrizione", "descrizione operazione", "descrizione operazioni",
-                     "descrizione completa", "causale", "dettagli", "dettaglio", "operazione",
-                     "esercente", "beneficiario", "description", "movimento"]),
-]
+RUOLI = {
+    "ignora": ["data valuta", "valuta", "divisa", "currency", "saldo", "saldo contabile",
+               "saldo disponibile", "balance"],
+    "data": ["data operazione", "data contabile", "data registrazione", "data contabilizzazione",
+             "data", "date", "giorno"],
+    "uscite": ["addebiti", "addebito", "dare", "uscite", "uscita", "importo dare"],
+    "entrate": ["accrediti", "accredito", "avere", "entrate", "entrata", "importo avere"],
+    "verso": ["segno", "d/a", "dare/avere", "verso", "tipo movimento"],
+    "importo": ["importo", "importo eur", "importo euro", "amount", "ammontare"],
+    "descrizione": ["descrizione", "descrizione operazione", "descrizione operazioni",
+                    "descrizione completa", "causale", "dettagli", "dettaglio", "operazione",
+                    "esercente", "beneficiario", "description", "movimento"],
+}
 _VERSO_USCITA = {"d", "-", "dare", "addebito", "uscita", "debit"}
 
 
@@ -267,7 +267,7 @@ def _normalizza(valore) -> str:
 
 
 def _ruolo(intestazione: str) -> str | None:
-    for ruolo, nomi in RUOLI:
+    for ruolo, nomi in RUOLI.items():
         if intestazione in nomi:
             return ruolo
     if intestazione.startswith("data") and "valuta" not in intestazione:
